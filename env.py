@@ -5,6 +5,7 @@ import time
 import yaml
 import secrets
 import logging
+import tempfile
 from dotenv import load_dotenv
 load_dotenv()
 from datetime import datetime, timezone
@@ -15,7 +16,7 @@ from models.miner_artifact import Artifact
 from db.models.eval import db, Miner, Evaluation
 from evals.eval_factory import EvalFactory
 from fastapi import FastAPI
-from pydantic import BaseModel  # Add this
+from pydantic import BaseModel
 
 app = FastAPI()
 
@@ -34,20 +35,8 @@ EVAL_SUITE = ["prompt"]
 class Actor:
     """Bitrecs Eval Actor"""
     
-    def __init__(
-        self,
-        api_key: str = None,
-    ):
-        """
-        Initialize Actor with API key
-        
-        Args:
-            api_key: API key for LLM service. If not provided, will use OPENROUTER_API_KEY env var
-        """
-        self.api_key = api_key or os.getenv("OPENROUTER_API_KEY")
-        
-        # Initialize trace task instance
-        #self.trace_task = TraceTask()
+    def __init__(self, api_key: str = None):       
+        self.api_key = api_key
 
 
     def load_miner_input_yaml(self, input_path=None) -> Artifact:
@@ -262,9 +251,8 @@ class EvaluateRequest(BaseModel):
 
 @app.post("/evaluate")
 async def evaluate_endpoint(req: EvaluateRequest):
-    yaml_content = req.yaml_content
-    #api_key = os.getenv("OPENROUTER_API_KEY")
-    actor = Actor()   
+    yaml_content = req.yaml_content    
+    actor = Actor()
         
     try:
         data = yaml.safe_load(yaml_content)
@@ -274,8 +262,7 @@ async def evaluate_endpoint(req: EvaluateRequest):
         logger.error(f"Failed to parse yaml into Artifact: {e}")
         return {"error": "Invalid yaml content"}
     
-    # Since evaluate expects a file path, save to a temp file
-    import tempfile
+    # Since evaluate expects a file path, save to a temp file    
     with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
         f.write(yaml_content)
         temp_path = f.name
