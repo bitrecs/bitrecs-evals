@@ -20,7 +20,7 @@ logging.getLogger('httpcore').setLevel(logging.WARNING)
 logging.getLogger('httpx').setLevel(logging.WARNING)
 logging.getLogger('peewee').setLevel(logging.WARNING)
 
-TOP_RECORDS = 15
+TOP_RECORDS = 5
 #EVAL_SUITE = ["catalog"]
 EVAL_SUITE = ["prompt"]
 #EVAL_SUITE = ["catalog", "prompt", "reason"]
