@@ -232,6 +232,6 @@ async def evaluate() -> dict:
             "extra": {}
         }
 
-if __name__ == "__main__":
-    import asyncio
-    asyncio.run(evaluate())
+# if __name__ == "__main__":
+#     import asyncio
+#     asyncio.run(evaluate())
