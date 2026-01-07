@@ -15,6 +15,7 @@ from models.miner_artifact import Artifact
 from db.models.eval import db, Miner, Evaluation
 from evals.eval_factory import EvalFactory
 from fastapi import FastAPI
+from pydantic import BaseModel  # Add this
 
 app = FastAPI()
 
@@ -267,8 +268,12 @@ async def root():
 async def health_check():
     return {"status": "healthy"}
 
+class EvaluateRequest(BaseModel):
+    yaml_content: str
+
 @app.post("/evaluate")
-async def evaluate_endpoint(yaml_content: str):
+async def evaluate_endpoint(req: EvaluateRequest):
+    yaml_content = req.yaml_content
     api_key = os.getenv("OPENROUTER_API_KEY")
     actor = Actor(api_key=api_key)
     # Load the yaml content into a dict
