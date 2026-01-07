@@ -5,7 +5,7 @@ Docker Image:
 **ghcr.io/janusdotai/bitrecs-evals:main**
 
 ```
-docker pull ghcr.io/janusdotai/bitrecs-evals:main
+docker pull ghcr.io/bitrecs/bitrecs-evals:main
 ```
 
 ## docker run
@@ -13,7 +13,7 @@ docker pull ghcr.io/janusdotai/bitrecs-evals:main
 ```
 
 
-docker run --rm --env-file $(pwd)/.env -v $(pwd)/output:/app/output --workdir /app ghcr.io/janusdotai/bitrecs-evals:main sh -c "python bitrecs_eval_runner.py"
+docker run --rm --env-file $(pwd)/.env -v $(pwd)/output:/app/output --workdir /app ghcr.io/bitrecs/bitrecs-evals:main sh -c "python bitrecs_eval_runner.py"
 
 ```
 
