@@ -14,6 +14,9 @@ from common import constants as CONST
 from models.miner_artifact import Artifact
 from db.models.eval import db, Miner, Evaluation
 from evals.eval_factory import EvalFactory
+from fastapi import FastAPI
+
+app = FastAPI()
 
 logging.basicConfig(level=CONST.LOG_LEVEL)
 logger = logging.getLogger(__name__)
@@ -247,11 +250,20 @@ class Actor:
                 "extra": {}
             }
 
-# if __name__ == "__main__":
-#     import asyncio
-#     asyncio.run(evaluate())
+@app.get("/")
+async def root():
+    return {"message": "Bitrecs Eval Actor is running."}
 
-# if __name__ == "__main__":
-#     import asyncio
-#     actor = Actor()
-#     asyncio.run(actor.evaluate())
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
+@app.post("/evaluate")
+async def evaluate_endpoint():
+    api_key = os.getenv("OPENROUTER_API_KEY")
+    actor = Actor(api_key=api_key)
+    return await actor.evaluate()
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8081)
