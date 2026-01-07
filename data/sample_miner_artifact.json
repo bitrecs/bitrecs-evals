@@ -1,0 +1,142 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Bitrecs V2 Miner Artifact Submission",
+  "description": "Standard format for miner artifact submission containing prompts and evaluation data",
+  "type": "object",
+  "required": [
+    "artifact_id",
+    "created_at",
+    "miner_hotkey",
+    "miner_uid",
+    "provider",
+    "model",
+    "system_prompt_template",
+    "user_prompt_template",
+    "sampling_params",
+    "eval_scores"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "artifact_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+      "description": "Unique artifact ID (UUID4 format)"
+    },
+    "parent_id": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+      "description": "ID of the parent artifact this one evolved from. Null if baseline"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO8601 timestamp of artifact creation"
+    },
+    "miner_hotkey": {
+      "type": "string",
+      "description": "Hotkey of the submitting miner"
+    },
+    "miner_uid": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Active UID on Subnet"
+    },
+    "provider": {
+      "type": "string",
+      "description": "LLM provider name (e.g., OpenAI, Anthropic)"
+    },
+    "model": {
+      "type": "string",
+      "description": "Exact model identifier the artifact was optimized for",
+      "examples": [
+        "claude-3-5-sonnet-20241022",
+        "gpt-4o-2024-08-06",
+        "grok-beta",
+        "gemini-1.5-pro-exp-0801",
+        "llama-3.1-405b-instruct",
+        "gemma3",
+        "kimi2"
+      ]
+    },
+    "sampling_params": {
+      "type": "object",
+      "required": ["temperature"],
+      "additionalProperties": false,
+      "properties": {
+        "temperature": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2,
+          "description": "Controls randomness in generation"
+        },
+        "top_p": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Nucleus sampling parameter"
+        },
+        "max_tokens": {
+          "type": ["integer", "null"],
+          "minimum": 1,
+          "description": "Maximum number of tokens to generate"
+        },
+        "stop_sequences": {
+          "type": ["array", "null"],
+          "items": { "type": "string" },
+          "description": "Sequences that stop generation"
+        }
+      }
+    },
+    "system_prompt_template": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 16000,
+      "description": "You are a helpful assistant, todays date is {{ current_date }}."
+    },
+    "user_prompt_template": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500000,
+      "description": "A shopper is looking at <sku>{{sku}}</sku>. Recommend {{num_recs}} skus from this <catalog>{{product_catalog}}</catalog>. Ensure the final set is in JSON array and does not include the <sku>"
+    },
+    "fewshot_examples": {
+      "type": ["array", "null"],
+      "items": {
+        "type": "object",
+        "required": ["role", "content"],
+        "additionalProperties": false,
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["user", "assistant", "system"]
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 8192
+          }
+        }
+      },
+      "maxItems": 64,
+      "description": "Optional few-shot examples for in-context learning"
+    },
+    "eval_scores": {
+      "type": "object",
+      "description": "Evaluation scores claimed by the miner (server will re-run and verify)",
+      "minProperties": 1,
+      "additionalProperties": { "type": "number" },
+      "examples": [
+        {
+          "mt-bench": 9.12,
+          "arena-hard": 934,
+          "alpaca-eval-2": 93.4,
+          "gpt4-judge-winrate": 0.712,
+          "length-controlled-winrate": 0.689
+        }
+      ]
+    },
+    "signature": {
+      "type": ["string", "null"],
+      "description": "Optional cryptographic signature for verification"
+    }
+  }
+}

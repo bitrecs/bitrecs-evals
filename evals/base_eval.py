@@ -1,0 +1,100 @@
+
+import json
+import os
+import logging
+from typing import List
+import pandas as pd
+from datetime import datetime
+from abc import ABC, abstractmethod
+
+
+from evals.eval_result import EvalResult
+from models.miner_artifact import Artifact
+from common import constants as CONST
+from models.product import Product
+
+logger = logging.getLogger(__name__)
+
+class BaseEval(ABC):
+    """
+    Abstract base class for all evaluation suites.
+    Ensures standardized invocation and result reporting.
+    """
+    
+    def __init__(self, run_id: str, miner_artifact: Artifact):      
+        if not run_id:
+            raise ValueError("Run ID is required")
+        self.run_id = run_id
+        if not miner_artifact:
+            raise ValueError("Miner artifact is required")
+        self.miner_artifact = miner_artifact
+    
+    @abstractmethod
+    def run(self, max_iterations: int = 10) -> EvalResult:
+        """
+        Run the evaluation and return a standardized EvalResult.
+        Subclasses must implement this.
+        """
+        pass
+    
+    def get_eval_name(self) -> str:
+        """Return a human-readable name for the eval (e.g., 'Bitrecs Prompt Eval')."""
+        #return self.__class__.__name__.replace('Eval', ' Eval')
+        return self.__class__.__name__
+    
+    def get_latest_holdout(self, specific_file: str = None) -> pd.DataFrame:
+        """
+        Get latest holdout set from data/holdout directory by parsing date/time from filenames.
+        
+        Filenames are expected in format: prompt_holdout_YYYYMMDD_HHMMSS.csv
+        Sorts by the embedded datetime to find the most recent.
+        """
+        #specific_file = "fashion_data_holdout_20260102.csv"
+        #specific_file = "amazon_ranking_100_strict_sample_20.csv"
+        holdout_dir = os.path.join(CONST.ROOT_DIR, "data", "holdout")
+        holdout_files = [f for f in os.listdir(holdout_dir) if f.endswith('.csv')]
+        if not holdout_files:
+            raise FileNotFoundError("No holdout files found.")
+        if specific_file:
+            specific_path = os.path.join(holdout_dir, specific_file)
+            if not os.path.exists(specific_path):
+                raise FileNotFoundError(f"Specified holdout file {specific_file} not found.")
+            logger.info(f"Using specified holdout file: {specific_path}")
+            return pd.read_csv(specific_path)
+        
+        # Parse datetime from filename and sort
+        file_datetime_pairs = []
+        for f in holdout_files:
+            try:
+                # Extract datetime part: e.g., '20251213_150551' from 'prompt_holdout_20251213_150551.csv'
+                datetime_str = f.split('_')[-2] + '_' + f.split('_')[-1].replace('.csv', '')
+                dt = datetime.strptime(datetime_str, '%Y%m%d_%H%M%S')
+                file_datetime_pairs.append((f, dt))
+            except (ValueError, IndexError) as e:
+                logger.warning(f"Could not parse datetime from filename {f}: {e}")
+                continue
+        
+        if not file_datetime_pairs:
+            raise FileNotFoundError("No valid holdout files with parseable dates found.")
+        
+        # Sort by datetime descending (most recent first)
+        file_datetime_pairs.sort(key=lambda x: x[1], reverse=True)
+        latest_file = file_datetime_pairs[0][0]
+        latest_path = os.path.join(holdout_dir, latest_file)
+        logger.info(f"Using latest holdout file: {latest_path}")       
+        return pd.read_csv(latest_path)
+    
+    def decode_context(self, context: str) -> List[str]:
+        """Context is double encoded from holdout sets """
+        try:
+            # First decode: from escaped JSON string to JSON string
+            context_decoded = json.loads(context) if isinstance(context, str) and context.startswith('"') else context
+            # Now context_decoded should be a proper JSON string like '[{...}]'            
+            products = Product.try_parse_context_strict(context_decoded)            
+            if len(products) == 0:
+                logger.warning(f"No products parsed from context.")
+                return []
+            return products
+        except (json.JSONDecodeError, ValueError) as e:
+            logger.error(f"Failed to parse context for row: {e}")
+            products = []
