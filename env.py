@@ -68,6 +68,7 @@ class Actor:
         logger.info("Running eval suites...")    
         run_id = secrets.token_hex(16)
         logger.info(f"Eval Run ID: \033[35m{run_id}\033[0m")
+        logger.info(f"TOP RECORDS: \033[36m{TOP_RECORDS}\033[0m")
         results = EvalFactory.run_all_evals(run_id, miner_artifact, EVAL_SUITE, TOP_RECORDS)
         
         for result in results:
@@ -249,3 +250,8 @@ class Actor:
 # if __name__ == "__main__":
 #     import asyncio
 #     asyncio.run(evaluate())
+
+# if __name__ == "__main__":
+#     import asyncio
+#     actor = Actor()
+#     asyncio.run(actor.evaluate())
