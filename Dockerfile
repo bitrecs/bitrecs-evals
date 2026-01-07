@@ -12,3 +12,5 @@ COPY . .
 
 
 #CMD ["python", "bitrecs_eval_runner.py"]
+
+CMD ["python", "-m", "env"]
