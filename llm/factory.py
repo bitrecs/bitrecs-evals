@@ -120,4 +120,4 @@ class ChutesInterface:
     def query(self, user_prompt) -> str:
         chutes = Chutes(key=self.CHUTES_API_KEY, model=self.model, 
                         system_prompt=self.system_prompt, temp=self.temp)
-        return asyncio.run(chutes.call_chutes(user_prompt))
+        return chutes.call_chutes(user_prompt)
