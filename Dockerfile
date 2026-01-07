@@ -12,6 +12,6 @@ COPY . .
 
 
 #CMD ["python", "bitrecs_eval_runner.py"]
+#CMD ["tail", "-f", "/dev/null"]
 
-#CMD ["python", "-m", "env"]
-CMD ["tail", "-f", "/dev/null"]
+CMD ["python", "-m", "env"]
