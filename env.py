@@ -191,12 +191,10 @@ class Actor:
             db.close()
 
 
-    async def evaluate(self) -> dict:
+    async def evaluate(self, model: str = None, base_url: str = None, task_id: int = None) -> dict:
         """
-            Affine Entrypoint
-
+        Affine Entrypoint
         """
-
         try:
             print("=" * 60)
             print("      Bitrecs Evaluation Suite Runner")
@@ -209,6 +207,15 @@ class Actor:
             miner_input_path = "input/miner_input.yaml"
             miner_artifact = self.load_miner_input_yaml(input_path=miner_input_path)
             
+            # Override with provided params if given
+            if model:
+                miner_artifact.model = model
+            if base_url:
+                # Assuming base_url indicates provider; adjust as needed
+                miner_artifact.provider = "chutes" if "chutes" in base_url else miner_artifact.provider
+            if task_id:
+                logger.info(f"Task ID: {task_id}")
+            
             logger.info(f"Artifact ID: {miner_artifact.artifact_id}")
             logger.info(f"Model: {miner_artifact.model}")
             logger.info("Starting evaluation suites...")
@@ -216,9 +223,6 @@ class Actor:
             run_report = self.generate_report_by_run_id(run_id)
             logger.info(f"Eval Report for Run ID: \033[35m{run_id}\033[0m")
             logger.info("\n" + run_report)
-
-            # Display results
-            #display_eval_results()
 
             logger.info("\033[35mEvaluation suites completed successfully. \033[0m")
             score = sum(r.score for r in results) / len(results) if results else 0.0
@@ -232,7 +236,6 @@ class Actor:
                 }
             }        
         
-            # Force garbage collection to free memory immediately
             gc.collect()
             return result
         
@@ -259,10 +262,13 @@ async def health_check():
     return {"status": "healthy"}
 
 @app.post("/evaluate")
-async def evaluate_endpoint():
+async def evaluate_endpoint(data: dict):
     api_key = os.getenv("OPENROUTER_API_KEY")
     actor = Actor(api_key=api_key)
-    return await actor.evaluate()
+    model = data.get("model")
+    base_url = data.get("base_url")
+    task_id = data.get("task_id")
+    return await actor.evaluate(model, base_url, task_id)
 
 if __name__ == "__main__":
     import uvicorn
