@@ -1,0 +1,16 @@
+services:
+  bitrecs-evals:
+    image: ghcr.io/janusdotai/bitrecs-evals:main  # Uses pre-built image
+    env_file:
+      - .env  # Loads env vars
+    volumes:
+      - ./input:/app/input:ro  # Minimal mounts
+      - ./output:/app/output:rw
+    working_dir: /app
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: ["python", "-u", "/app/bitrecs_eval_runner.py"]
+
+networks:
+  default:
+    name: rec-eval-net

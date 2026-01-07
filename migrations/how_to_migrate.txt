@@ -1,0 +1,1 @@
+pw_migrate migrate --database=sqlite:///output/eval_runs.db --directory=migrations

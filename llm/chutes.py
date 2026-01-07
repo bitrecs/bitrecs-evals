@@ -1,0 +1,64 @@
+import time
+import httpx
+import logging
+
+from llm.prompt_factory import PromptFactory
+from .llm_provider import LLM
+from common import constants as CONST
+
+
+logging.basicConfig(level=CONST.LOG_LEVEL)
+logger = logging.getLogger(__name__)
+
+class Chutes:
+    def __init__(self, 
+                 key, 
+                 model="deepseek-ai/DeepSeek-V3", 
+                 system_prompt="You are a helpful assistant.", 
+                 temp=0.0):
+        
+        self.CHUTES_API_KEY = key
+        if not self.CHUTES_API_KEY:
+            raise ValueError("CHUTES_API_KEY is not set")
+        self.model = model
+        self.system_prompt = system_prompt
+        self.temp = temp      
+        self.provider = LLM.CHUTES.name
+                
+
+
+    async def call_chutes(self, prompt) -> str:
+        if not prompt or len(prompt) < 10:
+            raise ValueError()
+        url = "https://llm.chutes.ai/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {self.CHUTES_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        data = {
+            "model": self.model,
+            "messages": [
+                {"role": "user", "content": prompt}
+            ],
+            "stream": False,
+            "max_tokens": 2048,
+            "temperature": self.temp
+        }      
+        timeout = (5, 60) #connect, read timeout     
+        async with httpx.AsyncClient() as client:
+            if CONST.LOG_LEVEL <= logging.DEBUG:
+                start_time = time.perf_counter()
+                content = data["messages"][0]["content"]
+                token_count = PromptFactory.get_token_count(content)
+                logger.debug(f"CHUTES request token count: {token_count} tokens")
+            response = await client.post(url, headers=headers, json=data, timeout=timeout)
+            result = response.json()
+            #print(result)
+            thing = result["choices"][0]["message"]["content"]
+            if CONST.LOG_LEVEL <= logging.DEBUG:
+                end_time = time.perf_counter()
+                duration = end_time - start_time
+                logger.debug(f"CHUTES request completed in {duration:.2f}s")
+            return thing
+
+
