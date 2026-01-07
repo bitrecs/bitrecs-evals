@@ -207,12 +207,12 @@ class Actor:
             miner_input_path = "input/miner_input.yaml"
             miner_artifact = self.load_miner_input_yaml(input_path=miner_input_path)
             
-            # Override with provided params if given
-            if model:
-                miner_artifact.model = model
-            if base_url:
-                # Assuming base_url indicates provider; adjust as needed
-                miner_artifact.provider = "chutes" if "chutes" in base_url else miner_artifact.provider
+            # # Override with provided params if given
+            # if model:
+            #     miner_artifact.model = model
+            # if base_url:
+            #     # Assuming base_url indicates provider; adjust as needed
+            #     miner_artifact.provider = "chutes" if "chutes" in base_url else miner_artifact.provider
             if task_id:
                 logger.info(f"Task ID: {task_id}")
             
