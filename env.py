@@ -63,8 +63,7 @@ class Actor:
             logger.info(f"Miner Hotkey: \033[32m{artifact.miner_hotkey}\033[0m")
             return artifact
         except Exception as e:
-            logger.error(f"Failed to parse miner input into Artifact: {e}")
-            sys.exit(1)
+            raise ValueError(f"Failed to parse YAML into Artifact: {e}")
 
 
     def run_eval_suites(self, miner_artifact: Artifact) -> Tuple[str, List[EvalResult]]:
@@ -207,10 +206,7 @@ class Actor:
             for key, value in os.environ.items():
                 logger.debug(f"ENV {key}={value}")
             
-            logger.info("Loading miner input...")
-            with open(yaml_file_path, 'r') as f:
-                data = yaml.safe_load(f)        
-               
+            logger.info("Loading miner input...")         
             #miner_input_path = "input/miner_input.yaml"
             miner_artifact = self.load_miner_input_yaml(input_path=yaml_file_path)
             
@@ -225,24 +221,26 @@ class Actor:
             logger.info("\033[35mEvaluation suites completed successfully. \033[0m")
             score = sum(r.score for r in results) / len(results) if results else 0.0
             result = {
-                "task_name": "Trace",
+                "task_name": "BitrecsEval",
+                "run_id": run_id,               
                 "score": score,
                 "success": score > 0,
                 "time_taken": time.time() - start,
                 "extra": {
                     "result": run_report
                 }
-            }        
-        
-            gc.collect()
+            }            
             return result
         
         except Exception as e:
             import traceback
             error = f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}"
             logger.error(f"Evaluation failed: {error}")
+            if not run_id:
+                run_id = None
             return {
-                "task_name": "Trace",
+                "task_name": "BitrecsEval",
+                "run_id": run_id,
                 "score": 0.0,
                 "success": False,
                 "time_taken": 0.0,
@@ -265,12 +263,11 @@ class EvaluateRequest(BaseModel):
 @app.post("/evaluate")
 async def evaluate_endpoint(req: EvaluateRequest):
     yaml_content = req.yaml_content
-    api_key = os.getenv("OPENROUTER_API_KEY")
-    actor = Actor(api_key=api_key)
-    # Load the yaml content into a dict
-    data = yaml.safe_load(yaml_content)
-    # Create artifact from the loaded data
+    #api_key = os.getenv("OPENROUTER_API_KEY")
+    actor = Actor()   
+        
     try:
+        data = yaml.safe_load(yaml_content)
         artifact = Artifact(**data)
         logger.info(f"Miner Hotkey: \033[32m{artifact.miner_hotkey}\033[0m")
     except Exception as e:
