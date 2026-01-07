@@ -202,26 +202,17 @@ class Actor:
             print(f"UTC:   {datetime.now(timezone.utc).isoformat()}")
             print("=" * 60)
             start = time.monotonic()
+
+            #Debug all environemtn variables:
+            for key, value in os.environ.items():
+                logger.debug(f"ENV {key}={value}")
             
             logger.info("Loading miner input...")
             with open(yaml_file_path, 'r') as f:
-                data = yaml.safe_load(f)
-        
-            # model = data.get("model")
-            # base_url = data.get("base_url")
-            # task_id = data.get("task_id")
-            # miner_hotkey = data.get("miner_hotkey")        
+                data = yaml.safe_load(f)        
+               
             #miner_input_path = "input/miner_input.yaml"
             miner_artifact = self.load_miner_input_yaml(input_path=yaml_file_path)
-            
-            # # Override with provided params if given
-            # if model:
-            #     miner_artifact.model = model
-            # if base_url:
-            #     # Assuming base_url indicates provider; adjust as needed
-            #     miner_artifact.provider = "chutes" if "chutes" in base_url else miner_artifact.provider
-            # if task_id:
-            #     logger.info(f"Task ID: {task_id}")
             
             logger.info(f"Artifact ID: {miner_artifact.artifact_id}")
             logger.info(f"Model: {miner_artifact.model}")
