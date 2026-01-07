@@ -190,8 +190,7 @@ class Actor:
         finally:
             db.close()
 
-
-    async def evaluate(self, model: str = None, base_url: str = None, task_id: int = None) -> dict:
+    async def evaluate(self, yaml_file_path: str) -> dict:    
         """
         Affine Entrypoint
         """
@@ -204,8 +203,15 @@ class Actor:
             start = time.monotonic()
             
             logger.info("Loading miner input...")
-            miner_input_path = "input/miner_input.yaml"
-            miner_artifact = self.load_miner_input_yaml(input_path=miner_input_path)
+            with open(yaml_file_path, 'r') as f:
+                data = yaml.safe_load(f)
+        
+            # model = data.get("model")
+            # base_url = data.get("base_url")
+            # task_id = data.get("task_id")
+            # miner_hotkey = data.get("miner_hotkey")        
+            #miner_input_path = "input/miner_input.yaml"
+            miner_artifact = self.load_miner_input_yaml(input_path=yaml_file_path)
             
             # # Override with provided params if given
             # if model:
@@ -213,8 +219,8 @@ class Actor:
             # if base_url:
             #     # Assuming base_url indicates provider; adjust as needed
             #     miner_artifact.provider = "chutes" if "chutes" in base_url else miner_artifact.provider
-            if task_id:
-                logger.info(f"Task ID: {task_id}")
+            # if task_id:
+            #     logger.info(f"Task ID: {task_id}")
             
             logger.info(f"Artifact ID: {miner_artifact.artifact_id}")
             logger.info(f"Model: {miner_artifact.model}")
@@ -262,13 +268,29 @@ async def health_check():
     return {"status": "healthy"}
 
 @app.post("/evaluate")
-async def evaluate_endpoint(data: dict):
+async def evaluate_endpoint(yaml_content: str):
     api_key = os.getenv("OPENROUTER_API_KEY")
     actor = Actor(api_key=api_key)
-    model = data.get("model")
-    base_url = data.get("base_url")
-    task_id = data.get("task_id")
-    return await actor.evaluate(model, base_url, task_id)
+    # Load the yaml content into a dict
+    data = yaml.safe_load(yaml_content)
+    # Create artifact from the loaded data
+    try:
+        artifact = Artifact(**data)
+        logger.info(f"Miner Hotkey: \033[32m{artifact.miner_hotkey}\033[0m")
+    except Exception as e:
+        logger.error(f"Failed to parse yaml into Artifact: {e}")
+        return {"error": "Invalid yaml content"}
+    
+    # Since evaluate expects a file path, save to a temp file
+    import tempfile
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        f.write(yaml_content)
+        temp_path = f.name
+    try:
+        result = await actor.evaluate(temp_path)
+    finally:
+        os.unlink(temp_path)
+    return result
 
 if __name__ == "__main__":
     import uvicorn
