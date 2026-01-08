@@ -191,9 +191,9 @@ class Actor:
             print("=" * 60)
             start = time.monotonic()
 
-            #Debug all environemtn variables:
-            for key, value in os.environ.items():
-                logger.debug(f"ENV {key}={value}")
+            #Debug variables:
+            # for key, value in os.environ.items():
+            #     logger.debug(f"ENV {key}={value}")
             
             logger.info("Loading miner input...")         
             #miner_input_path = "input/miner_input.yaml"
@@ -202,6 +202,7 @@ class Actor:
             logger.info(f"Artifact ID: {miner_artifact.artifact_id}")
             logger.info(f"Model: {miner_artifact.model}")
             logger.info("Starting evaluation suites...")
+            logger.info(f"Eval Suites to run: {EVAL_SUITE}, Top Records: {TOP_RECORDS}")
             run_id, results = self.run_eval_suites(miner_artifact)
             run_report = self.generate_report_by_run_id(run_id)
             logger.info(f"Eval Report for Run ID: \033[35m{run_id}\033[0m")

@@ -20,7 +20,7 @@ logging.getLogger('httpcore').setLevel(logging.WARNING)
 logging.getLogger('httpx').setLevel(logging.WARNING)
 logging.getLogger('peewee').setLevel(logging.WARNING)
 
-TOP_RECORDS = 5
+TOP_RECORDS = 3
 #EVAL_SUITE = ["catalog"]
 EVAL_SUITE = ["prompt"]
 #EVAL_SUITE = ["catalog", "prompt", "reason"]
@@ -184,6 +184,7 @@ def main():
     logger.info(f"Artifact ID: {miner_artifact.artifact_id}")
     logger.info(f"Model: {miner_artifact.model}")
     logger.info("Starting evaluation suites...")
+    logger.info(f"Eval Suites to run: {EVAL_SUITE}, Top Records: {TOP_RECORDS}")
     run_id, results = run_eval_suites(miner_artifact)
     run_report = generate_report_by_run_id(run_id)
     logger.info(f"Eval Report for Run ID: \033[35m{run_id}\033[0m")
