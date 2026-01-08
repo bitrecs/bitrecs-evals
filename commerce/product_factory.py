@@ -18,18 +18,6 @@ class CatalogProvider(Enum):
     WALMART = 5
 
 
-# @dataclass
-# class Product:
-#     sku: str
-#     name: str
-#     price: str
-
-#     def to_dict(self) -> Dict[str, Any]:
-#         return asdict(self)
-    
-#     def to_json(self) -> str:
-#         return json.dumps(self.to_dict(), separators=(',', ':'))
-
 
 class ProductFactory:
 
