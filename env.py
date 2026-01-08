@@ -209,12 +209,14 @@ class Actor:
 
             logger.info("\033[35mEvaluation suites completed successfully. \033[0m")
             score = sum(r.score for r in results) / len(results) if results else 0.0
+            end = time.monotonic()
+            durtation = round(end - start, 8)
             result = {
                 "task_name": "BitrecsEval",
                 "run_id": run_id,               
                 "score": score,
                 "success": score > 0,
-                "time_taken": time.time() - start,
+                "time_taken": durtation,
                 "extra": {
                     "result": run_report
                 }
@@ -225,6 +227,8 @@ class Actor:
             import traceback
             error = f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}"
             logger.error(f"Evaluation failed: {error}")
+            end = time.monotonic()
+            durtation = round(end - start, 8)
             if not run_id:
                 run_id = None
             return {
@@ -232,7 +236,7 @@ class Actor:
                 "run_id": run_id,
                 "score": 0.0,
                 "success": False,
-                "time_taken": 0.0,
+                "time_taken": durtation,
                 "error": error,
                 "error_type": "evaluation_failure",
                 "extra": {}
