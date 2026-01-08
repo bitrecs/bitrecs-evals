@@ -22,22 +22,7 @@ class Product:
     
     def to_json(self) -> str:
         return json.dumps(self.to_dict(), separators=(',', ':'))
-
-
-    # @staticmethod
-    # def try_parse_context(context: str) -> List["Product"]:
-    #     """
-    #     Default converter expects a json array of products with sku/name/price fields
-
-    #     """
-    #     try:
-    #         store_catalog: List[Product] = json.loads(context)
-    #         return store_catalog
-    #     except Exception as e:
-    #         logger.error(f"try_parse_context Exception: {e}")
-    #         return []
-        
-        
+   
     @staticmethod
     def try_parse_context_strict(context: str) -> List["Product"]:
         """
@@ -206,7 +191,7 @@ class Product:
             
             # Percentage of the array that consists of duplicate entries
             dupe_percentage = (dupe_count / total_count) * 100
-            return round(dupe_percentage, 2)  # Round to 2 decimals for readability
+            return round(dupe_percentage, 2)
         
         except Exception as e:
             logger.error(f"get_dupe_percentage failed: {e}")
