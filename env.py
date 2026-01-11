@@ -27,7 +27,7 @@ logging.getLogger('httpcore').setLevel(logging.WARNING)
 logging.getLogger('httpx').setLevel(logging.WARNING)
 logging.getLogger('peewee').setLevel(logging.WARNING)
 
-TOP_RECORDS = 3
+
 #EVAL_SUITE = ["catalog"]
 EVAL_SUITE = ["prompt"]
 #EVAL_SUITE = ["catalog", "prompt", "reason"]
@@ -60,8 +60,8 @@ class Actor:
         logger.info("Running eval suites...")    
         run_id = secrets.token_hex(16)
         logger.info(f"Eval Run ID: \033[35m{run_id}\033[0m")
-        logger.info(f"TOP RECORDS: \033[36m{TOP_RECORDS}\033[0m")
-        results = EvalFactory.run_all_evals(run_id, miner_artifact, EVAL_SUITE, TOP_RECORDS)
+        logger.info(f"TOP RECORDS: \033[36m{CONST.TOP_RECORDS}\033[0m")
+        results = EvalFactory.run_all_evals(run_id, miner_artifact, EVAL_SUITE, CONST.TOP_RECORDS)
         
         for result in results:
             print(f"{result}")
@@ -202,7 +202,7 @@ class Actor:
             logger.info(f"Artifact ID: {miner_artifact.artifact_id}")
             logger.info(f"Model: {miner_artifact.model}")
             logger.info("Starting evaluation suites...")
-            logger.info(f"Eval Suites to run: {EVAL_SUITE}, Top Records: {TOP_RECORDS}")
+            logger.info(f"Eval Suites to run: {EVAL_SUITE}, Top Records: {CONST.TOP_RECORDS}")
             run_id, results = self.run_eval_suites(miner_artifact)
             run_report = self.generate_report_by_run_id(run_id)
             logger.info(f"Eval Report for Run ID: \033[35m{run_id}\033[0m")
@@ -265,9 +265,8 @@ async def evaluate_endpoint(req: EvaluateRequest):
         logger.info(f"Miner Hotkey: \033[32m{artifact.miner_hotkey}\033[0m")
     except Exception as e:
         logger.error(f"Failed to parse yaml into Artifact: {e}")
-        return {"error": "Invalid yaml content"}
+        return {"error": "Invalid yaml content"}    
     
-    # Since evaluate expects a file path, save to a temp file    
     with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
         f.write(yaml_content)
         temp_path = f.name

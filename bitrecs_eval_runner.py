@@ -20,7 +20,7 @@ logging.getLogger('httpcore').setLevel(logging.WARNING)
 logging.getLogger('httpx').setLevel(logging.WARNING)
 logging.getLogger('peewee').setLevel(logging.WARNING)
 
-TOP_RECORDS = 3
+
 #EVAL_SUITE = ["catalog"]
 EVAL_SUITE = ["prompt"]
 #EVAL_SUITE = ["catalog", "prompt", "reason"]
@@ -43,12 +43,12 @@ def load_miner_input_yaml(input_path=None) -> Artifact:
         sys.exit(1)
 
 
-def run_eval_suites(miner_artifact: Artifact) -> Tuple[str, List[EvalResult]]:
+def run_eval_suites(miner_artifact: Artifact, shuffle=False) -> Tuple[str, List[EvalResult]]:
     """Run evaluation suites."""
     logger.info("Running eval suites...")    
     run_id = secrets.token_hex(16)
     logger.info(f"Eval Run ID: \033[35m{run_id}\033[0m")
-    results = EvalFactory.run_all_evals(run_id, miner_artifact, EVAL_SUITE, TOP_RECORDS)
+    results = EvalFactory.run_all_evals(run_id, miner_artifact, EVAL_SUITE, CONST.TOP_RECORDS)
     
     for result in results:
         print(f"{result}")
@@ -184,7 +184,7 @@ def main():
     logger.info(f"Artifact ID: {miner_artifact.artifact_id}")
     logger.info(f"Model: {miner_artifact.model}")
     logger.info("Starting evaluation suites...")
-    logger.info(f"Eval Suites to run: {EVAL_SUITE}, Top Records: {TOP_RECORDS}")
+    logger.info(f"Eval Suites to run: {EVAL_SUITE}, Top Records: {CONST.TOP_RECORDS}")
     run_id, results = run_eval_suites(miner_artifact)
     run_report = generate_report_by_run_id(run_id)
     logger.info(f"Eval Report for Run ID: \033[35m{run_id}\033[0m")
