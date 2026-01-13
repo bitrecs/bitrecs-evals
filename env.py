@@ -183,6 +183,8 @@ class Actor:
         """
         Affine Entrypoint
         """
+        bitrecs_run_id = None
+        run_id = None
         try:
             print("=" * 60)
             print("      Bitrecs Evaluation Suite Runner")
@@ -212,8 +214,12 @@ class Actor:
             score = sum(r.score for r in results) / len(results) if results else 0.0
             end = time.monotonic()
             durtation = round(end - start, 8)
+
+            bitrecs_run_id = os.getenv("BITRECS_RUN_ID", "unknown")
+            logger.info(f"Bitrecs Run ID: \033[33m{bitrecs_run_id}\033[0m")
             result = {
                 "task_name": "BitrecsEval",
+                "bitrecs_run_id": bitrecs_run_id,
                 "run_id": run_id,               
                 "score": score,
                 "success": score > 0,
@@ -229,11 +235,10 @@ class Actor:
             error = f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}"
             logger.error(f"Evaluation failed: {error}")
             end = time.monotonic()
-            durtation = round(end - start, 8)
-            if not run_id:
-                run_id = None
+            durtation = round(end - start, 8)         
             return {
                 "task_name": "BitrecsEval",
+                "bitrecs_run_id": bitrecs_run_id,
                 "run_id": run_id,
                 "score": 0.0,
                 "success": False,
