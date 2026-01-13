@@ -35,8 +35,8 @@ EVAL_SUITE = ["prompt"]
 class Actor:
     """Bitrecs Eval Actor"""
     
-    def __init__(self, api_key: str = None):       
-        self.api_key = api_key
+    def __init__(self):
+        self.bitrecs_run_id = os.getenv("BITRECS_RUN_ID", "unknown")
 
 
     def load_miner_input_yaml(self, input_path=None) -> Artifact:
@@ -107,46 +107,46 @@ class Actor:
             db.close()
 
 
-    def display_eval_results(self):
-        """Display eval results from the database."""
-        try:
-            db.connect()
-            evaluations = Evaluation.select().order_by(Evaluation.created_at.desc()).limit(10)  # Last 10 results
-            if not evaluations:
-                logger.info("No eval results found in DB.")
-                return
+    # def display_eval_results(self):
+    #     """Display eval results from the database."""
+    #     try:
+    #         db.connect()
+    #         evaluations = Evaluation.select().order_by(Evaluation.created_at.desc()).limit(10)  # Last 10 results
+    #         if not evaluations:
+    #             logger.info("No eval results found in DB.")
+    #             return
             
-            print("\n" + "=" * 60)
-            print("      Recent Eval Results")
-            print("=" * 60)
-            for eval in evaluations:
-                print(f"ID: {eval.id} | Eval: {eval.eval_name} | Model: {eval.model_name} | Provider: {eval.provider_name} | Score: {eval.score:.2f} | Success: {eval.success} | Duration: {eval.duration_seconds:.2f}s | Success Rows: {eval.rows_evaluated} | Comments: {eval.comments}")
-            print("=" * 60)
-        except Exception as e:
-            logger.error(f"Failed to display results: {e}")
-        finally:
-            db.close()
+    #         print("\n" + "=" * 60)
+    #         print("      Recent Eval Results")
+    #         print("=" * 60)
+    #         for eval in evaluations:
+    #             print(f"ID: {eval.id} | Eval: {eval.eval_name} | Model: {eval.model_name} | Provider: {eval.provider_name} | Score: {eval.score:.2f} | Success: {eval.success} | Duration: {eval.duration_seconds:.2f}s | Success Rows: {eval.rows_evaluated} | Comments: {eval.comments}")
+    #         print("=" * 60)
+    #     except Exception as e:
+    #         logger.error(f"Failed to display results: {e}")
+    #     finally:
+    #         db.close()
 
 
-    def display_eval_results_by_run_id(self, run_id: str):
-        """Display eval results for a specific run ID from the database."""
-        try:
-            db.connect()
-            evaluations = Evaluation.select().where(Evaluation.run_id == run_id)
-            if not evaluations:
-                logger.info(f"No eval results found in DB for run ID: {run_id}")
-                return
+    # def display_eval_results_by_run_id(self, run_id: str):
+    #     """Display eval results for a specific run ID from the database."""
+    #     try:
+    #         db.connect()
+    #         evaluations = Evaluation.select().where(Evaluation.run_id == run_id)
+    #         if not evaluations:
+    #             logger.info(f"No eval results found in DB for run ID: {run_id}")
+    #             return
             
-            print("\n" + "=" * 60)
-            print(f"      Eval Results for Run ID: {run_id}")
-            print("=" * 60)
-            for eval in evaluations:
-                print(f"ID: {eval.id} | Eval: {eval.eval_name} | Model: {eval.model_name} | Provider: {eval.provider_name} | Score: {eval.score:.2f} | Success: {eval.success} | Duration: {eval.duration_seconds:.2f}s | Success Rows: {eval.rows_evaluated} | Comments: {eval.comments}")
-            print("=" * 60)
-        except Exception as e:
-            logger.error(f"Failed to display results for run ID {run_id}: {e}")
-        finally:
-            db.close()
+    #         print("\n" + "=" * 60)
+    #         print(f"      Eval Results for Run ID: {run_id}")
+    #         print("=" * 60)
+    #         for eval in evaluations:
+    #             print(f"ID: {eval.id} | Eval: {eval.eval_name} | Model: {eval.model_name} | Provider: {eval.provider_name} | Score: {eval.score:.2f} | Success: {eval.success} | Duration: {eval.duration_seconds:.2f}s | Success Rows: {eval.rows_evaluated} | Comments: {eval.comments}")
+    #         print("=" * 60)
+    #     except Exception as e:
+    #         logger.error(f"Failed to display results for run ID {run_id}: {e}")
+    #     finally:
+    #         db.close()
 
     def generate_report_by_run_id(self, run_id: str) -> str:
         """Generate a detailed report for a specific run ID."""
@@ -161,6 +161,8 @@ class Actor:
             report_lines.append(f"Eval Report for Run ID: {run_id}")
             report_lines.append("=" * 60)
             for eval in evaluations:
+                report_lines.append(f"Bitrecs Run ID: {self.bitrecs_run_id}")
+                report_lines.append(f"Run ID: {eval.run_id}")
                 report_lines.append(f"Eval: {eval.eval_name}")
                 report_lines.append(f"Model: {eval.model_name}")
                 report_lines.append(f"Provider: {eval.provider_name}")
