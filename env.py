@@ -107,47 +107,6 @@ class Actor:
             db.close()
 
 
-    # def display_eval_results(self):
-    #     """Display eval results from the database."""
-    #     try:
-    #         db.connect()
-    #         evaluations = Evaluation.select().order_by(Evaluation.created_at.desc()).limit(10)  # Last 10 results
-    #         if not evaluations:
-    #             logger.info("No eval results found in DB.")
-    #             return
-            
-    #         print("\n" + "=" * 60)
-    #         print("      Recent Eval Results")
-    #         print("=" * 60)
-    #         for eval in evaluations:
-    #             print(f"ID: {eval.id} | Eval: {eval.eval_name} | Model: {eval.model_name} | Provider: {eval.provider_name} | Score: {eval.score:.2f} | Success: {eval.success} | Duration: {eval.duration_seconds:.2f}s | Success Rows: {eval.rows_evaluated} | Comments: {eval.comments}")
-    #         print("=" * 60)
-    #     except Exception as e:
-    #         logger.error(f"Failed to display results: {e}")
-    #     finally:
-    #         db.close()
-
-
-    # def display_eval_results_by_run_id(self, run_id: str):
-    #     """Display eval results for a specific run ID from the database."""
-    #     try:
-    #         db.connect()
-    #         evaluations = Evaluation.select().where(Evaluation.run_id == run_id)
-    #         if not evaluations:
-    #             logger.info(f"No eval results found in DB for run ID: {run_id}")
-    #             return
-            
-    #         print("\n" + "=" * 60)
-    #         print(f"      Eval Results for Run ID: {run_id}")
-    #         print("=" * 60)
-    #         for eval in evaluations:
-    #             print(f"ID: {eval.id} | Eval: {eval.eval_name} | Model: {eval.model_name} | Provider: {eval.provider_name} | Score: {eval.score:.2f} | Success: {eval.success} | Duration: {eval.duration_seconds:.2f}s | Success Rows: {eval.rows_evaluated} | Comments: {eval.comments}")
-    #         print("=" * 60)
-    #     except Exception as e:
-    #         logger.error(f"Failed to display results for run ID {run_id}: {e}")
-    #     finally:
-    #         db.close()
-
     def generate_report_by_run_id(self, run_id: str) -> str:
         """Generate a detailed report for a specific run ID."""
         try:
@@ -260,11 +219,19 @@ async def health_check():
 
 class EvaluateRequest(BaseModel):
     yaml_content: str
+    run_token: str
 
 @app.post("/evaluate")
 async def evaluate_endpoint(req: EvaluateRequest):
     yaml_content = req.yaml_content    
     actor = Actor()
+    env_token = os.getenv("BITRECS_RUN_TOKEN", "")
+    if not env_token or not req.run_token:
+        logger.error("Run token not provided.")
+        return {"error": "Run token not provided"}
+    if env_token != req.run_token:
+        logger.error("Invalid run token provided.")
+        return {"error": "Invalid run token"}
         
     try:
         data = yaml.safe_load(yaml_content)
