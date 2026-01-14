@@ -35,7 +35,7 @@ class AmazonPromptEval(BaseEval):
 
 
     def eval_type(self) -> BitrecsEvaluationType:
-        return BitrecsEvaluationType.BITRECS_PROMPT_DAILY
+        return BitrecsEvaluationType.AMAZON_PROMPT_100
 
     def run(self, max_iterations=10) -> EvalResult:
         """
