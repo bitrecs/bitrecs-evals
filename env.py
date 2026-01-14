@@ -7,8 +7,6 @@ import secrets
 import logging
 import tempfile
 from dotenv import load_dotenv
-
-from models.eval_type import BitrecsEvaluationType
 load_dotenv()
 from datetime import datetime, timezone
 from typing import List, Tuple
@@ -16,6 +14,7 @@ from evals.eval_result import EvalResult
 from common import constants as CONST
 from models.miner_artifact import Artifact
 from db.models.eval import db, Miner, Evaluation
+from models.eval_type import BitrecsEvaluationType
 from evals.eval_factory import EvalFactory
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -28,11 +27,6 @@ logger = logging.getLogger(__name__)
 logging.getLogger('httpcore').setLevel(logging.DEBUG)
 logging.getLogger('httpx').setLevel(logging.DEBUG)
 logging.getLogger('peewee').setLevel(logging.DEBUG)
-
-
-#EVAL_SUITE = ["catalog"]
-#EVAL_SUITE = ["prompt"]
-#EVAL_SUITE = ["catalog", "prompt", "reason"]
 
 # Bitrecs Production Eval Suite
 
@@ -259,6 +253,14 @@ async def evaluate_endpoint(req: EvaluateRequest):
     finally:
         os.unlink(temp_path)
     return result
+
+@app.get("/run_log/{run_id}")
+async def get_run_log(run_id: str):
+    actor = Actor()
+    report = actor.generate_report_by_run_id(run_id)
+    if not report:
+        return {"error": f"No report found for run ID: {run_id}"}
+    return {"run_id": run_id, "report": report}
 
 if __name__ == "__main__":
     import uvicorn
