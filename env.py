@@ -235,13 +235,13 @@ class EvaluateRequest(BaseModel):
 async def evaluate_endpoint(req: EvaluateRequest):
     yaml_content = req.yaml_content    
     actor = Actor()
-    env_token = os.getenv("BITRECS_RUN_TOKEN", "")
-    if not env_token or not req.run_token:
-        logger.error("Run token not provided.")
-        return {"error": "Run token not provided"}
-    if env_token != req.run_token:
-        logger.error("Invalid run token provided.")
-        return {"error": "Invalid run token"}
+    # env_token = os.getenv("BITRECS_RUN_TOKEN", "")
+    # if not env_token or not req.run_token:
+    #     logger.error("Run token not provided.")
+    #     return {"error": "Run token not provided"}
+    # if env_token != req.run_token:
+    #     logger.error("Invalid run token provided.")
+    #     return {"error": "Invalid run token"}
         
     try:
         data = yaml.safe_load(yaml_content)
