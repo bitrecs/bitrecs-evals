@@ -27,6 +27,10 @@ class BaseEval(ABC):
         if not miner_artifact:
             raise ValueError("Miner artifact is required")
         self.miner_artifact = miner_artifact
+        logger.info(f"Initialized {self.miner_artifact.model} eval with run ID: {self.run_id}")
+        logger.info(f"Artifact {self.miner_artifact.provider} ")
+        logger.info(f"Artifact {self.miner_artifact.created_at} ")
+        logger.info(f"Artifact {self.miner_artifact.miner_hotkey} ")
     
     @abstractmethod
     def run(self, max_iterations: int = 10) -> EvalResult:
@@ -44,7 +48,11 @@ class BaseEval(ABC):
     def get_eval_name(self) -> str:
         """Return a human-readable name for the eval (e.g., 'Bitrecs Prompt Eval')."""
         #return self.__class__.__name__.replace('Eval', ' Eval')
-        return self.__class__.__name__
+        #return self.__class__.__name__
+        this_type = self.eval_type()
+        name = str(this_type)
+        return name        
+        
     
     def get_latest_holdout(self, specific_file: str = None) -> pd.DataFrame:
         """

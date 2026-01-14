@@ -32,3 +32,4 @@ class Artifact(BaseModel):
     sampling_params: SamplingParams = Field(description="Sampling parameters for LLM")
     fewshot_examples: Optional[List[MessageExample]] = Field(None, max_length=64)
     eval_scores: Dict[str, float] = Field(description="Evaluation scores claimed by the miner", default_factory=dict)
+    status: Optional[str] = Field(None, description="Status of the artifact in the evaluation pipeline")

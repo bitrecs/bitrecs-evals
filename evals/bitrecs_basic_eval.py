@@ -1,5 +1,6 @@
 import logging
 import time
+import traceback
 import tiktoken
 import pandas as pd
 
@@ -22,17 +23,26 @@ Basic Bitrecs Evaluation Class
 
 """
 
+MAX_PROMPT_TOKENS = 50_000
+MAX_SYSTEM_PROMPT_TOKENS = 10_000
+
+VALID_TEMPLATE_VARIABLES = {
+    'current_date',
+    'product_catalog',
+    'sku',
+    'sku_info',
+    'num_recs',    
+    'persona',
+    'cart_json',
+    'order_json'
+}
+
 class BitrecsBasicEval(BaseEval):
 
     min_row_count = 3
 
-    def __init__(self, run_id: str, miner_artifact: Artifact = None):      
+    def __init__(self, run_id: str, miner_artifact: Artifact):
         super().__init__(run_id, miner_artifact)
-
-        self.this_artifact = miner_artifact
-        if not self.this_artifact:
-            raise ValueError("Miner artifact is required for basic evaluation.")        
-
 
     def eval_type(self) -> BitrecsEvaluationType:
         return BitrecsEvaluationType.BITRECS_BASIC_DAILY
@@ -44,25 +54,30 @@ class BitrecsBasicEval(BaseEval):
         start_time = time.monotonic()        
         count = 0
         success_count = 0
-        exception_count = 0       
-
-
-        self.validate_template()
+        exception_count = 0
+        result = False
+        try:
+            result = self.validate_template()            
+        except Exception as e:
+            logger.error(f"Exception during evaluation: {e}")
+            traceback.print_exc()
+            exception_count += 1
+        
         
         end_time = time.monotonic()
         total_duration = end_time - start_time        
         final_score = success_count / count if count > 0 else 0.0
-        eval_success = False
-
+        #eval_success = result and (exception_count == 0)
+        eval_success = result
 
         result = EvalResult(           
-            eval_name=self.get_eval_name(),  # Use base method
+            eval_name=self.get_eval_name(),
             created_at=datetime.now(timezone.utc).isoformat(),
             hot_key=self.miner_artifact.miner_hotkey,
             score=final_score,
             passed=eval_success,
             rows_evaluated=count,
-            details=f"AMAZON TESTS RESULT DETAILS",
+            details=f"Basic Test result {result}. Evaluated {count} samples with {exception_count} exceptions for hotkey {self.miner_artifact.miner_hotkey}.",
             duration_seconds=total_duration,
             temperature=self.miner_artifact.sampling_params.temperature,
             model_name=self.miner_artifact.model,
@@ -70,12 +85,26 @@ class BitrecsBasicEval(BaseEval):
             run_id=self.run_id
         )        
 
+        detail_report = self.make_detail_report()
+        logger.info(f"Detail Report:\n{detail_report}")
+
         return result
+    
+    def make_detail_report(self) -> str:
+        report_lines = []
+        report_lines.append(f"Eval Name: {self.get_eval_name()}")
+        report_lines.append(f"Run ID: {self.run_id}")
+        report_lines.append(f"Miner Hotkey: {self.miner_artifact.miner_hotkey}")
+        report_lines.append(f"Model: {self.miner_artifact.model}")
+        report_lines.append(f"Provider: {self.miner_artifact.provider}")
+        return "\n".join(report_lines)
     
     def validate_template(self) -> bool:
 
-
-        return False
+        validated, reason = BitrecsBasicEval.validate_artifact_template(self.miner_artifact)
+        logger.info(f"Template validation result: {validated}, Reason: {reason}")
+        
+        return validated
     
 
     def log_miner_response(self, run_id: str, query: str, num_recs: int, recommended_skus: list, duration: float):
@@ -110,7 +139,9 @@ class BitrecsBasicEval(BaseEval):
 
 
     def get_eval_name(self) -> str:
-        return "Bitrecs Basic Daily Eval"    
+        this_type = self.eval_type()
+        name = str(this_type)
+        return name        
     
 
     @staticmethod
@@ -126,10 +157,10 @@ class BitrecsBasicEval(BaseEval):
         
         if len(agent.miner_hotkey) == 0:
             return False, "miner_hotkey must not be empty"
-        if len(agent.name) == 0:
-            return False, "name must not be empty"
-        if agent.version_num <= 0:
-            return False, "version_num must be greater than 0"
+        # if len(agent.name) == 0:
+        #     return False, "name must not be empty"
+        # if agent.version_num <= 0:
+        #     return False, "version_num must be greater than 0"
         if agent.miner_uid <= 0:
             return False, "miner_uid must be greater than 0"
         if len(agent.provider) == 0:
@@ -145,8 +176,8 @@ class BitrecsBasicEval(BaseEval):
         if BitrecsBasicEval.get_token_count(agent.user_prompt_template) > 100_000:
             return False, "user_prompt_template must not exceed maximum token count"
         
-        if agent.status != 'screening_1':
-            return False, "status must be 'screening_1' upon submission"
+        # if agent.status != 'screening_1':
+        #     return False, "status must be 'screening_1' upon submission"
         
         try:
             Template(agent.system_prompt_template)
