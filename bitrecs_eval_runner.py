@@ -21,13 +21,10 @@ logging.getLogger('httpcore').setLevel(logging.WARNING)
 logging.getLogger('httpx').setLevel(logging.WARNING)
 logging.getLogger('peewee').setLevel(logging.WARNING)
 
-
-#EVAL_SUITE = ["catalog"]
-#EVAL_SUITE = ["prompt"]
-#EVAL_SUITE = [BitrecsEvaluationType.CATALOG, BitrecsEvaluationType.PROMPT, BitrecsEvaluationType.REASON]
-#EVAL_SUITE = [BitrecsEvaluationType.BITRECS_REASON_DAILY]
+#EVAL_SUITE = [BitrecsEvaluationType.AMAZON_PROMPT_100]
 
 EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY, BitrecsEvaluationType.BITRECS_REASON_DAILY]
+
 #EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY, BitrecsEvaluationType.BITRECS_REASON_DAILY, BitrecsEvaluationType.BITRECS_PROMPT_DAILY]
 
 
@@ -126,14 +123,17 @@ def generate_report_by_run_id(run_id: str) -> str:
         evaluations = Evaluation.select().where(Evaluation.run_id == run_id)
         if not evaluations:
             logger.info(f"No eval results found in DB for run ID: {run_id}")
-            return
+            return ""
         
         report_lines = []
         report_lines.append(f"Eval Report for Run ID: {run_id}")
         report_lines.append("=" * 60)
         for eval in evaluations:
             report_lines.append(f"Eval: {eval.eval_name}")
-            report_lines.append(f"Success: {eval.success}")
+            if eval.success:
+                report_lines.append("Result: \033[32mPASS\033[0m")
+            else:
+                report_lines.append("Result: \033[31mFAIL\033[0m")            
             report_lines.append(f"Sample Size: {eval.rows_evaluated}")
             report_lines.append(f"Provider: {eval.provider_name}")
             report_lines.append(f"Model: {eval.model_name}")            
