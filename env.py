@@ -77,10 +77,12 @@ class Actor:
         return run_id, results
 
 
+    
     def log_eval_result_to_db(self, run_id: str, result: EvalResult, hotkey, model_name, provider_name):
         """Log EvalResult to the database."""
         try:
-            db.connect()        
+            if not db.is_connection_usable():
+                db.connect()        
             #db.drop_tables([Miner, Evaluation], safe=True)
             db.create_tables([Miner, Evaluation], safe=True)  # Ensure tables exist
 
@@ -104,7 +106,9 @@ class Actor:
         except Exception as e:
             logger.error(f"Failed to log to DB: {e}")
         finally:
-            db.close()
+            if db.is_connection_usable():
+                db.close()
+
 
 
     def generate_report_by_run_id(self, run_id: str) -> str:

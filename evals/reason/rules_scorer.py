@@ -1,6 +1,4 @@
 import ast
-import hashlib
-import os
 import json
 import re
 import sqlite3
@@ -9,10 +7,10 @@ import pandas as pd
 from typing import List, Tuple, Union
 from dataclasses import dataclass
 from pandas import DataFrame
-#from batch_report_presenter import BatchReportPresenter
 from datetime import datetime, timedelta, timezone
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from commerce.product_factory import CatalogProvider, ProductFactory
+from models.product import Product
 
 
 MIN_REQUESTS = 15  
@@ -156,16 +154,19 @@ class RulesScorer:
         if len(db_files) == 0:
             raise FileNotFoundError("No SQLite database files found in the specified directory")
         
-        woo_products = ProductFactory.load_default_catalog(CatalogProvider.WOO_COMMERCE)
-        self.woo_catalog = tuple(woo_products)  # Convert to tuple for read-only access
+        #woo_products = ProductFactory.load_default_catalog(CatalogProvider.WOOCOMMERCE)
+        #self.product_catalog = tuple(woo_products)  # Convert to tuple for read-only access
+
+        woo_products = ProductFactory.load_default_catalog(CatalogProvider.WOOCOMMERCE)
+        self.product_catalog = [Product(sku=p['sku'], name=p['name'], price=str(p['price'])) for p in woo_products]
         
         self.db_files = db_files
         self.max_workers = max_workers
-        indexs_updated = self.init_indicies()
-        print(f"Database indices updated: {indexs_updated}")
+        #indexs_updated = self.init_indicies()
+        #print(f"Database indices updated: {indexs_updated}")
 
-        bad_hotkeys = self.get_verified_proof_abusive_hotkeys(days_back=14, error_threshold=0.80)
-        self.abusive_keys = bad_hotkeys if bad_hotkeys else []
+        #bad_hotkeys = self.get_verified_proof_abusive_hotkeys(days_back=14, error_threshold=0.80)
+        #self.abusive_keys = bad_hotkeys if bad_hotkeys else []
 
         self.terrible_reasons = {            
             "good", "great", "nice", "ok", "fine", "recommended", "popular",
@@ -205,33 +206,14 @@ class RulesScorer:
         cursor = conn.cursor()
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_created_at ON miner_responses(created_at)")
         conn.commit()
-        #print(f"Created index on created_at in {db_file}")
-
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_bt_header_axon_hotkey ON miner_responses(bt_header_axon_hotkey)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_hotkey ON miner_responses(hotkey)")
         conn.commit()
-        #print(f"Created index on idx_bt_header_axon_hotkey in {db_file}")
-        
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_site_key ON miner_responses(site_key)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_miner_uid ON miner_responses(miner_id)")
         conn.commit()
-        #print(f"Created index on idx_site_key in {db_file}")
-        
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_miner_uid ON miner_responses(miner_uid)")
-        conn.commit()
-        #print(f"Created index on idx_miner_uid in {db_file}")
-
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_miner_hotkey ON miner_responses(miner_hotkey)")
-        conn.commit()
-        #print(f"Created index on idx_miner_hotkey in {db_file}")
-        
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_query ON miner_responses(query)")
         conn.commit()
-        #print(f"Created index on idx_query in {db_file}")
-        
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_status_code ON miner_responses(bt_header_axon_status_code )")
-        conn.commit()
-        #print(f"Created index on idx_status_code in {db_file}")
         print("Checked / Created indices in {}".format(db_file))
-        return True       
+        return True
         
 
     def get_stats(self) -> dict:
@@ -241,56 +223,17 @@ class RulesScorer:
             'max_workers': self.max_workers,
             'debug': self.debug,
             'num_db_files': len(self.db_files),
-            'catalog_size': len(self.woo_catalog)
+            'catalog_size': len(self.product_catalog)
         }
-        return stats
+        return stats 
     
    
-    def get_batch_ids(self) -> List[str]:
-        batch_ids = set()
-        for db_file in self.db_files:
-            #conn = sqlite3.connect(db_file)
-            conn = sqlite3.connect(f"file:{db_file}?mode=ro", uri=True)
-            df = pd.read_sql_query("SELECT DISTINCT site_key FROM miner_responses", conn)
-            batch_ids.update(df['site_key'].tolist())
-            conn.close()        
-        return list(batch_ids)
-    
-    def get_batch_ids_since(self, since_date: datetime) -> List[str]:
-            batch_ids = set()
-            since_dt = since_date.strftime('%Y-%m-%d %H:%M:%S')
-            for db_file in self.db_files:
-                #conn = sqlite3.connect(db_file)
-                conn = sqlite3.connect(f"file:{db_file}?mode=ro", uri=True)
-                df = pd.read_sql_query(
-                    "SELECT DISTINCT site_key FROM miner_responses WHERE created_at > ?",
-                    conn,
-                    params=(since_dt,)
-                )
-                batch_ids.update(df['site_key'].tolist())
-                conn.close()
-            return list(batch_ids)
-    
-    def get_dataframe_by_batch(self, batch_id: str) -> Union[pd.DataFrame, None]:
-        final_df = None
-        for db_file in self.db_files:
-            #conn = sqlite3.connect(db_file)
-            conn = sqlite3.connect(f"file:{db_file}?mode=ro", uri=True)
-            df = pd.read_sql_query("SELECT * FROM miner_responses WHERE site_key=?", conn, params=(batch_id,))
-            print(f"loaded db from {db_file} for batch {batch_id}")
-            if final_df is None:
-                final_df = df
-            else:
-                final_df = pd.concat([final_df, df], ignore_index=True) 
-            conn.close()        
-        return final_df
-    
     def get_dataframe_by_miner(self, miner_hotkey: str) -> Union[pd.DataFrame, None]:
         final_df = None
         for db_file in self.db_files:
             #conn = sqlite3.connect(db_file)
             conn = sqlite3.connect(f"file:{db_file}?mode=ro", uri=True)
-            df = pd.read_sql_query("SELECT * FROM miner_responses WHERE bt_header_axon_hotkey=?", conn, params=(miner_hotkey,))
+            df = pd.read_sql_query("SELECT * FROM miner_responses WHERE hotkey=?", conn, params=(miner_hotkey,))
             print(f"loaded db from {db_file} for miner {miner_hotkey}")
             if final_df is None:
                 final_df = df
@@ -299,87 +242,6 @@ class RulesScorer:
             conn.close()
         return final_df
     
-
-    def is_suspect_miner(self, miner_hotkey: str) -> bool:
-        """
-        Check if the miner has made requests from known abusive IP patterns in the last 30 days.
-        """
-        return self.abusive_keys and miner_hotkey in self.abusive_keys
-    
-    
-    def get_verified_proof_abusive_hotkeys(self, days_back: int = 7, error_threshold: float = 0.80) -> List[str]:
-        vi_since = (datetime.now(timezone.utc) - timedelta(days=days_back)).strftime('%Y-%m-%d %H:%M')
-        vi_proof = self.get_verified_proof_table(since_date=vi_since)
-        if vi_proof.empty:
-            print("No verified proof data found.")
-            return []        
-        filtered_vi_proof = vi_proof[vi_proof['success_rate_float'] < error_threshold]        
-        vi_fakers = filtered_vi_proof["miner"].unique().tolist()        
-        return vi_fakers
-            
-
-    def get_verified_proof_table(self, since_date: str = '2025-10-24') -> pd.DataFrame:
-        """
-        Runs the verified proof table query and returns a DataFrame.
-        The query analyzes miner responses with verified proofs since the given date.
-        """
-        sql = f"""        
-        WITH ranked AS (
-            SELECT
-                bt_header_axon_hotkey,
-                bt_header_axon_ip,
-                verified_proof,
-                reward,
-                created_at,
-                ROW_NUMBER() OVER (
-                    PARTITION BY bt_header_axon_hotkey 
-                    ORDER BY created_at DESC
-                ) AS rn
-            FROM miner_responses
-            WHERE created_at > '{since_date}'
-            AND verified_proof IS NOT NULL 
-            AND verified_proof != ''
-            AND bt_header_axon_ip IS NOT NULL 
-            AND bt_header_axon_ip != ''
-        ),
-        stats AS (
-            SELECT
-                bt_header_axon_hotkey AS miner,
-                MAX(CASE WHEN rn = 1 THEN bt_header_axon_ip END) AS ip,
-                COUNT(*) AS total_requests,
-                COUNT(*) AS verified_proof_count,
-                SUM(CASE WHEN CAST(reward AS REAL) > 0 THEN 1 ELSE 0 END) AS success_count,
-                SUM(CASE WHEN CAST(reward AS REAL) = 0 OR reward IS NULL THEN 1 ELSE 0 END) AS fail_with_proof_count,
-                0 AS fail_without_proof_count
-            FROM ranked
-            GROUP BY bt_header_axon_hotkey
-            HAVING success_count < verified_proof_count - 1
-        )
-        SELECT
-            miner,
-            ip,
-            total_requests,
-            verified_proof_count,
-            success_count,
-            fail_with_proof_count,
-            fail_without_proof_count,
-            printf("%.2f", 100.0 * success_count * 1.0 / verified_proof_count) || '%' AS success_rate_pct,
-            CAST(success_count AS REAL) / verified_proof_count AS success_rate_float
-        FROM stats
-        ORDER BY (total_requests - success_count) DESC;
-        """
-        
-        final_df = None
-        for db_file in self.db_files:
-            conn = sqlite3.connect(f"file:{db_file}?mode=ro", uri=True)
-            df = pd.read_sql_query(sql, conn)
-            if final_df is None:
-                final_df = df
-            else:
-                final_df = pd.concat([final_df, df], ignore_index=True)
-            conn.close()
-        
-        return final_df if final_df is not None else pd.DataFrame()
     
     
     def score_all_miners_since_parallel(self, days_ago: int = 7, top: int = 256, min_success: int = 50) -> List[MinerReport]:
@@ -634,11 +496,11 @@ class RulesScorer:
             report.evalator_notes.append(f"Only {len(filtered_df)} responses. Minimum is {min_success}. Applied 95% penalty.")
             #miner_score = 0.0
 
-        if 1==1:
-            if self.is_suspect_miner(miner_hotkey):
-                miner_score = 0.0
-                report.evalator_notes.append("Flagged as suspect miner for proof signature abuse")
-                print(f"Miner {miner_hotkey} flagged as suspect miner for proof signature abuse")
+        # if 1==1:
+        #     if self.is_suspect_miner(miner_hotkey):
+        #         miner_score = 0.0
+        #         report.evalator_notes.append("Flagged as suspect miner for proof signature abuse")
+        #         print(f"Miner {miner_hotkey} flagged as suspect miner for proof signature abuse")
 
 
         # Finalize report
@@ -751,48 +613,9 @@ class RulesScorer:
 
         
         print("----------------- END BATCH REPORT -----------------")
-        return report
-    
+        return report   
 
-    # def check_sku_duplication(self, filtered_df, miner_hotkey, threshold=0.5):
-    #     """
-    #     Checks if a miner is returning the same SKUs for different queries.
-    #     Flags if more than `threshold` fraction of queries have identical SKU sets.
-    #     Prints the top 3 most common SKU sets with their counts and percentages.
-    #     """
-    #     from collections import Counter
-    #     print(f"Checking SKU duplication for miner {miner_hotkey}...")
-    #     print(f"Total queries status == 200 : {len(filtered_df)}")
-
-    #     query_sku_map = {}
-    #     for idx, row in filtered_df.iterrows():
-    #         query = row.get('query')
-    #         result_val = row.get('results')
-    #         if query and result_val:
-    #             try:
-    #                 products = ReasonedProduct.from_json(result_val)
-    #                 skus = tuple(sorted(p.sku for p in products if p.sku))
-    #                 query_sku_map[query] = skus
-    #             except Exception as e:
-    #                 print(f"Error parsing results for miner {miner_hotkey}: {e}")
-
-    #     total_queries = len(query_sku_map)
-    #     sku_tuple_list = list(query_sku_map.values())
-    #     counter = Counter(sku_tuple_list)
-    #     most_common = counter.most_common(10)
-
-    #     print(f"\n--- SKU Duplication Analysis for miner {miner_hotkey} ---")
-    #     print(f"Total queries: {total_queries}")
-    #     for i, (sku_set, count) in enumerate(most_common, 1):
-    #         percent = (count / total_queries) * 100 if total_queries else 0
-    #         print(f"Top {i}: {count} queries ({percent:.2f}%) returned SKUs: {sku_set}")
-
-    #     if most_common:
-    #         most_common_sku_set, most_common_count = most_common[0]
-    #         if total_queries > 1 and (most_common_count / total_queries) > threshold:
-    #             print(f"❌ Miner {miner_hotkey} is likely cheating: {most_common_count}/{total_queries} queries ({(most_common_count/total_queries)*100:.2f}%) returned the same SKUs: {most_common_sku_set}")
-    #             return True
-    #     return False
+  
 
     def _duplicate_reason_penalty(self, reasons: list) -> float:
         if not reasons or len(reasons) == 1:
@@ -861,7 +684,7 @@ class RulesScorer:
         for idx, row in filtered_df.iterrows():
             result_val = row.get('results')
             query = row.get('query')
-            woo_product = next((p for p in self.woo_catalog if p.sku.lower() == query.lower()), None)
+            woo_product = next((p for p in self.product_catalog if p.sku.lower() == query.lower()), None)
             if woo_product and result_val:
                 try:
                     products = ReasonedProduct.from_json(result_val)
@@ -1248,21 +1071,7 @@ class RulesScorer:
         
         return max(0.0, score - total_penalty)
 
-    # def display_batch_report(self, report: BatchReport, theme: str = "default", save_png: bool = False, output_dir: str = ".") -> str:
-    #     """
-    #     Displays the batch report using the BatchReportPresenter.
-    #     """
-        
-    #     presenter = BatchReportPresenter(theme=theme)
-        
-    #     # Create full dashboard
-    #     saved_report = presenter.create_dashboard(report, save_png=save_png, output_dir=output_dir, show_plot=False, is_debug=self.debug)
-        
-    #     # Print console summary
-    #     presenter.print_console_summary(report)
-
-    #     return saved_report
-    
+  
     def _is_terrible_reason(self, reason: str) -> bool:
         """Check if reason is terrible using both exact matches and patterns."""
         reason_lower = reason.lower().strip()

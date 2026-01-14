@@ -1,11 +1,20 @@
-
+import os
+import random
 import time
 import logging
+import pandas as pd
 from datetime import datetime, timezone
+from common.utils import rec_list_to_set
+from db.models.eval import db, Miner, MinerResponse
 from evals.base_eval import BaseEval 
 from evals.eval_result import EvalResult
+from evals.reason.rules_scorer import RulesScorer
+from llm.factory import LLMFactory
+from llm.llm_provider import LLM
+from llm.prompt_factory import PromptFactory
 from models.eval_type import BitrecsEvaluationType
 from models.miner_artifact import Artifact
+from common import constants as CONST
 
 logger = logging.getLogger(__name__)
 
@@ -23,17 +32,86 @@ class BitrecsReasonEval(BaseEval):
     def __init__(self,  run_id: str, miner_artifact: Artifact):
         super().__init__(run_id, miner_artifact)
         self.holdout_df = None
-        holdout_df = self.get_latest_holdout()
-        self.holdout_df = holdout_df
-        logger.info(f"Loaded holdout set with {len(self.holdout_df)} records.")
-        if len(self.holdout_df) < self.min_row_count:
-            raise ValueError(f"Holdout set size {len(self.holdout_df)} is less than minimum required {self.min_row_count}")        
+        # holdout_df = self.get_latest_holdout()
+        # self.holdout_df = holdout_df
+        # logger.info(f"Loaded holdout set with {len(self.holdout_df)} records.")
+        # if len(self.holdout_df) < self.min_row_count:
+        #     raise ValueError(f"Holdout set size {len(self.holdout_df)} is less than minimum required {self.min_row_count}")       
+        self.db_path = os.path.join(CONST.ROOT_DIR, "output", "eval_runs.db")
+        if not os.path.exists(self.db_path):
+            raise FileNotFoundError(f"Database file not found at {self.db_path}")
+        self.rules_scorer = RulesScorer(self.db_path, max_workers=4, debug=True)        
         self.debug_prompts = False
+
+        df = self.load_recent_answers()
+        #print(df.head())
+        self.holdout_df = df
+        if len(self.holdout_df) < self.min_row_count:
+            raise ValueError(f"Holdout set size {len(self.holdout_df)} is less than minimum required {self.min_row_count}")
+
+        self.init_baseline_reasons()
 
     def eval_type(self) -> BitrecsEvaluationType:
         return BitrecsEvaluationType.REASON
     
-    def run(self, max_iterations=10) -> EvalResult:
+    def load_recent_answers(self) -> pd.DataFrame:
+        try:
+            db.connect()
+            sql = "Select * From miner_responses where hotkey = ? Order By created_at Desc Limit 100"
+            df = pd.read_sql_query(sql, db.connection(), params=(self.miner_artifact.miner_hotkey,))
+            return df
+        finally:
+            db.close()
+
+    def init_baseline_reasons(self):
+        rows = 2
+        for idx in range(rows):
+            reason = f"This is a baseline reason statement number {idx+1}."
+            logger.info(f"Baseline Reason {idx+1}: {reason}")
+            
+            random_product = random.choice(self.rules_scorer.product_catalog)
+            num_recs = 5
+            query = random_product.sku
+            
+            prompt_factory = PromptFactory(
+                miner_artifact=self.miner_artifact,
+                sku=query,
+                products=self.rules_scorer.product_catalog,
+                num_recs=num_recs,
+                debug=self.debug_prompts
+            )
+            system_prompt, user_prompt = prompt_factory.generate_prompt()
+            tokens = PromptFactory.get_token_count(system_prompt + user_prompt)
+            logger.info(f"Prompt Tokens: {tokens}")
+
+            temperature = self.miner_artifact.sampling_params.temperature
+            model = self.miner_artifact.model
+            provider = self.miner_artifact.provider
+
+            st = time.monotonic()
+            system_prompt, user_prompt = prompt_factory.generate_prompt()
+            server = LLM.try_parse(provider)
+            llm_output = LLMFactory.query_llm(server=server,
+                                                model=model,
+                                                system_prompt=system_prompt,
+                                                user_prompt=user_prompt,
+                                                temp=temperature)
+            recommended_skus = PromptFactory.tryparse_llm(llm_output)
+            #logger.info(f"LLM Output: {llm_output}")
+            logger.info(f"Recommended SKUs: {recommended_skus}")
+            et = time.monotonic()
+            durtion = et - st
+
+            self.log_miner_response(
+                run_id=self.run_id,
+                query=query,
+                num_recs=num_recs,
+                recommended_skus=recommended_skus,
+                duration=durtion
+            )
+
+    
+    def run(self, max_iterations = 10) -> EvalResult:
         """
         Run the Bitrecs reason evaluation.
         """
@@ -76,7 +154,7 @@ class BitrecsReasonEval(BaseEval):
             hot_key=self.miner_artifact.miner_hotkey,
             score=score,
             passed=eval_success,
-            rows_evaluated=len(self.holdout_df),
+            rows_evaluated=max_iterations,
             details=f"Evaluated {count} of {len(self.holdout_df)} rows with {exception_count} exceptions (max_iterations {max_iterations}).",
             duration_seconds=total_duration,
             temperature=self.miner_artifact.sampling_params.temperature            
@@ -84,39 +162,9 @@ class BitrecsReasonEval(BaseEval):
         return result
     
     def evaluate_row(self, row) -> float:
+        """       
         """
-        Evaluate a single row: Use LLM to check if the reason statement is valid for the recommendation.
-        Returns 1.0 if valid, 0.0 if invalid.
-        """
-        # recommendation = row.get('recommendation', '')
-        # reason_statement = row.get('reason_statement', '')
-        
-        # if not recommendation or not reason_statement:
-        #     raise ValueError("Row missing 'recommendation' or 'reason_statement'")
-        
-        # # Create prompt for LLM evaluation
-        # system_prompt = PromptFactory.create_system_prompt(self.miner_artifact)
-        # user_prompt = f"""
-        # Evaluate the following reason statement for the recommendation. Is the reason logical, accurate, and well-supported? Respond with 'VALID' if yes, 'INVALID' if no, and explain briefly.
-
-        # Recommendation: {recommendation}
-        # Reason Statement: {reason_statement}
-        # """
-        
-        # # Query LLM
-        # server = self.miner_artifact.provider.lower()
-        # model = self.miner_artifact.model
-        # temp = self.miner_artifact.sampling_params.temperature
-        
-        # llm_output = LLMFactory.query_llm(server=server, model=model, system_prompt=system_prompt, user_prompt=user_prompt, temp=temp)
-        
-        # # Parse LLM response (simple keyword check; enhance with regex or JSON parsing if needed)
-        # if "VALID" in llm_output.upper():
-        #     return 1.0
-        # elif "INVALID" in llm_output.upper():
-        #     return 0.0
-        # else:
-        #     logger.warning(f"Ambiguous LLM response: {llm_output}")
+       
         #     return 0.0  # Default to invalid on ambiguity
         print("Evaluating reason statement...")  # Placeholder
         #print(row)  # Show row being evaluated
