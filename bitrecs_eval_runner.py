@@ -26,7 +26,8 @@ logging.getLogger('peewee').setLevel(logging.WARNING)
 #EVAL_SUITE = ["prompt"]
 #EVAL_SUITE = [BitrecsEvaluationType.CATALOG, BitrecsEvaluationType.PROMPT, BitrecsEvaluationType.REASON]
 #EVAL_SUITE = [BitrecsEvaluationType.BITRECS_REASON_DAILY]
-EVAL_SUITE = [BitrecsEvaluationType.BITRECS_PROMPT_DAILY]
+#EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY]
+EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY, BitrecsEvaluationType.BITRECS_REASON_DAILY, BitrecsEvaluationType.BITRECS_PROMPT_DAILY]
 
 
 def load_miner_input_yaml(input_path=None) -> Artifact:
@@ -49,7 +50,7 @@ def load_miner_input_yaml(input_path=None) -> Artifact:
 def run_eval_suites(miner_artifact: Artifact, shuffle=False) -> Tuple[str, List[EvalResult]]:
     """Run evaluation suites."""
     logger.info("Running eval suites...")    
-    run_id = secrets.token_hex(16)
+    run_id = f"test_{secrets.token_hex(16)}"
     logger.info(f"Eval Run ID: \033[35m{run_id}\033[0m")
     results = EvalFactory.run_all_evals(run_id, miner_artifact, EVAL_SUITE, CONST.TOP_RECORDS)
     
@@ -131,12 +132,12 @@ def generate_report_by_run_id(run_id: str) -> str:
         report_lines.append("=" * 60)
         for eval in evaluations:
             report_lines.append(f"Eval: {eval.eval_name}")
-            report_lines.append(f"Model: {eval.model_name}")
-            report_lines.append(f"Provider: {eval.provider_name}")
-            report_lines.append(f"Score: {eval.score:.2f}")
             report_lines.append(f"Success: {eval.success}")
-            report_lines.append(f"Duration: {eval.duration_seconds:.2f}s")
             report_lines.append(f"Sample Size: {eval.rows_evaluated}")
+            report_lines.append(f"Provider: {eval.provider_name}")
+            report_lines.append(f"Model: {eval.model_name}")            
+            report_lines.append(f"Duration: {eval.duration_seconds:.2f}s")
+            report_lines.append(f"Score: {eval.score:.2f}")
             report_lines.append(f"Comments: {eval.comments}")
             report_lines.append("-" * 60)
         
