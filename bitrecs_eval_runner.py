@@ -97,25 +97,25 @@ def log_eval_result_to_db(run_id: str, result: EvalResult, hotkey, model_name, p
         db.close()
 
 
-def display_eval_results():
-    """Display eval results from the database."""
-    try:
-        db.connect()
-        evaluations = Evaluation.select().order_by(Evaluation.created_at.desc()).limit(10)  # Last 10 results
-        if not evaluations:
-            logger.info("No eval results found in DB.")
-            return
+# def display_eval_results():
+#     """Display eval results from the database."""
+#     try:
+#         db.connect()
+#         evaluations = Evaluation.select().order_by(Evaluation.created_at.desc()).limit(10)  # Last 10 results
+#         if not evaluations:
+#             logger.info("No eval results found in DB.")
+#             return
         
-        print("\n" + "=" * 60)
-        print("      Recent Eval Results")
-        print("=" * 60)
-        for eval in evaluations:
-            print(f"ID: {eval.id} | Eval: {eval.eval_name} | Model: {eval.model_name} | Provider: {eval.provider_name} | Score: {eval.score:.2f} | Success: {eval.success} | Duration: {eval.duration_seconds:.2f}s | Success Rows: {eval.rows_evaluated} | Comments: {eval.comments}")
-        print("=" * 60)
-    except Exception as e:
-        logger.error(f"Failed to display results: {e}")
-    finally:
-        db.close()
+#         print("\n" + "=" * 60)
+#         print("      Recent Eval Results")
+#         print("=" * 60)
+#         for eval in evaluations:
+#             print(f"ID: {eval.id} | Eval: {eval.eval_name} | Model: {eval.model_name} | Provider: {eval.provider_name} | Score: {eval.score:.2f} | Success: {eval.success} | Duration: {eval.duration_seconds:.2f}s | Success Rows: {eval.rows_evaluated} | Comments: {eval.comments}")
+#         print("=" * 60)
+#     except Exception as e:
+#         logger.error(f"Failed to display results: {e}")
+#     finally:
+#         db.close()
 
 
 def display_eval_results_by_run_id(run_id: str):
