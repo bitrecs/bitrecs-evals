@@ -134,9 +134,10 @@ def generate_report_by_run_id(run_id: str) -> str:
         for eval in evaluations:
             report_lines.append(f"Eval: {eval.eval_name}")
             if eval.success:
-                report_lines.append("Result: PASS")  # Remove ANSI codes here
+                report_lines.append("Result:\033[32m PASS\033[0m")                
             else:
-                report_lines.append("Result: FAIL")  # Remove ANSI codes here
+                report_lines.append("Result:\033[31m FAIL\033[0m")
+
             report_lines.append(f"Sample Size: {eval.rows_evaluated}")
             report_lines.append(f"Provider: {eval.provider_name}")
             report_lines.append(f"Model: {eval.model_name}")            
@@ -181,12 +182,13 @@ def main():
     run_report = generate_report_by_run_id(run_id) or ""
     logger.info(f"Eval Report for Run ID: \033[35m{run_id}\033[0m")
     logger.info("\n" + run_report)
+    logger.info("\033[35mEvaluation suites completed successfully. \033[0m")
 
     run_log = strip_ansi(run_report)
     
     write_log_to_output_file(run_log, output_path=f"output/eval_report_{run_id}.txt")
 
-    logger.info("\033[35mEvaluation suites completed successfully. \033[0m")
+    
 
 
 if __name__ == "__main__":
