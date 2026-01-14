@@ -4,8 +4,6 @@ import yaml
 import secrets
 import logging
 from dotenv import load_dotenv
-
-from models.eval_type import BitrecsEvaluationType
 load_dotenv()
 from datetime import datetime, timezone
 from typing import List, Tuple
@@ -14,6 +12,7 @@ from common import constants as CONST
 from models.miner_artifact import Artifact
 from db.models.eval import db, Miner, Evaluation
 from evals.eval_factory import EvalFactory
+from models.eval_type import BitrecsEvaluationType
 
 logging.basicConfig(level=CONST.LOG_LEVEL)
 logger = logging.getLogger(__name__)
@@ -73,7 +72,8 @@ def run_eval_suites(miner_artifact: Artifact, shuffle=False) -> Tuple[str, List[
 def log_eval_result_to_db(run_id: str, result: EvalResult, hotkey, model_name, provider_name):
     """Log EvalResult to the database."""
     try:
-        db.connect()        
+        if not db.is_connection_usable():
+            db.connect()        
         #db.drop_tables([Miner, Evaluation], safe=True)
         db.create_tables([Miner, Evaluation], safe=True)  # Ensure tables exist
 
@@ -97,7 +97,8 @@ def log_eval_result_to_db(run_id: str, result: EvalResult, hotkey, model_name, p
     except Exception as e:
         logger.error(f"Failed to log to DB: {e}")
     finally:
-        db.close()
+        if db.is_connection_usable():
+            db.close()
 
 
 # def display_eval_results():
@@ -189,7 +190,7 @@ def main():
     logger.info("Starting evaluation suites...")
     logger.info(f"Eval Suites to run: {EVAL_SUITE}, Top Records: {CONST.TOP_RECORDS}")
     run_id, results = run_eval_suites(miner_artifact)
-    run_report = generate_report_by_run_id(run_id)
+    run_report = generate_report_by_run_id(run_id) or ""
     logger.info(f"Eval Report for Run ID: \033[35m{run_id}\033[0m")
     logger.info("\n" + run_report)
 

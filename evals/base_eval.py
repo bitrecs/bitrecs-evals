@@ -1,4 +1,3 @@
-
 import json
 import os
 import logging
@@ -6,8 +5,7 @@ from typing import List
 import pandas as pd
 from datetime import datetime
 from abc import ABC, abstractmethod
-
-
+from db.models.eval import db, Miner, MinerResponse
 from evals.eval_result import EvalResult
 from models.eval_type import BitrecsEvaluationType
 from models.miner_artifact import Artifact
@@ -104,3 +102,34 @@ class BaseEval(ABC):
         except (json.JSONDecodeError, ValueError) as e:
             logger.error(f"Failed to parse context for row: {e}")
             products = []
+    
+
+    def log_miner_response(self, run_id: str, query: str, num_recs: int, recommended_skus: list, duration: float):
+        """
+        Log the miner response to the database.
+        """
+        try:
+            db.connect()
+            db.create_tables([Miner, MinerResponse], safe=True)  # Ensure tables exist
+
+            # Get or create Miner
+            miner, created = Miner.get_or_create(hotkey=self.miner_artifact.miner_hotkey)
+
+            # Create MinerResponse record
+            MinerResponse.create(
+                run_id=run_id,
+                miner=miner,
+                hotkey=self.miner_artifact.miner_hotkey,
+                query=query,
+                num_recs=num_recs,
+                response=str(recommended_skus),
+                model_name=self.miner_artifact.model,
+                provider_name=self.miner_artifact.provider,
+                temperature=self.miner_artifact.sampling_params.temperature,
+                duration_seconds=duration         
+            )
+            logger.info("Miner response logged to DB.")
+        except Exception as e:
+            logger.error(f"Failed to log miner response to DB: {e}")
+        finally:
+            db.close()
