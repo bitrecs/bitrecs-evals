@@ -73,6 +73,8 @@ class AmazonPromptEval(BaseEval):
         Evaluate a single row from the holdout set.
         """
 
+        # should log_miner_response here before returning 
+
         return False
     
 
