@@ -1,3 +1,5 @@
+import ast
+import json
 import os
 import random
 import time
@@ -32,7 +34,10 @@ class BitrecsReasonEval(BaseEval):
     def __init__(self,  run_id: str, miner_artifact: Artifact):
         super().__init__(run_id, miner_artifact)
         
-        self.db_path = os.path.join(CONST.ROOT_DIR, "output", "eval_runs.db")
+        # Compute path relative to the project root (parent of 'evals' folder)
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.db_path = os.path.join(project_root, "output", "eval_runs.db")
+        
         if not os.path.exists(self.db_path):
             raise FileNotFoundError(f"Database file not found at {self.db_path}")
         self.rules_scorer = RulesScorer(self.db_path, max_workers=4, debug=True)        
@@ -157,11 +162,50 @@ class BitrecsReasonEval(BaseEval):
         )
         return result
     
-    def evaluate_row(self, row) -> float:
-        """       
-        """
-       
-        #     return 0.0  # Default to invalid on ambiguity
+    def evaluate_row(self, row) -> float:        
+
         print("Evaluating reason statement...")  # Placeholder
-        #print(row)  # Show row being evaluated
+        
+        query = row['query']
+        num_recs = int(row['num_recs'])
+        recs = ast.literal_eval(row['response'])
+        for product in recs:
+            print(f"  Recommended Product: {product}")       
+        
+        logger.info(f"Evaluating reason for query: {query} with num_recs: {num_recs}")
+
+        #rec_set = rec_list_to_set(recs)
+        #logger.info(f"parsed recommended_skus: {rec_set}")
+
+        
         return 0 # Placeholder implementation; replace with actual LLM evaluation logic
+    
+    def log_miner_response(self, run_id: str, query: str, num_recs: int, recommended_skus: list, duration: float):
+        """
+        Log the miner response to the database.
+        """
+        try:
+            db.connect()
+            db.create_tables([Miner, MinerResponse], safe=True)  # Ensure tables exist
+
+            # Get or create Miner
+            miner, created = Miner.get_or_create(hotkey=self.miner_artifact.miner_hotkey)
+
+            # Create MinerResponse record
+            MinerResponse.create(
+                run_id=run_id,
+                miner=miner,
+                hotkey=self.miner_artifact.miner_hotkey,
+                query=query,
+                num_recs=num_recs,
+                response=str(recommended_skus),
+                model_name=self.miner_artifact.model,
+                provider_name=self.miner_artifact.provider,
+                temperature=self.miner_artifact.sampling_params.temperature,
+                duration_seconds=duration         
+            )
+            logger.info("Miner response logged to DB.")
+        except Exception as e:
+            logger.error(f"Failed to log miner response to DB: {e}")
+        finally:
+            db.close()
