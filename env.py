@@ -7,6 +7,8 @@ import secrets
 import logging
 import tempfile
 from dotenv import load_dotenv
+
+from models.eval_type import BitrecsEvaluationType
 load_dotenv()
 from datetime import datetime, timezone
 from typing import List, Tuple
@@ -29,8 +31,12 @@ logging.getLogger('peewee').setLevel(logging.DEBUG)
 
 
 #EVAL_SUITE = ["catalog"]
-EVAL_SUITE = ["prompt"]
+#EVAL_SUITE = ["prompt"]
 #EVAL_SUITE = ["catalog", "prompt", "reason"]
+
+# Bitrecs Production Eval Suite
+
+EVAL_SUITE = [BitrecsEvaluationType.BITRECS_PROMPT_DAILY, BitrecsEvaluationType.BITRECS_REASON_DAILY]
 
 class Actor:
     """Bitrecs Eval Actor"""
