@@ -26,8 +26,9 @@ logging.getLogger('peewee').setLevel(logging.WARNING)
 #EVAL_SUITE = ["prompt"]
 #EVAL_SUITE = [BitrecsEvaluationType.CATALOG, BitrecsEvaluationType.PROMPT, BitrecsEvaluationType.REASON]
 #EVAL_SUITE = [BitrecsEvaluationType.BITRECS_REASON_DAILY]
-#EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY]
-EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY, BitrecsEvaluationType.BITRECS_REASON_DAILY, BitrecsEvaluationType.BITRECS_PROMPT_DAILY]
+
+EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY, BitrecsEvaluationType.BITRECS_REASON_DAILY]
+#EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY, BitrecsEvaluationType.BITRECS_REASON_DAILY, BitrecsEvaluationType.BITRECS_PROMPT_DAILY]
 
 
 def load_miner_input_yaml(input_path=None) -> Artifact:
