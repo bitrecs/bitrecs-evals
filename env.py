@@ -132,7 +132,7 @@ class Actor:
                 report_lines.append(f"Score: {eval.score:.2f}")
                 report_lines.append(f"Success: {eval.success}")
                 report_lines.append(f"Duration: {eval.duration_seconds:.2f}s")
-                report_lines.append(f"Rows Evaluated: {eval.rows_evaluated}")
+                report_lines.append(f"Sample Size: {eval.rows_evaluated}")
                 report_lines.append(f"Comments: {eval.comments}")
                 report_lines.append("-" * 60)
             

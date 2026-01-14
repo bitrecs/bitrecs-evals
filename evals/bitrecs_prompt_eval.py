@@ -26,15 +26,15 @@ checks if the ground truth SKU is in the LLM's recommended SKUs.
 
 class BitrecsPromptEval(BaseEval):
 
-    min_row_count = 3
+    min_sample_size = 3
 
     def __init__(self, run_id: str, miner_artifact: Artifact = None):      
         super().__init__(run_id, miner_artifact)
         holdout_df = self.get_latest_holdout()
         self.holdout_df = holdout_df
         logger.info(f"Loaded holdout set with {len(self.holdout_df)} records.")
-        if len(self.holdout_df) < self.min_row_count:
-            raise ValueError(f"Holdout set size {len(self.holdout_df)} is less than minimum required {self.min_row_count}")        
+        if len(self.holdout_df) < self.min_sample_size:
+            raise ValueError(f"Holdout set size {len(self.holdout_df)} is less than minimum required {self.min_sample_size}")        
         self.debug_prompts = False
 
     def eval_type(self) -> BitrecsEvaluationType:

@@ -20,7 +20,7 @@ Call provider using prompt and ensure catalog skus match
 
 class BitrecsCatalogEval(BaseEval):
   
-    min_row_count = 3
+    min_sample_size = 3
     
     def __init__(self, run_id: str, miner_artifact: Artifact):
         super().__init__(run_id, miner_artifact)
