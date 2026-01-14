@@ -4,6 +4,7 @@ import logging
 from datetime import datetime, timezone
 from evals.base_eval import BaseEval 
 from evals.eval_result import EvalResult
+from models.eval_type import BitrecsEvaluationType
 from models.miner_artifact import Artifact
 
 logger = logging.getLogger(__name__)
@@ -28,6 +29,9 @@ class BitrecsReasonEval(BaseEval):
         if len(self.holdout_df) < self.min_row_count:
             raise ValueError(f"Holdout set size {len(self.holdout_df)} is less than minimum required {self.min_row_count}")        
         self.debug_prompts = False
+
+    def eval_type(self) -> BitrecsEvaluationType:
+        return BitrecsEvaluationType.REASON
     
     def run(self, max_iterations=10) -> EvalResult:
         """
@@ -63,6 +67,8 @@ class BitrecsReasonEval(BaseEval):
         
         end_time = time.monotonic()
         total_duration = end_time - start_time
+
+        eval_success = True
         
         result = EvalResult(
             eval_name=self.get_eval_name(),
@@ -114,4 +120,4 @@ class BitrecsReasonEval(BaseEval):
         #     return 0.0  # Default to invalid on ambiguity
         print("Evaluating reason statement...")  # Placeholder
         #print(row)  # Show row being evaluated
-        return 1.0  # Placeholder implementation; replace with actual LLM evaluation logic
+        return 0 # Placeholder implementation; replace with actual LLM evaluation logic

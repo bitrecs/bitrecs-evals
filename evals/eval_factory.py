@@ -1,6 +1,7 @@
 import logging
 from typing import List, Dict
 from evals.eval_result import EvalResult
+from models.eval_type import BitrecsEvaluationType
 from models.miner_artifact import Artifact
 from common import constants as CONST
 from datetime import datetime, timezone
@@ -20,19 +21,19 @@ class EvalFactory:
     Supports dynamic registration of new evals.
     """
     
-    _registry: Dict[str, type] = {
-        "prompt": BitrecsPromptEval,
-        "reason": BitrecsReasonEval,
-        "catalog": BitrecsCatalogEval
+    _registry: Dict[BitrecsEvaluationType, type] = {
+        BitrecsEvaluationType.PROMPT: BitrecsPromptEval,
+        BitrecsEvaluationType.REASON: BitrecsReasonEval,
+        BitrecsEvaluationType.CATALOG: BitrecsCatalogEval
     }
     
     @classmethod
-    def register_eval(cls, name: str, eval_class: type):
+    def register_eval(cls, name: BitrecsEvaluationType, eval_class: type):
         """Register a new eval class."""
         cls._registry[name] = eval_class
     
     @classmethod
-    def run_eval(cls, eval_type: str, miner_artifact: Artifact, run_id: str, max_iterations: int = 10) -> EvalResult:
+    def run_eval(cls, eval_type: BitrecsEvaluationType, miner_artifact: Artifact, run_id: str, max_iterations: int = 10) -> EvalResult:
         """Create and run a specific eval."""
         if eval_type not in cls._registry:
             raise ValueError(f"Unknown eval type: {eval_type}")
@@ -41,14 +42,13 @@ class EvalFactory:
         return eval_instance.run(max_iterations)
     
     @classmethod
-    def run_all_evals(cls, run_id: str, miner_artifact: Artifact, eval_types: List[str] = None, max_iterations: int = 10) -> List[EvalResult]:
+    def run_all_evals(cls, run_id: str, miner_artifact: Artifact, eval_types: List[BitrecsEvaluationType] = None, max_iterations: int = 10) -> List[EvalResult]:
         """Run multiple evals and return aggregated results."""
         if eval_types is None:
             raise ValueError("eval_types must be provided")
             #eval_types = list(cls._registry.keys())
         
-        results = []
-        eval_types = [et for et in eval_types if et is not None and et.strip() != ""]
+        results = []        
         for eval_type in eval_types:
             try:
                 logger.debug(f"\033[34mRunning eval type: {eval_type}\033[0m")
@@ -65,6 +65,7 @@ class EvalFactory:
                     passed=False,
                     rows_evaluated=0,
                     details=f"FAIL - Error: {e}",
-                    duration_seconds=0.0
+                    duration_seconds=0.0,
+                    run_id=run_id                    
                 ))
         return results

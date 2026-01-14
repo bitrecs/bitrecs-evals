@@ -9,6 +9,7 @@ from abc import ABC, abstractmethod
 
 
 from evals.eval_result import EvalResult
+from models.eval_type import BitrecsEvaluationType
 from models.miner_artifact import Artifact
 from common import constants as CONST
 from models.product import Product
@@ -35,6 +36,11 @@ class BaseEval(ABC):
         Run the evaluation and return a standardized EvalResult.
         Subclasses must implement this.
         """
+        pass
+    
+    @abstractmethod
+    def eval_type(self) -> BitrecsEvaluationType:
+        """Return the type of evaluation being performed."""
         pass
     
     def get_eval_name(self) -> str:
