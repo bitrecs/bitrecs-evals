@@ -30,7 +30,9 @@ logging.getLogger('peewee').setLevel(logging.DEBUG)
 
 # Bitrecs Production Eval Suite
 
-EVAL_SUITE = [BitrecsEvaluationType.BITRECS_PROMPT_DAILY, BitrecsEvaluationType.BITRECS_REASON_DAILY]
+#EVAL_SUITE = [BitrecsEvaluationType.BITRECS_PROMPT_DAILY, BitrecsEvaluationType.BITRECS_REASON_DAILY]
+
+EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY, BitrecsEvaluationType.BITRECS_REASON_DAILY]
 
 class Actor:
     """Bitrecs Eval Actor"""
