@@ -13,6 +13,7 @@ from models.miner_artifact import Artifact
 from db.models.eval import db, Miner, Evaluation
 from evals.eval_factory import EvalFactory
 from models.eval_type import BitrecsEvaluationType
+import re  # Add this import at the top
 
 logging.basicConfig(level=CONST.LOG_LEVEL)
 logger = logging.getLogger(__name__)
@@ -70,12 +71,9 @@ def log_eval_result_to_db(run_id: str, result: EvalResult, hotkey, model_name, p
     """Log EvalResult to the database."""
     try:
         if not db.is_connection_usable():
-            db.connect()        
-        #db.drop_tables([Miner, Evaluation], safe=True)
-        db.create_tables([Miner, Evaluation], safe=True)  # Ensure tables exist
-        # Get or create Miner
-        miner, created = Miner.get_or_create(hotkey=hotkey)
-        # Create Evaluation record
+            db.connect()
+        db.create_tables([Miner, Evaluation], safe=True)
+        miner, created = Miner.get_or_create(hotkey=hotkey)        
         Evaluation.create(
             run_id=run_id,
             miner=miner,
@@ -116,6 +114,11 @@ def display_eval_results_by_run_id(run_id: str):
     finally:
         db.close()
 
+def strip_ansi(text: str) -> str:
+    """Strip ANSI escape sequences from text."""
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    return ansi_escape.sub('', text)
+
 def generate_report_by_run_id(run_id: str) -> str:
     """Generate a detailed report for a specific run ID."""
     try:
@@ -131,9 +134,9 @@ def generate_report_by_run_id(run_id: str) -> str:
         for eval in evaluations:
             report_lines.append(f"Eval: {eval.eval_name}")
             if eval.success:
-                report_lines.append("Result: \033[32mPASS\033[0m")
+                report_lines.append("Result: PASS")  # Remove ANSI codes here
             else:
-                report_lines.append("Result: \033[31mFAIL\033[0m")            
+                report_lines.append("Result: FAIL")  # Remove ANSI codes here
             report_lines.append(f"Sample Size: {eval.rows_evaluated}")
             report_lines.append(f"Provider: {eval.provider_name}")
             report_lines.append(f"Model: {eval.model_name}")            
@@ -142,13 +145,21 @@ def generate_report_by_run_id(run_id: str) -> str:
             report_lines.append(f"Comments: {eval.comments}")
             report_lines.append("-" * 60)
         
-        report = "\n".join(report_lines)
-        #print("\n" + report)
+        report = "\n".join(report_lines)                
         return report        
     except Exception as e:
         logger.error(f"Failed to generate report for run ID {run_id}: {e}")
     finally:
         db.close()
+
+def write_log_to_output_file(log_content: str, output_path: str):
+    """Write log content to an output file."""
+    try:
+        with open(output_path, 'w') as f:
+            f.write(log_content)
+        logger.info(f"Log written to \033[32m{output_path}\033[0m")
+    except Exception as e:
+        logger.error(f"Failed to write log to {output_path}: {e}")
 
 
 def main():
@@ -171,8 +182,9 @@ def main():
     logger.info(f"Eval Report for Run ID: \033[35m{run_id}\033[0m")
     logger.info("\n" + run_report)
 
-    # Display results
-    #display_eval_results()
+    run_log = strip_ansi(run_report)
+    
+    write_log_to_output_file(run_log, output_path=f"output/eval_report_{run_id}.txt")
 
     logger.info("\033[35mEvaluation suites completed successfully. \033[0m")
 
