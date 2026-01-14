@@ -27,7 +27,7 @@ Each reason statement is checked for validity using an LLM.
 
 class BitrecsReasonEval(BaseEval):
   
-    min_row_count = 3
+    min_sample_size = 3
     
     def __init__(self,  run_id: str, miner_artifact: Artifact):
         super().__init__(run_id, miner_artifact)
@@ -39,12 +39,13 @@ class BitrecsReasonEval(BaseEval):
         self.debug_prompts = False
       
         #print(df.head())
-        self.init_baseline_reasons()
+        if 1==2:
+            self.init_baseline_reasons()
 
         df = self.load_recent_answers()
         self.holdout_df = df
-        if len(self.holdout_df) < self.min_row_count:
-            raise ValueError(f"Holdout set size {len(self.holdout_df)} is less than minimum required {self.min_row_count}")
+        if len(self.holdout_df) < self.min_sample_size:
+            raise ValueError(f"Holdout set size {len(self.holdout_df)} is less than minimum required {self.min_sample_size}")
 
     def eval_type(self) -> BitrecsEvaluationType:
         return BitrecsEvaluationType.BITRECS_REASON_DAILY
