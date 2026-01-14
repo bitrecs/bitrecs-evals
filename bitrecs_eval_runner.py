@@ -25,7 +25,7 @@ logging.getLogger('peewee').setLevel(logging.WARNING)
 #EVAL_SUITE = ["catalog"]
 #EVAL_SUITE = ["prompt"]
 #EVAL_SUITE = [BitrecsEvaluationType.CATALOG, BitrecsEvaluationType.PROMPT, BitrecsEvaluationType.REASON]
-EVAL_SUITE = [BitrecsEvaluationType.REASON]
+EVAL_SUITE = [BitrecsEvaluationType.AMAZON_PROMPT_100]
 
 
 def load_miner_input_yaml(input_path=None) -> Artifact:
@@ -61,11 +61,8 @@ def run_eval_suites(miner_artifact: Artifact, shuffle=False) -> Tuple[str, List[
             logger.error(f"\033[31m{result.eval_name} Failed! Score: {result.score:.2f}\033[0m")    
     
     total_score = sum(r.score for r in results) / len(results) if results else 0.0
-    logger.info(f"Aggregated Score: {total_score:.2f}")
-    
-    logger.info(f"RUN COMPLETE for run ID: \033[34m{run_id}\033[0m")
-
-    #display_eval_results_by_run_id(run_id)
+    logger.info(f"Aggregated Score: {total_score:.2f}")    
+    logger.info(f"RUN COMPLETE for run ID: \033[34m{run_id}\033[0m")    
     return run_id, results
 
 
@@ -76,10 +73,8 @@ def log_eval_result_to_db(run_id: str, result: EvalResult, hotkey, model_name, p
             db.connect()        
         #db.drop_tables([Miner, Evaluation], safe=True)
         db.create_tables([Miner, Evaluation], safe=True)  # Ensure tables exist
-
         # Get or create Miner
         miner, created = Miner.get_or_create(hotkey=hotkey)
-
         # Create Evaluation record
         Evaluation.create(
             run_id=run_id,
@@ -99,27 +94,6 @@ def log_eval_result_to_db(run_id: str, result: EvalResult, hotkey, model_name, p
     finally:
         if db.is_connection_usable():
             db.close()
-
-
-# def display_eval_results():
-#     """Display eval results from the database."""
-#     try:
-#         db.connect()
-#         evaluations = Evaluation.select().order_by(Evaluation.created_at.desc()).limit(10)  # Last 10 results
-#         if not evaluations:
-#             logger.info("No eval results found in DB.")
-#             return
-        
-#         print("\n" + "=" * 60)
-#         print("      Recent Eval Results")
-#         print("=" * 60)
-#         for eval in evaluations:
-#             print(f"ID: {eval.id} | Eval: {eval.eval_name} | Model: {eval.model_name} | Provider: {eval.provider_name} | Score: {eval.score:.2f} | Success: {eval.success} | Duration: {eval.duration_seconds:.2f}s | Success Rows: {eval.rows_evaluated} | Comments: {eval.comments}")
-#         print("=" * 60)
-#     except Exception as e:
-#         logger.error(f"Failed to display results: {e}")
-#     finally:
-#         db.close()
 
 
 def display_eval_results_by_run_id(run_id: str):

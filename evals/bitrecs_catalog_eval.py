@@ -33,7 +33,7 @@ class BitrecsCatalogEval(BaseEval):
         self.debug_prompts = False
 
     def eval_type(self) -> BitrecsEvaluationType:
-        return BitrecsEvaluationType.CATALOG
+        return BitrecsEvaluationType.AMAZON_PROMPT_100
     
     def run(self, max_iterations=10) -> EvalResult:
         """

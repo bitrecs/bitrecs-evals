@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from evals.bitrecs_catalog_eval import BitrecsCatalogEval
 from evals.bitrecs_prompt_eval import BitrecsPromptEval
 from evals.bitrecs_reason_eval import BitrecsReasonEval
+from evals.amaon_prompt import AmazonPromptEval
 
 
 
@@ -22,9 +23,11 @@ class EvalFactory:
     """
     
     _registry: Dict[BitrecsEvaluationType, type] = {
-        BitrecsEvaluationType.PROMPT: BitrecsPromptEval,
-        BitrecsEvaluationType.REASON: BitrecsReasonEval,
-        BitrecsEvaluationType.CATALOG: BitrecsCatalogEval
+        BitrecsEvaluationType.BITRECS_PROMPT_DAILY: BitrecsPromptEval,
+        BitrecsEvaluationType.BITRECS_REASON_DAILY: BitrecsReasonEval,
+        BitrecsEvaluationType.AMAZON_PROMPT_100: AmazonPromptEval,
+        BitrecsEvaluationType.AMAZON_PROMPT_500: AmazonPromptEval,
+        BitrecsEvaluationType.AMAZON_PROMPT_1000: AmazonPromptEval
     }
     
     @classmethod
