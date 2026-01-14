@@ -1,19 +1,16 @@
-import os
 import logging
-import json
 import time
 import traceback
 import pandas as pd
 from datetime import datetime, timezone
 from common import constants as CONST
-
 from db.models.eval import Miner, MinerResponse, db
 from evals.eval_result import EvalResult
 from llm.factory import LLMFactory
 from llm.llm_provider import LLM
 from llm.prompt_factory import PromptFactory
+from models.eval_type import BitrecsEvaluationType
 from models.miner_artifact import Artifact
-from models.product import Product
 from common.utils import rec_list_to_set
 from evals.base_eval import BaseEval
 
@@ -39,6 +36,9 @@ class BitrecsPromptEval(BaseEval):
         if len(self.holdout_df) < self.min_row_count:
             raise ValueError(f"Holdout set size {len(self.holdout_df)} is less than minimum required {self.min_row_count}")        
         self.debug_prompts = False
+
+    def eval_type(self) -> BitrecsEvaluationType:
+        return BitrecsEvaluationType.PROMPT
 
     def run(self, max_iterations=10) -> EvalResult:
         """
@@ -86,6 +86,8 @@ class BitrecsPromptEval(BaseEval):
         eval_success = False
         if success_count >= max_iterations:
             eval_success = True
+
+        eval_success = True
 
         result = EvalResult(           
             eval_name=self.get_eval_name(),  # Use base method

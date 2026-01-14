@@ -4,6 +4,8 @@ import yaml
 import secrets
 import logging
 from dotenv import load_dotenv
+
+from models.eval_type import BitrecsEvaluationType
 load_dotenv()
 from datetime import datetime, timezone
 from typing import List, Tuple
@@ -22,8 +24,9 @@ logging.getLogger('peewee').setLevel(logging.WARNING)
 
 
 #EVAL_SUITE = ["catalog"]
-EVAL_SUITE = ["prompt"]
-#EVAL_SUITE = ["catalog", "prompt", "reason"]
+#EVAL_SUITE = ["prompt"]
+#EVAL_SUITE = [BitrecsEvaluationType.CATALOG, BitrecsEvaluationType.PROMPT, BitrecsEvaluationType.REASON]
+EVAL_SUITE = [BitrecsEvaluationType.REASON]
 
 
 def load_miner_input_yaml(input_path=None) -> Artifact:
