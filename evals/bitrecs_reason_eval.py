@@ -31,25 +31,20 @@ class BitrecsReasonEval(BaseEval):
     
     def __init__(self,  run_id: str, miner_artifact: Artifact):
         super().__init__(run_id, miner_artifact)
-        self.holdout_df = None
-        # holdout_df = self.get_latest_holdout()
-        # self.holdout_df = holdout_df
-        # logger.info(f"Loaded holdout set with {len(self.holdout_df)} records.")
-        # if len(self.holdout_df) < self.min_row_count:
-        #     raise ValueError(f"Holdout set size {len(self.holdout_df)} is less than minimum required {self.min_row_count}")       
+        
         self.db_path = os.path.join(CONST.ROOT_DIR, "output", "eval_runs.db")
         if not os.path.exists(self.db_path):
             raise FileNotFoundError(f"Database file not found at {self.db_path}")
         self.rules_scorer = RulesScorer(self.db_path, max_workers=4, debug=True)        
         self.debug_prompts = False
+      
+        #print(df.head())
+        self.init_baseline_reasons()
 
         df = self.load_recent_answers()
-        #print(df.head())
         self.holdout_df = df
         if len(self.holdout_df) < self.min_row_count:
             raise ValueError(f"Holdout set size {len(self.holdout_df)} is less than minimum required {self.min_row_count}")
-
-        self.init_baseline_reasons()
 
     def eval_type(self) -> BitrecsEvaluationType:
         return BitrecsEvaluationType.BITRECS_REASON_DAILY
