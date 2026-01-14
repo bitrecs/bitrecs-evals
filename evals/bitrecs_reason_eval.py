@@ -52,7 +52,7 @@ class BitrecsReasonEval(BaseEval):
         self.init_baseline_reasons()
 
     def eval_type(self) -> BitrecsEvaluationType:
-        return BitrecsEvaluationType.REASON
+        return BitrecsEvaluationType.BITRECS_REASON_DAILY
     
     def load_recent_answers(self) -> pd.DataFrame:
         try:

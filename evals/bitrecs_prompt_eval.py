@@ -38,7 +38,7 @@ class BitrecsPromptEval(BaseEval):
         self.debug_prompts = False
 
     def eval_type(self) -> BitrecsEvaluationType:
-        return BitrecsEvaluationType.PROMPT
+        return BitrecsEvaluationType.BITRECS_PROMPT_DAILY
 
     def run(self, max_iterations=10) -> EvalResult:
         """
