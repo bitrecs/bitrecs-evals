@@ -52,7 +52,7 @@ class BitrecsReasonEval(BaseEval):
 
         if len(self.holdout_df) == 0:
             logger.error(f"No data for hotkey {self.miner_artifact.miner_hotkey}")
-            raise ValueError("No recent miner responses found for evaluation.")
+            raise ValueError(f"No recent miner responses found for {self.miner_artifact.miner_hotkey}")
         
         if len(self.holdout_df) < self.min_sample_size:
             raise ValueError(f"Holdout set size {len(self.holdout_df)} is less than minimum required {self.min_sample_size}")
@@ -121,11 +121,12 @@ class BitrecsReasonEval(BaseEval):
         """
         Run the Bitrecs reason evaluation.
         """
-        start_time = time.monotonic()
+        
         count = 0
         success_count = 0
         exception_count = 0
         total_duration = 0.0
+        start_time = time.monotonic()
         for idx, row in self.holdout_df.iterrows():
             if idx >= max_iterations:
                 break
@@ -133,27 +134,25 @@ class BitrecsReasonEval(BaseEval):
                 eval_start = time.monotonic()
                 eval_score = self.evaluate_row(row)
                 eval_end = time.monotonic()
-                total_duration += (eval_end - eval_start)
+                row_duration = eval_end - eval_start
                 
                 if eval_score > 0:
                     success_count += 1
                 
-                logger.info(f"Row {idx}: Score {eval_score}")
+                logger.info(f"Row {idx}: Score {eval_score} in {row_duration:.2f} seconds.")
             except Exception as e:
                 exception_count += 1
                 logger.error(f"Error evaluating row {idx}: {e}")
             finally:
                 count += 1
-        
-        # Calculate overall score (fraction of valid reasons)
-        score = success_count / len(self.holdout_df) if len(self.holdout_df) > 0 else 0.0
-        eval_success = score >= 1.0  # Pass if all reasons are valid (adjust threshold as needed)
-        
         end_time = time.monotonic()
         total_duration = end_time - start_time
 
-        eval_success = True
-        
+        # Calculate overall score (fraction of valid reasons)
+        score = success_count / len(self.holdout_df) if len(self.holdout_df) > 0 else 0.0
+        eval_success = score >= 1.0
+        #eval_success = True
+
         result = EvalResult(
             eval_name=self.get_eval_name(),
             created_at=datetime.now(timezone.utc).isoformat(),
@@ -167,20 +166,17 @@ class BitrecsReasonEval(BaseEval):
         )
         return result
     
-    def evaluate_row(self, row) -> float:        
-
-        print("Evaluating reason statement...")  # Placeholder
-        
+    def evaluate_row(self, row) -> float:
         query = row['query']
         num_recs = int(row['num_recs'])
-        recs = ast.literal_eval(row['response'])
-        for product in recs:
-            #print(f"  Recommended Product: {product}")
-            sku = product.get('sku', '')
-            name = product.get('name', '')
-            price = product.get('price', 0.0)
-            reason = product.get('reason', '')
-            reasoned_product = ReasonedProduct(sku=sku, name=name, price=price, reason=reason)
+        #recs = ast.literal_eval(row['response'])
+        # for product in recs:
+        #     #print(f"  Recommended Product: {product}")
+        #     sku = product.get('sku', '')
+        #     name = product.get('name', '')
+        #     price = product.get('price', 0.0)
+        #     reason = product.get('reason', '')
+        #     reasoned_product = ReasonedProduct(sku=sku, name=name, price=price, reason=reason)
             #print(f"    Reason: {reasoned_product.reason}")            
         
         logger.info(f"Evaluating reason for query: {query} with num_recs: {num_recs}")
