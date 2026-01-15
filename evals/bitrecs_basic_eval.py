@@ -8,6 +8,7 @@ from typing import Tuple
 from common import constants as CONST
 from db.models.eval import Miner, MinerResponse, db
 from evals.eval_result import EvalResult
+from llm.llm_provider import LLM
 from models.eval_type import BitrecsEvaluationType
 from models.miner_artifact import Artifact
 from evals.base_eval import BaseEval
@@ -55,6 +56,8 @@ class BitrecsBasicEval(BaseEval):
         exception_count = 0
         result = False
         start_time = time.monotonic()
+        final_score = 0.0
+        template_status = "ERROR"
         try:
             result = self.validate_template()    
         except Exception as e:
@@ -67,6 +70,7 @@ class BitrecsBasicEval(BaseEval):
         eval_success = result
         if eval_success:
             final_score = 1.0        
+            template_status = "OK"
 
         result = EvalResult(           
             eval_name=self.get_eval_name(),
@@ -75,7 +79,7 @@ class BitrecsBasicEval(BaseEval):
             score=final_score,
             passed=eval_success,
             rows_evaluated=count,
-            details=f"Test result: {result}. TEMPLATE OK.\nEvaluated {count} samples with {exception_count} exceptions for hotkey {self.miner_artifact.miner_hotkey}.\n{self.run_id}",
+            details=f"Test result: {result}. TEMPLATE {template_status}.\nEvaluated {count} samples with {exception_count} exceptions for hotkey {self.miner_artifact.miner_hotkey}.\n{self.run_id}",
             duration_seconds=total_duration,
             temperature=self.miner_artifact.sampling_params.temperature,
             model_name=self.miner_artifact.model,
@@ -141,6 +145,9 @@ class BitrecsBasicEval(BaseEval):
         
         # if agent.status != 'screening_1':
         #     return False, "status must be 'screening_1' upon submission"
+
+        if LLM.is_valid(agent.provider) == False:
+            return False, f"provider '{agent.provider}' is not a valid LLM provider"
         
         try:
             Template(agent.system_prompt_template)

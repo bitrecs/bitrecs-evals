@@ -21,3 +21,7 @@ class LLM(Enum):
             return LLM[value.upper()]
         except KeyError:
             raise ValueError(f"Unknown LLM: {value}")
+    
+    @staticmethod
+    def is_valid(provider: str) -> bool:
+        return provider.upper() in LLM.__members__
