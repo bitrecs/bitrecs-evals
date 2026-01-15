@@ -10,7 +10,7 @@ from common.utils import rec_list_to_set
 from db.models.eval import db, Miner, MinerResponse
 from evals.base_eval import BaseEval 
 from evals.eval_result import EvalResult
-from evals.reason.rules_scorer import RulesScorer
+from evals.rules.rules_scorer import ReasonedProduct, RulesScorer
 from llm.factory import LLMFactory
 from llm.llm_provider import LLM
 from llm.prompt_factory import PromptFactory
@@ -40,7 +40,7 @@ class BitrecsReasonEval(BaseEval):
         
         if not os.path.exists(self.db_path):
             raise FileNotFoundError(f"Database file not found at {self.db_path}")
-        self.rules_scorer = RulesScorer(self.db_path, max_workers=4, debug=True)        
+        self.rules_scorer = RulesScorer(self.db_path, max_workers=4, debug=True, run_id=run_id)        
         self.debug_prompts = False
       
         #print(df.head())
@@ -49,6 +49,11 @@ class BitrecsReasonEval(BaseEval):
 
         df = self.load_recent_answers()
         self.holdout_df = df
+
+        if len(self.holdout_df) == 0:
+            logger.error(f"No data for hotkey {self.miner_artifact.miner_hotkey}")
+            raise ValueError("No recent miner responses found for evaluation.")
+        
         if len(self.holdout_df) < self.min_sample_size:
             raise ValueError(f"Holdout set size {len(self.holdout_df)} is less than minimum required {self.min_sample_size}")
 
@@ -170,42 +175,23 @@ class BitrecsReasonEval(BaseEval):
         num_recs = int(row['num_recs'])
         recs = ast.literal_eval(row['response'])
         for product in recs:
-            print(f"  Recommended Product: {product}")       
+            #print(f"  Recommended Product: {product}")
+            sku = product.get('sku', '')
+            name = product.get('name', '')
+            price = product.get('price', 0.0)
+            reason = product.get('reason', '')
+            reasoned_product = ReasonedProduct(sku=sku, name=name, price=price, reason=reason)
+            #print(f"    Reason: {reasoned_product.reason}")            
         
         logger.info(f"Evaluating reason for query: {query} with num_recs: {num_recs}")
+        hotkey = self.miner_artifact.miner_hotkey
+        
+        report = self.rules_scorer.score_miner(miner_hotkey=hotkey, days_ago=21, min_success=1)
+        print(report)
 
         #rec_set = rec_list_to_set(recs)
         #logger.info(f"parsed recommended_skus: {rec_set}")
-
         
         return 0 # Placeholder implementation; replace with actual LLM evaluation logic
     
-    def log_miner_response(self, run_id: str, query: str, num_recs: int, recommended_skus: list, duration: float):
-        """
-        Log the miner response to the database.
-        """
-        try:
-            db.connect()
-            db.create_tables([Miner, MinerResponse], safe=True)  # Ensure tables exist
-
-            # Get or create Miner
-            miner, created = Miner.get_or_create(hotkey=self.miner_artifact.miner_hotkey)
-
-            # Create MinerResponse record
-            MinerResponse.create(
-                run_id=run_id,
-                miner=miner,
-                hotkey=self.miner_artifact.miner_hotkey,
-                query=query,
-                num_recs=num_recs,
-                response=str(recommended_skus),
-                model_name=self.miner_artifact.model,
-                provider_name=self.miner_artifact.provider,
-                temperature=self.miner_artifact.sampling_params.temperature,
-                duration_seconds=duration         
-            )
-            logger.info("Miner response logged to DB.")
-        except Exception as e:
-            logger.error(f"Failed to log miner response to DB: {e}")
-        finally:
-            db.close()
+   

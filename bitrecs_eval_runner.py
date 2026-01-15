@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import yaml
 import secrets
@@ -13,7 +14,6 @@ from models.miner_artifact import Artifact
 from db.models.eval import db, Miner, Evaluation
 from evals.eval_factory import EvalFactory
 from models.eval_type import BitrecsEvaluationType
-import re  # Add this import at the top
 
 logging.basicConfig(level=CONST.LOG_LEVEL)
 logger = logging.getLogger(__name__)
