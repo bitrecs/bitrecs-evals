@@ -3,7 +3,6 @@ import time
 import traceback
 import tiktoken
 import pandas as pd
-
 from datetime import datetime, timezone
 from typing import Tuple
 from common import constants as CONST
@@ -18,8 +17,7 @@ logging.basicConfig(level=CONST.LOG_LEVEL)
 logger = logging.getLogger(__name__)
 
 """
-Basic Bitrecs Evaluation Class
--run validate_template
+Basic Template Evaluator
 
 """
 
@@ -51,14 +49,14 @@ class BitrecsBasicEval(BaseEval):
         """
         Run the Bitrecs prompt evaluation.
         """
-        start_time = time.monotonic()        
+           
         count = 0
         success_count = 0
         exception_count = 0
         result = False
+        start_time = time.monotonic()
         try:
             result = self.validate_template()    
-
         except Exception as e:
             logger.error(f"Exception during evaluation: {e}")
             traceback.print_exc()
