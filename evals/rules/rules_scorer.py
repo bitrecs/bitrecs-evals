@@ -513,6 +513,7 @@ class RulesScorer:
             reason_clean = reason_lower.translate(str.maketrans('', '', string.punctuation))
             if name_clean in reason_clean or name in reason_lower:
                 print(f"❌ Product name found in reason for hotkey {hotkey}, applying heavy penalty.")
+                print(f"Product name: {product.name} | Reason: {product.reason}")
                 return 0.01  # or 0.0 for total disqualification
         
         # Initialize scoring components

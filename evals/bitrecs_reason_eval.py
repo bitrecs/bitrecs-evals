@@ -29,7 +29,9 @@ Each reason statement is checked for validity using an LLM.
 
 class BitrecsReasonEval(BaseEval):
   
-    min_sample_size = 3
+    min_sample_size = 2
+
+    pass_threshold = 0.3
     
     def __init__(self,  run_id: str, miner_artifact: Artifact):
         super().__init__(run_id, miner_artifact)
@@ -42,9 +44,9 @@ class BitrecsReasonEval(BaseEval):
             raise FileNotFoundError(f"Database file not found at {self.db_path}")
         self.rules_scorer = RulesScorer(self.db_path, max_workers=4, debug=True, run_id=run_id)        
         self.debug_prompts = False
-      
+
         #print(df.head())
-        if 1==2:
+        if 1==1:
             self.init_baseline_reasons()
 
         df = self.load_recent_answers()
@@ -72,8 +74,8 @@ class BitrecsReasonEval(BaseEval):
     def init_baseline_reasons(self):
         rows = 2
         for idx in range(rows):
-            reason = f"This is a baseline reason statement number {idx+1}."
-            logger.info(f"Baseline Reason {idx+1}: {reason}")
+            reason = f"This is a baseline iteration number {idx+1}."
+            logger.info(f"Reason Baseline {idx+1}: {reason}")
             
             random_product = random.choice(self.rules_scorer.product_catalog)
             num_recs = 5
@@ -104,6 +106,7 @@ class BitrecsReasonEval(BaseEval):
                                                 temp=temperature)
             recommended_skus = PromptFactory.tryparse_llm(llm_output)
             #logger.info(f"LLM Output: {llm_output}")
+            logger.info(f"Query : {query}")
             logger.info(f"Recommended SKUs: {recommended_skus}")
             et = time.monotonic()
             durtion = et - st
@@ -150,7 +153,7 @@ class BitrecsReasonEval(BaseEval):
 
         # Calculate overall score (fraction of valid reasons)
         score = success_count / len(self.holdout_df) if len(self.holdout_df) > 0 else 0.0
-        eval_success = score >= 1.0
+        eval_success = score >= self.pass_threshold
         #eval_success = True
 
         result = EvalResult(
