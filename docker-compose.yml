@@ -39,8 +39,8 @@ services:
 
     working_dir: /app
     environment:
-      - PYTHONUNBUFFERED=1
-    command: ["python", "-u", "bitrecs_eval_runner.py"]  # can omit /app/ if you mount code
+      - PYTHONUNBUFFERED=1    
+    #command: ["python", "-u", "bitrecs_eval_runner.py"]  # can omit /app/ if you mount code
 
 networks:
   default:

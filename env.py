@@ -232,8 +232,9 @@ class EvaluateRequest(BaseModel):
 async def evaluate_endpoint(req: EvaluateRequest):
     yaml_content = req.yaml_content    
     actor = Actor()
-    env_token = os.getenv("BITRECS_RUN_TOKEN", "")
-    logger.debug(f"Env Token: {env_token}, Req Token: {req.run_token}")
+    env_token = os.getenv("BITRECS_RUN_TOKEN", "")    
+    logger.info(f"Env Token: {env_token}, Req Token: {req.run_token}")
+
     # if not env_token or not req.run_token:
     #     logger.error("Run token not provided.")
     #     return {"error": "Run token not provided"}
@@ -277,7 +278,7 @@ async def get_db():
     return FileResponse(
         path=db_path,
         media_type='application/octet-stream',
-        filename='eval_runs.db'  # Suggested download name
+        filename='eval_runs.db'
     )
 
 if __name__ == "__main__":
