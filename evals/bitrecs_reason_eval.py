@@ -35,11 +35,7 @@ class BitrecsReasonEval(BaseEval):
     
     def __init__(self,  run_id: str, miner_artifact: Artifact):
         super().__init__(run_id, miner_artifact)
-        
-        # Compute path relative to the project root (parent of 'evals' folder)
-        # project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        # self.db_path = os.path.join(project_root, "output", "eval_runs.db")   
-        
+
         db.connect()
         db.close()     
         db_path = db.database  
@@ -132,74 +128,36 @@ class BitrecsReasonEval(BaseEval):
         exception_count = 0
         total_duration = 0.0
         start_time = time.monotonic()
-        for idx, row in self.holdout_df.iterrows():
-            if idx >= max_iterations:
-                break
-            try:
-                eval_start = time.monotonic()
-                eval_score = self.evaluate_row(row)
-                eval_end = time.monotonic()
-                row_duration = eval_end - eval_start
-                
-                if eval_score > 0:
-                    success_count += 1
-                
-                logger.info(f"Row {idx}: Score {eval_score} in {row_duration:.2f} seconds.")
-            except Exception as e:
-                exception_count += 1
-                logger.error(f"Error evaluating row {idx}: {e}")
-            finally:
-                count += 1
+        eval_score = 0.0        
+        hotkey = self.miner_artifact.miner_hotkey        
+        try:
+            report = self.rules_scorer.score_miner(miner_hotkey=hotkey, days_ago=21, min_success=1)
+            logger.info(f"Notes for miner {hotkey}:")
+            for note in report.evaluator_notes:
+                logger.info(f"  - {note}")
+            logger.info(f"R Score: {report.r_score}")
+            logger.info(f"S Score: {report.s_score}")        
+            logger.info(f"F Score: {report.f_score}")
+            eval_score = report.r_score
+            count = report.num_requests_evaluated
+        except Exception as e:
+            logger.error(f"Exception during evaluation: {e}")
+            exception_count += 1     
         end_time = time.monotonic()
-        total_duration = end_time - start_time
-
-        # Calculate overall score (fraction of valid reasons)
-        score = success_count / len(self.holdout_df) if len(self.holdout_df) > 0 else 0.0
-        eval_success = score >= self.pass_threshold
-        #eval_success = True
+        total_duration = end_time - start_time        
+        eval_success = eval_score >= self.pass_threshold        
 
         result = EvalResult(
             eval_name=self.get_eval_name(),
             created_at=datetime.now(timezone.utc).isoformat(),
             hot_key=self.miner_artifact.miner_hotkey,
-            score=score,
+            score=eval_score,
             passed=eval_success,
-            rows_evaluated=max_iterations,
+            rows_evaluated=count,
             details=f"Evaluated {count} of {len(self.holdout_df)} rows with {exception_count} exceptions (max_iterations {max_iterations}).",
             duration_seconds=total_duration,
             temperature=self.miner_artifact.sampling_params.temperature            
         )
-        return result
-    
-    def evaluate_row(self, row) -> float:
-        query = row['query']
-        num_recs = int(row['num_recs'])
-        #recs = ast.literal_eval(row['response'])
-        # for product in recs:
-        #     #print(f"  Recommended Product: {product}")
-        #     sku = product.get('sku', '')
-        #     name = product.get('name', '')
-        #     price = product.get('price', 0.0)
-        #     reason = product.get('reason', '')
-        #     reasoned_product = ReasonedProduct(sku=sku, name=name, price=price, reason=reason)
-            #print(f"    Reason: {reasoned_product.reason}")            
-        
-        logger.info(f"Evaluating reason for query: {query} with num_recs: {num_recs}")
-        hotkey = self.miner_artifact.miner_hotkey
-        
-        report = self.rules_scorer.score_miner(miner_hotkey=hotkey, days_ago=21, min_success=1)
-        #print(report)       
-        logger.info(f"Notes for miner {hotkey}:")
-        for note in report.evaluator_notes:
-            logger.info(f"  - {note}")
-
-        logger.info(f"R Score: {report.r_score}")
-        logger.info(f"S Score: {report.s_score}")        
-        logger.info(f"F Score: {report.f_score}")
-
-        #rec_set = rec_list_to_set(recs)
-        #logger.info(f"parsed recommended_skus: {rec_set}")
-        
-        return report.r_score
-    
+        return result    
+  
    
