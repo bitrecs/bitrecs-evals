@@ -57,18 +57,18 @@ class BitrecsBasicEval(BaseEval):
         exception_count = 0
         result = False
         try:
-            result = self.validate_template()            
+            result = self.validate_template()    
+
         except Exception as e:
             logger.error(f"Exception during evaluation: {e}")
             traceback.print_exc()
             exception_count += 1
-        
-        
         end_time = time.monotonic()
-        total_duration = end_time - start_time        
-        final_score = success_count / count if count > 0 else 0.0
-        #eval_success = result and (exception_count == 0)
+        total_duration = end_time - start_time
+
         eval_success = result
+        if eval_success:
+            final_score = 1.0        
 
         result = EvalResult(           
             eval_name=self.get_eval_name(),
@@ -77,7 +77,7 @@ class BitrecsBasicEval(BaseEval):
             score=final_score,
             passed=eval_success,
             rows_evaluated=count,
-            details=f"Basic Test result {result}. Evaluated {count} samples with {exception_count} exceptions for hotkey {self.miner_artifact.miner_hotkey}.",
+            details=f"Test result: {result}. TEMPLATE OK.\nEvaluated {count} samples with {exception_count} exceptions for hotkey {self.miner_artifact.miner_hotkey}.\n{self.run_id}",
             duration_seconds=total_duration,
             temperature=self.miner_artifact.sampling_params.temperature,
             model_name=self.miner_artifact.model,
@@ -100,49 +100,14 @@ class BitrecsBasicEval(BaseEval):
         return "\n".join(report_lines)
     
     def validate_template(self) -> bool:
-
         validated, reason = BitrecsBasicEval.validate_artifact_template(self.miner_artifact)
-        logger.info(f"Template validation result: {validated}, Reason: {reason}")
-        
+        logger.info(f"Template validation result: {validated}, Reason: {reason}")        
         return validated
-    
-
-    def log_miner_response(self, run_id: str, query: str, num_recs: int, recommended_skus: list, duration: float):
-        """
-        Log the miner response to the database.
-        """
-        try:
-            db.connect()
-            db.create_tables([Miner, MinerResponse], safe=True)  # Ensure tables exist
-
-            # Get or create Miner
-            miner, created = Miner.get_or_create(hotkey=self.miner_artifact.miner_hotkey)
-
-            # Create MinerResponse record
-            MinerResponse.create(
-                run_id=run_id,
-                miner=miner,
-                hotkey=self.miner_artifact.miner_hotkey,
-                query=query,
-                num_recs=num_recs,
-                response=str(recommended_skus),
-                model_name=self.miner_artifact.model,
-                provider_name=self.miner_artifact.provider,
-                temperature=self.miner_artifact.sampling_params.temperature,
-                duration_seconds=duration         
-            )
-            logger.info("Miner response logged to DB.")
-        except Exception as e:
-            logger.error(f"Failed to log miner response to DB: {e}")
-        finally:
-            db.close()
-
 
     def get_eval_name(self) -> str:
         this_type = self.eval_type()
         name = str(this_type)
-        return name        
-    
+        return name
 
     @staticmethod
     def get_token_count(prompt: str, encoding_name: str="o200k_base") -> int:

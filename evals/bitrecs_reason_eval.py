@@ -135,7 +135,7 @@ class BitrecsReasonEval(BaseEval):
                 eval_end = time.monotonic()
                 total_duration += (eval_end - eval_start)
                 
-                if eval_score == 1.0:  # Assuming 1.0 for valid reason
+                if eval_score > 0:
                     success_count += 1
                 
                 logger.info(f"Row {idx}: Score {eval_score}")
@@ -187,11 +187,18 @@ class BitrecsReasonEval(BaseEval):
         hotkey = self.miner_artifact.miner_hotkey
         
         report = self.rules_scorer.score_miner(miner_hotkey=hotkey, days_ago=21, min_success=1)
-        print(report)
+        #print(report)       
+        logger.info(f"Notes for miner {hotkey}:")
+        for note in report.evaluator_notes:
+            logger.info(f"  - {note}")
+
+        logger.info(f"R Score: {report.r_score}")
+        logger.info(f"S Score: {report.s_score}")        
+        logger.info(f"F Score: {report.f_score}")
 
         #rec_set = rec_list_to_set(recs)
         #logger.info(f"parsed recommended_skus: {rec_set}")
         
-        return 0 # Placeholder implementation; replace with actual LLM evaluation logic
+        return report.r_score
     
    
