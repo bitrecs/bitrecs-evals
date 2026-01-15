@@ -45,14 +45,10 @@ class BaseEval(ABC):
         """Return the type of evaluation being performed."""
         pass
     
-    def get_eval_name(self) -> str:
-        """Return a human-readable name for the eval (e.g., 'Bitrecs Prompt Eval')."""
-        #return self.__class__.__name__.replace('Eval', ' Eval')
-        #return self.__class__.__name__
+    def get_eval_name(self) -> str:        
         this_type = self.eval_type()
         name = str(this_type)
-        return name        
-        
+        return name
     
     def get_latest_holdout(self, specific_file: str = None) -> pd.DataFrame:
         """
@@ -118,12 +114,8 @@ class BaseEval(ABC):
         """
         try:
             db.connect()
-            db.create_tables([Miner, MinerResponse], safe=True)  # Ensure tables exist
-
-            # Get or create Miner
-            miner, created = Miner.get_or_create(hotkey=self.miner_artifact.miner_hotkey)
-
-            # Create MinerResponse record
+            db.create_tables([Miner, MinerResponse], safe=True)            
+            miner, created = Miner.get_or_create(hotkey=self.miner_artifact.miner_hotkey)            
             MinerResponse.create(
                 run_id=run_id,
                 miner=miner,
@@ -134,7 +126,7 @@ class BaseEval(ABC):
                 model_name=self.miner_artifact.model,
                 provider_name=self.miner_artifact.provider,
                 temperature=self.miner_artifact.sampling_params.temperature,
-                duration_seconds=duration         
+                duration_seconds=duration
             )
             logger.info("Miner response logged to DB.")
         except Exception as e:
