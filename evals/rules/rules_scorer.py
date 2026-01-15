@@ -6,9 +6,7 @@ import string
 import pandas as pd
 from typing import List, Tuple, Union
 from dataclasses import dataclass
-from pandas import DataFrame
-from datetime import datetime, timedelta, timezone
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timezone
 from commerce.product_factory import CatalogProvider, ProductFactory
 from models.product import Product
 
@@ -78,13 +76,13 @@ class MinerReport:
     total_unique_products: int
     avg_response_time: float
 
-    r_score: float # Reasoning Score
-    s_score: float # SKU Relevance Score
+    r_score: float # Rules Score (Reasoning Quality)
+    s_score: float # SKU Relevance Score (Reasoning Relevance)
     f_score: float # Final Score
 
     report_card: str
     models_used: List[str] = []    
-    evalator_notes: List[str] = []
+    evaluator_notes: List[str] = []
     rank: int = -1    
 
     def to_dict(self):
@@ -104,7 +102,7 @@ class MinerReport:
             'f_score': self.f_score,
             'report_card': self.report_card,
             'models_used': self.models_used,
-            'evalator_notes': self.evalator_notes,
+            'evalator_notes': self.evaluator_notes,
             'rank': self.rank
         }
 
@@ -267,7 +265,7 @@ class RulesScorer:
 
         report = MinerReport()
         report.run_id = self.run_id
-        report.evalator_notes = []
+        report.evaluator_notes = []
         created_at_val = filtered_df['created_at'].iloc[0] if not filtered_df['created_at'].empty else None
         report.created_at = created_at_val.strftime('%Y-%m-%d %H:%M:%S') if hasattr(created_at_val, 'strftime') else str(created_at_val) if created_at_val is not None else None
 
@@ -336,7 +334,7 @@ class RulesScorer:
             frac_duplicate = duplicate_penalty_count / len(per_response_averages)
             if frac_duplicate > reason_dupe_threshold:
                 print(f"❌ Miner {miner_hotkey} has {frac_duplicate} duplicate responses. Setting score to 0.")
-                report.evalator_notes.append(f"{frac_duplicate} duplicate responses detected. Score set to 0.")
+                report.evaluator_notes.append(f"{frac_duplicate} duplicate responses detected. Score set to 0.")
                 miner_score = 0.0
         print(f"Score after duplicate penalty {miner_score:.2f}")
 
@@ -346,71 +344,34 @@ class RulesScorer:
             sku_dupe_threshold = .60
         print(f"Checking for excessive SKU duplication for miner {miner_hotkey}")
         print(f"check_individual_sku_duplication row_count = {len(success_rows)}, threshold = {sku_dupe_threshold:.2%}")
-        has_dupes, flagged_skus = self.check_individual_sku_duplication(success_rows, miner_hotkey, sku_dupe_threshold)
-        if has_dupes:        
-            print(f"Miner {miner_hotkey} flagged for excessive SKU duplication across queries.")
-            report.evalator_notes.append(f"Flagged for excessive SKU duplication across queries (> {sku_dupe_threshold:.0%} overlap).")
-            if flagged_skus:
-                report.evalator_notes.append(f"Flagged SKUs: {', '.join(flagged_skus)}")
-            miner_score = 0.0
-        print(f"Score after SKU duplication check {miner_score:.2f}")      
+        
+        if 1==2:
+            has_dupes, flagged_skus = self.check_individual_sku_duplication(success_rows, miner_hotkey, sku_dupe_threshold)
+            if has_dupes:        
+                print(f"Miner {miner_hotkey} flagged for excessive SKU duplication across queries.")
+                report.evaluator_notes.append(f"Flagged for excessive SKU duplication across queries (> {sku_dupe_threshold:.0%} overlap).")
+                if flagged_skus:
+                    report.evaluator_notes.append(f"Flagged SKUs: {', '.join(flagged_skus)}")
+                miner_score = 0.0
+            print(f"Score after SKU duplication check {miner_score:.2f}")      
 
         # Check for cross site copying
         if self.check_cross_catalog_reasons(success_rows):
             miner_score = 0.0
-            report.evalator_notes.append("Flagged for cross-catalog copying of reasons.")
+            report.evaluator_notes.append("Flagged for cross-catalog copying of reasons.")
             print(f"Miner {miner_hotkey} flagged for cross-catalog copying of reasons.")
-
-       # Penalize for failures (non-200 status) - REDUCED EMPHASIS as consensus already handles this fairly
+       
         #success_count = int(len(filtered_df[filtered_df['bt_header_axon_status_code'] == '200']))
-
         success_count = int(len(success_rows))
 
         total_count = len(filtered_df)
         success_rate = success_count / total_count if total_count > 0 else 0.0                
-        penalty_multiplier = 1.0  # Start with no penalty       
         
-        if total_count > 200:
-            # Penalize for suspiciously perfect success rates (e.g., >98% indicates potential gaming)
-            if success_rate > 0.98:
-                over_perfect_penalty = 0.9  # Mild penalty (10% reduction) for near-perfect success
-                penalty_multiplier *= over_perfect_penalty
-                print(f"⚠️ Miner {miner_hotkey} has suspiciously high success rate ({success_rate:.2%}). Applying mild over-perfection penalty: {over_perfect_penalty:.2f} (new multiplier: {penalty_multiplier:.4f})")
-                report.evalator_notes.append(f"Mild over-perfection penalty applied for {success_rate:.2%} success rate.")
-            # Penalize for unrealistically fast response times
-            if report.avg_response_time < 1.4 and report.avg_response_time > 0:
-                speed_penalty = 0.65  # Reduce score by 35% for too-fast responses
-                penalty_multiplier *= speed_penalty
-                print(f"⚠️ Miner {miner_hotkey} response time ({report.avg_response_time:.2f}s) is suspiciously fast. Applying speed penalty: {speed_penalty:.2f} (new multiplier: {penalty_multiplier:.4f})")
-                report.evalator_notes.append(f"Speed penalty applied for fast response time ({report.avg_response_time:.2f}s).")
-
-            # if report.avg_response_time < 1.8 and report.avg_response_time > 0 and total_count > 400:
-            #     speed_penalty = 0.80  # Reduce score by 20% for very fast responses or caching
-            #     penalty_multiplier *= speed_penalty
-            #     print(f"⚠️ Miner {miner_hotkey} response time ({report.avg_response_time:.2f}s) is very fast. Applying speed penalty: {speed_penalty:.2f} (new multiplier: {penalty_multiplier:.4f})")
-            #     report.evalator_notes.append(f"Speed penalty applied for very fast response time ({report.avg_response_time:.2f}s).")
-
-   
-        # if 1.4 <= report.avg_response_time <= 8.0:
-        #     realism_bonus = 1.15  # Boost score by 15% for realistic timing
-        #     penalty_multiplier *= realism_bonus
-        #     print(f"✅ Miner {miner_hotkey} has realistic response time ({report.avg_response_time:.2f}s). Applying realism bonus: {realism_bonus:.2f} (new multiplier: {penalty_multiplier:.4f})")
-        #     report.evalator_notes.append(f"Realism bonus applied for response time ({report.avg_response_time:.2f}s).")
-
-        # Apply the updated multiplier
-        miner_score *= penalty_multiplier
-
         # Enforce minimum success count
         if len(filtered_df) < min_success:
             miner_score *= 0.05  # Apply 95% penalty instead of setting to 0.0
-            report.evalator_notes.append(f"Only {len(filtered_df)} responses. Minimum is {min_success}. Applied 95% penalty.")
-            #miner_score = 0.0
-
-        # if 1==1:
-        #     if self.is_suspect_miner(miner_hotkey):
-        #         miner_score = 0.0
-        #         report.evalator_notes.append("Flagged as suspect miner for proof signature abuse")
-        #         print(f"Miner {miner_hotkey} flagged as suspect miner for proof signature abuse")
+            report.evaluator_notes.append(f"Only {len(filtered_df)} responses. Minimum is {min_success}. Applied 95% penalty.")
+            #miner_score = 0.0      
 
 
         # Finalize report
@@ -423,110 +384,8 @@ class RulesScorer:
         report.scored_at = datetime.now(tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
 
         print("\033[33m---------------RULES SCORE MINER END ---------------- \033[0m")
-        return report
-
+        return report    
     
-    def score_batch(self, batch_id: str, df: DataFrame) -> BatchReport:
-        filtered_df = df[(df['site_key'] == batch_id)]
-        if filtered_df.empty:
-            print(f"No data found for batch ID: {batch_id}")
-            return None
-        report = BatchReport()
-        report.keys = []
-        report.scores = []
-        report.axon_status_codes = []
-        report.dendrite_status_codes = []
-        report.batch_id = batch_id
-        report.batch_date = filtered_df['created_at'].iloc[0] if not filtered_df['created_at'].empty else None
-        report.query = filtered_df['query'].iloc[0] if not filtered_df['query'].empty else None
-        #report.avg_process_time = filtered_df['bt_header_axon_process_time'].mean() if 'bt_header_axon_process_time' in filtered_df else None        
-        report.avg_axon_process_time = pd.to_numeric(filtered_df['bt_header_axon_process_time'], errors='coerce').mean() if 'bt_header_axon_process_time' in filtered_df.columns else None
-        report.avg_dendrite_process_time = pd.to_numeric(filtered_df['bt_header_dendrite_process_time'], errors='coerce').mean() if 'bt_header_dendrite_process_time' in filtered_df.columns else None
-        report.num_results = filtered_df['num_results'].iloc[0] if not filtered_df['num_results'].empty else None
-        try:
-            report.batch_elected_miner_uid = filtered_df['batch_elected_uid'].mode().iloc[0] if not filtered_df['batch_elected_uid'].mode().empty else None
-        except Exception as e:
-            print(f"Error getting batch_elected_miner_uid: {e}")
-            report.batch_elected_miner_uid = ""
-        
-        # Get the winning miner's model
-        if report.batch_elected_miner_uid:
-            winning_miner_row = filtered_df[filtered_df['miner_id'] == report.batch_elected_miner_uid]
-            if not winning_miner_row.empty:
-                report.batch_elected_model = winning_miner_row['models_used'].iloc[0]
-                report.batch_elected_result = winning_miner_row['results'].iloc[0] if 'results' in winning_miner_row.columns else None
-                try:
-                    report.batch_elected_miner_hotkey = winning_miner_row['hotkey'].iloc[0] if 'hotkey' in winning_miner_row.columns else None
-                except Exception as e:
-                    report.batch_elected_miner_hotkey = None
-
-            else:
-                report.batch_elected_model = "Unknown"
-        else:
-            report.batch_elected_model = "No Winner"        
-
-        #print("----------------- STARTING BATCH REPORT -----------------")
-        # print("\n=== DEBUG: Checking results by hotkey ===")
-        # for hotkey in filtered_df["hotkey"].unique():
-        #     hotkey_data = filtered_df[filtered_df["hotkey"] == hotkey]
-        #     results_status = []
-        #     for idx, row in hotkey_data.iterrows():
-        #         result_val = row['results']
-        #         if result_val is None:
-        #             results_status.append("NULL")
-        #         elif result_val == '':
-        #             results_status.append("EMPTY")
-        #         else:
-        #             results_status.append(f"DATA({len(str(result_val))} chars)")
-            
-        #     print(f"{hotkey[:10]}...: {results_status}")
-        # print("=== END DEBUG ===\n")    
-        
-        scores = []       
-        for hotkey in filtered_df["hotkey"].unique():
-            hotkey_data = filtered_df[filtered_df["hotkey"] == hotkey]            
-            report.keys.append(hotkey)
-            #axon_code = hotkey_data['bt_header_axon_status_code'].mode().iloc[0] if not hotkey_data['bt_header_axon_status_code'].mode().empty else None
-            axon_code = 200
-            report.axon_status_codes.append(axon_code)
-            #dendrite_code = hotkey_data['bt_header_dendrite_status_code'].mode().iloc[0] if not hotkey_data['bt_header_dendrite_status_code'].mode().empty else None
-            dendrite_code = 200
-            report.dendrite_status_codes.append(dendrite_code)            
-            
-            hotkey_scores = []  # Collect scores for this hotkey
-            for idx, row in hotkey_data.iterrows():
-                result_val = row['results']
-                if result_val is None:
-                    hotkey_scores.append(0.0)
-                elif result_val == '':
-                    hotkey_scores.append(0.0)
-                else:
-                    try:
-                        products = ReasonedProduct.from_json(result_val)
-                        if products:
-                            product_scores = []
-                            for product in products:
-                                score = self.score_reasoning_product(hotkey, product) 
-                                product_scores.append(score)
-                                print(f"Product '{product.name}' scored: {score} for reason: '{product.reason[:50]}...'")
-                            
-                            avg_score = sum(product_scores) / len(product_scores) if product_scores else 0.0
-                            hotkey_scores.append(avg_score)
-                        else:
-                            print(f"No products parsed for hotkey {hotkey}")
-                            hotkey_scores.append(0.0)
-                    except Exception as e:
-                        print(f"Error processing results for hotkey {hotkey}: {e}")
-                        hotkey_scores.append(0.0)            
-            
-            final_hotkey_score = sum(hotkey_scores) / len(hotkey_scores) if hotkey_scores else 0.0
-            scores.append(final_hotkey_score)
-            print(f"Final score for hotkey {hotkey[:10]}...: {final_hotkey_score}")
-
-        report.scores = scores
-
-        print("----------------- END BATCH REPORT -----------------")
-        return report   
 
   
 
@@ -566,7 +425,7 @@ class RulesScorer:
             if not query or query in seen_queries:
                 #print("SEEN QUERY, skipping...")
                 continue
-            result_val = row.get('results')
+            result_val = row.get('response')
             if result_val:                
                 try:
                     products = ReasonedProduct.from_json(result_val)

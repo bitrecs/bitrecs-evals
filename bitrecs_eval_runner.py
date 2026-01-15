@@ -54,7 +54,7 @@ def run_eval_suites(miner_artifact: Artifact, shuffle=False) -> Tuple[str, List[
     results = EvalFactory.run_all_evals(run_id, miner_artifact, EVAL_SUITE, CONST.TOP_RECORDS)
     
     for result in results:
-        print(f"{result}")
+        #print(f"{result}")
         log_eval_result_to_db(run_id, result, miner_artifact.miner_hotkey, miner_artifact.model, miner_artifact.provider)
         if result.passed:
             logger.info(f"\033[32m{result.eval_name} Passed! Score: {result.score:.2f}\033[0m")
