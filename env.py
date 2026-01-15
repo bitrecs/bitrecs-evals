@@ -18,6 +18,7 @@ from models.eval_type import BitrecsEvaluationType
 from evals.eval_factory import EvalFactory
 from fastapi import FastAPI
 from pydantic import BaseModel
+from fastapi.responses import FileResponse
 
 app = FastAPI()
 
@@ -231,7 +232,8 @@ class EvaluateRequest(BaseModel):
 async def evaluate_endpoint(req: EvaluateRequest):
     yaml_content = req.yaml_content    
     actor = Actor()
-    # env_token = os.getenv("BITRECS_RUN_TOKEN", "")
+    env_token = os.getenv("BITRECS_RUN_TOKEN", "")
+    logger.debug(f"Env Token: {env_token}, Req Token: {req.run_token}")
     # if not env_token or not req.run_token:
     #     logger.error("Run token not provided.")
     #     return {"error": "Run token not provided"}
@@ -256,6 +258,7 @@ async def evaluate_endpoint(req: EvaluateRequest):
         os.unlink(temp_path)
     return result
 
+
 @app.get("/run_log/{run_id}")
 async def get_run_log(run_id: str):
     actor = Actor()
@@ -263,6 +266,19 @@ async def get_run_log(run_id: str):
     if not report:
         return {"error": f"No report found for run ID: {run_id}"}
     return {"run_id": run_id, "report": report}
+
+
+@app.get("/db")
+async def get_db():
+    db_path = db.database    
+    if not os.path.exists(db_path):
+        return {"error": "Database file not found"}    
+    
+    return FileResponse(
+        path=db_path,
+        media_type='application/octet-stream',
+        filename='eval_runs.db'  # Suggested download name
+    )
 
 if __name__ == "__main__":
     import uvicorn

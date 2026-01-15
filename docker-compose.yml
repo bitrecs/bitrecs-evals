@@ -1,15 +1,46 @@
+# services:
+#   bitrecs-evals:
+#     image: ghcr.io/janusdotai/bitrecs-evals:main  # Uses pre-built image
+#     env_file:
+#       - .env  # Loads env vars
+#     volumes:
+#       - ./input:/app/input:ro  # Minimal mounts
+#       - ./output:/app/output:rw
+#     working_dir: /app
+#     environment:
+#       - PYTHONUNBUFFERED=1
+#     command: ["python", "-u", "/app/bitrecs_eval_runner.py"]
+
+# networks:
+#   default:
+#     name: rec-eval-net
+
 services:
   bitrecs-evals:
-    image: ghcr.io/janusdotai/bitrecs-evals:main  # Uses pre-built image
+    # Remove or comment the remote image
+    # image: ghcr.io/janusdotai/bitrecs-evals:main
+
+    build:                          # ← This tells compose to build locally
+      context: .                    # Build from current directory
+      dockerfile: Dockerfile        # (default name - you can change it)
+      # args:                       # optional: build arguments
+      #   - SOME_ARG=value
+
+    image: bitrecs-evals:dev        # ← Name your local image (you choose the tag!)
+
     env_file:
-      - .env  # Loads env vars
+      - .env
+
     volumes:
-      - ./input:/app/input:ro  # Minimal mounts
+      - ./input:/app/input:ro
       - ./output:/app/output:rw
+      # Very useful for development - live code reload:
+      - .:/app:ro                   # ← Mount whole project (optional)
+
     working_dir: /app
     environment:
       - PYTHONUNBUFFERED=1
-    command: ["python", "-u", "/app/bitrecs_eval_runner.py"]
+    command: ["python", "-u", "bitrecs_eval_runner.py"]  # can omit /app/ if you mount code
 
 networks:
   default:
