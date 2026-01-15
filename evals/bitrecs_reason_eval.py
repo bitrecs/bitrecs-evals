@@ -37,12 +37,14 @@ class BitrecsReasonEval(BaseEval):
         super().__init__(run_id, miner_artifact)
         
         # Compute path relative to the project root (parent of 'evals' folder)
-        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        self.db_path = os.path.join(project_root, "output", "eval_runs.db")
+        # project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        # self.db_path = os.path.join(project_root, "output", "eval_runs.db")   
         
-        if not os.path.exists(self.db_path):
-            raise FileNotFoundError(f"Database file not found at {self.db_path}")
-        self.rules_scorer = RulesScorer(self.db_path, max_workers=4, debug=True, run_id=run_id)        
+        db.connect()
+        db.close()     
+        db_path = db.database  
+     
+        self.rules_scorer = RulesScorer(db_full_path=db_path, max_workers=4, debug=True, run_id=run_id)        
         self.debug_prompts = False
 
         #print(df.head())
