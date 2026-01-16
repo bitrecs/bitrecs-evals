@@ -10,13 +10,13 @@ from common.utils import rec_list_to_set
 from db.models.eval import db, Miner, MinerResponse
 from evals.base_eval import BaseEval 
 from evals.eval_result import EvalResult
-from evals.rules.rules_scorer import ReasonedProduct, RulesScorer
+from evals.scoring.rules_scorer import RulesScorer
 from llm.factory import LLMFactory
 from llm.llm_provider import LLM
 from llm.prompt_factory import PromptFactory
 from models.eval_type import BitrecsEvaluationType
 from models.miner_artifact import Artifact
-from common import constants as CONST
+
 
 logger = logging.getLogger(__name__)
 
