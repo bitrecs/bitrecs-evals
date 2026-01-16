@@ -16,6 +16,7 @@ class Product:
     sku: str
     name: str
     price: str
+    desc: str = None
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
