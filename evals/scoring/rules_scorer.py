@@ -7,9 +7,10 @@ import pandas as pd
 from typing import List, Tuple, Union
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from evals.rules.terms import POOR_REASONS
+
 from models.product import Product
 from commerce.product_factory import CatalogProvider, ProductFactory
+from .terms import POOR_REASONS
 
 MIN_REQUESTS = 1  
 SKU_DUPLICATION_THRESHOLD = 0.40
