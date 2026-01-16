@@ -1,5 +1,6 @@
 
 from dataclasses import dataclass
+from typing import List
 
 
 @dataclass
@@ -16,4 +17,15 @@ class EvalResult:
     provider_name: str = ""
     temperature: float = 0.0
     run_id: str = ""
+
+    @staticmethod
+    def calculate_overall_score(results: List["EvalResult"]) -> float:
+        """
+        Calculate the overall success score from a list of EvalResult objects.
+        Returns a float between 0 and 1, where all evals are weighted equally.
+        """
+        if not results:
+            return 0.0
+        total_score = sum(r.score for r in results)
+        return total_score / len(results)
     

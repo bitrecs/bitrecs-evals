@@ -178,15 +178,17 @@ def main():
     logger.info(f"Model: {miner_artifact.model}")
     logger.info("Starting evaluation suites...")
     logger.info(f"Eval Suites to run: {EVAL_SUITE}, Top Records: {CONST.TOP_RECORDS}")
-    run_id, results = run_eval_suites(miner_artifact)
+    run_id, results = run_eval_suites(miner_artifact)    
+
     run_report = generate_report_by_run_id(run_id) or ""
     logger.info(f"Eval Report for Run ID: \033[35m{run_id}\033[0m")
     logger.info("\n" + run_report)
     logger.info("\033[35mEvaluation suites completed successfully. \033[0m")
-
-    run_log = strip_ansi(run_report)
-    
+    run_log = strip_ansi(run_report)    
     write_log_to_output_file(run_log, output_path=f"output/eval_report_{run_id}.txt")
+
+    final_score = EvalResult.calculate_overall_score(results)
+    logger.info(f"\033[34mFinal Overall Score: {final_score:.2f}\033[0m")
 
     
 
