@@ -74,11 +74,10 @@ class Actor:
             else:
                 logger.error(f"\033[31m{result.eval_name} Failed! Score: {result.score:.2f}\033[0m")    
         
-        total_score = sum(r.score for r in results) / len(results) if results else 0.0
-        logger.info(f"Aggregated Score: {total_score:.2f}")        
+        # total_score = sum(r.score for r in results) / len(results) if results else 0.0
+        # logger.info(f"Aggregated Score: {total_score:.2f}")        
         logger.info(f"RUN COMPLETE for run ID: \033[34m{run_id}\033[0m")
         return run_id, results
-
 
     
     def log_eval_result_to_db(self, run_id: str, result: EvalResult, hotkey, model_name, provider_name):
@@ -179,9 +178,9 @@ class Actor:
             logger.info("\n" + run_report)
 
             logger.info("\033[35mEvaluation suites completed successfully. \033[0m")
-            score = sum(r.score for r in results) / len(results) if results else 0.0
+            score = EvalResult.calculate_overall_score(results)
             end = time.monotonic()
-            durtation = round(end - start, 8)
+            duration = round(end - start, 8)
 
             bitrecs_run_id = os.getenv("BITRECS_RUN_ID", "unknown")
             logger.info(f"Bitrecs Run ID: \033[33m{bitrecs_run_id}\033[0m")
@@ -191,7 +190,7 @@ class Actor:
                 "run_id": run_id,               
                 "score": score,
                 "success": score > 0,
-                "time_taken": durtation,
+                "time_taken": duration,
                 "extra": {
                     "result": run_report
                 }
@@ -203,14 +202,14 @@ class Actor:
             error = f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}"
             logger.error(f"Evaluation failed: {error}")
             end = time.monotonic()
-            durtation = round(end - start, 8)         
+            duration = round(end - start, 8)
             return {
                 "task_name": "BitrecsEval",
                 "bitrecs_run_id": bitrecs_run_id,
                 "run_id": run_id,
                 "score": 0.0,
                 "success": False,
-                "time_taken": durtation,
+                "time_taken": duration,
                 "error": error,
                 "error_type": "evaluation_failure",
                 "extra": {}
