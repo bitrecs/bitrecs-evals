@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from evals.bitrecs_catalog_eval import BitrecsCatalogEval
 from evals.bitrecs_prompt_eval import BitrecsPromptEval
 from evals.bitrecs_reason_eval import BitrecsReasonEval
-from evals.amaon_prompt_eval import AmazonPromptEval
+from evals.amazon_prompt_eval import AmazonPromptEval
 
 
 

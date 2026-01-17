@@ -32,8 +32,8 @@ logging.getLogger('peewee').setLevel(logging.DEBUG)
 # Bitrecs Production Eval Suite
 
 #EVAL_SUITE = [BitrecsEvaluationType.BITRECS_PROMPT_DAILY, BitrecsEvaluationType.BITRECS_REASON_DAILY]
-
 EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY, BitrecsEvaluationType.BITRECS_REASON_DAILY]
+
 
 class Actor:
     """Bitrecs Eval Actor"""
@@ -194,8 +194,14 @@ class Actor:
                 "extra": {
                     "result": run_report
                 }
-            }            
+            }        
+            
+            logger.info(f"Local Run ID: \033[33m{run_id}\033[0m")
+            logger.info(f"Bitrecs Run ID: \033[33m{bitrecs_run_id}\033[0m")
+            logger.info(f" FINAL SCORE \033[34m{score:.2f}\033[0m")
+
             return result
+
         
         except Exception as e:
             import traceback
