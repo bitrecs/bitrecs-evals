@@ -182,15 +182,16 @@ class Actor:
             logger.info(f"Artifact Hotkey: {miner_artifact.miner_hotkey}")
             logger.info("Starting evaluation suites...")
             logger.info(f"Eval Suites to run: {EVAL_SUITE}, Top Records: {CONST.TOP_RECORDS}")
-            run_id, results = self.run_eval_suites(miner_artifact)
-            run_report = self.generate_report_by_run_id(run_id)
-            logger.info(f"Eval Report for Run ID: \033[35m{run_id}\033[0m")
-            logger.info("\n" + run_report)
+            run_id, results = self.run_eval_suites(miner_artifact)           
 
             logger.info("\033[35mEvaluation suites completed successfully. \033[0m")
             score = EvalResult.calculate_overall_score(results)
             end = time.monotonic()
             duration = round(end - start, 8)
+
+            run_report = self.generate_report_by_run_id(run_id)
+            logger.info(f"Eval Report for Run ID: \033[35m{run_id}\033[0m")
+            logger.info("\n" + run_report)
 
             bitrecs_run_id = os.getenv("BITRECS_RUN_ID", "unknown")
             logger.info(f"Bitrecs Run ID: \033[33m{bitrecs_run_id}\033[0m")
