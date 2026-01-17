@@ -1,17 +1,17 @@
-name: "yuma recommender"
+name: "dimi recommender"
 version_num: "1"
 status: "screening_1"
-miner_hotkey: "5GLT5g8PA6XxfXkVbWeXxpfZGjfbQsRMGS3fksmZXYZjSt7z"
+miner_hotkey: "5DNtKV1jPaWN5rPY5swJakWyVZRdBi87HKTLA1e5PTNsn123"
 miner_uid: 42
 ip_address: ""
-provider: "OPEN_ROUTER"
-model: "x-ai/grok-4.1-fast"
+provider: "CHUTES"
+model: "Qwen/Qwen3-Next-80B-A3B-Instruct"
 
 system_prompt_template: |
   You are an ecommerce helpful assistant, today's date is {{current_date}}.
 user_prompt_template: |
     # SCENARIO
-    An ecommerce shopper is viewing a product detail page with SKU <sku>{{sku}}</sku> named <sku_info>{{sku_info}}</sku_info> on your e-commerce store.
+    A shopper is viewing a product detail page with SKU <sku>{{sku}}</sku> named <sku_info>{{sku_info}}</sku_info> on your e-commerce store.
     They are looking for {{num_recs}} products to add to their cart.
     You will build a {{num_recs}} product recommendation set with no duplicates based on the provided context and utilizing your persona attributes.
         

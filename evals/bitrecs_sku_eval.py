@@ -1,14 +1,9 @@
-import ast
-import json
-import os
-import random
 import time
 import logging
 import secrets
 import pandas as pd
 from datetime import datetime, timezone
-from common.utils import rec_list_to_set
-from db.models.eval import db, Miner, MinerResponse
+from db.models.eval import db
 from evals.base_eval import BaseEval 
 from evals.eval_result import EvalResult
 from evals.scoring.sku_scorer import SKURelevanceScorer
@@ -31,7 +26,7 @@ class BitrecsSkuEval(BaseEval):
 
     pass_threshold = 0.3
     
-    def __init__(self,  run_id: str, miner_artifact: Artifact):
+    def __init__(self, run_id: str, miner_artifact: Artifact):
         super().__init__(run_id, miner_artifact)
 
         db.connect()
@@ -77,7 +72,7 @@ class BitrecsSkuEval(BaseEval):
             db.close()
 
     def init_baseline_reasons(self):
-        rows = 2
+        rows = 5
         for idx in range(rows):
             reason = f"This is a baseline iteration number {idx+1}."
             logger.info(f"Reason Baseline {idx+1}: {reason}")
