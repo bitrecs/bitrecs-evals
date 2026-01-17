@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Dict, Dict, List, Tuple
 from dataclasses import asdict
+from common.utils import time_ago
 from llm.factory import LLMFactory
 from llm.llm_provider import LLM
 from llm.prompt_factory import PromptFactory
@@ -67,59 +68,13 @@ class SKURelevanceScorer:
         if len(self.product_catalog) == 0:
             raise ValueError("Product catalog is empty")
         self.system_prompt = "You are a product relevance evaluator. Your task is to evaluate the relevance of recommended products based on a given product and their reasons for recommendation."
-    
-
-    def get_top_n_scorers(self, top: int = 10, days_back: int=14) -> List[str]:        
-        conn_score = sqlite3.connect(f"file:{self.scoring_db}?mode=ro", uri=True)
-        one_month_old = (datetime.now(timezone.utc) - pd.Timedelta(days=days_back)).strftime("%Y-%m-%d %H:%M:%S")
-        query_score = """
-            SELECT miner_hotkey, AVG(score) as avg_score
-            FROM miner_scores
-            WHERE created_at >= ?
-            GROUP BY miner_hotkey
-            ORDER BY avg_score DESC
-            LIMIT ?
-        """
-        df_score = pd.read_sql_query(query_score, conn_score, params=(one_month_old, top))
-        conn_score.close()
-        return list(df_score['miner_hotkey'])
-
+  
     
     def get_dataframe_by_miner(self, miner_hotkey: str) -> pd.DataFrame:        
         conn = sqlite3.connect(f"file:{self.source_db}?mode=ro", uri=True)
         df = pd.read_sql_query("SELECT * FROM miner_responses WHERE hotkey=?", conn, params=(miner_hotkey,))
         print(f"loaded db from {self.source_db} for miner {miner_hotkey}")      
         return df
-    
-    # def get_miner_latest_score(self, hot_key: str) -> float:
-    #     """
-    #     Get the latest score for a given miner hotkey.
-    #     """
-    #     conn = sqlite3.connect(f"file:{self.scoring_db}?mode=ro", uri=True)
-    #     query = "SELECT score FROM miner_scores WHERE miner_hotkey=? ORDER BY created_at DESC LIMIT 1"
-    #     df = pd.read_sql_query(query, conn, params=(hot_key,))
-    #     conn.close()
-    #     if df.empty:
-    #         return 0.0
-    #     return df['score'].iloc[0]
-    
-    # def get_miner_latest_score_with_date_ema(self, hot_key: str, max_rows: int = 10) -> Tuple[float, str]:
-    #     """
-    #     Get the latest score for a given miner hotkey with exponential moving average,
-    #     using only the most recent max_rows scores for emphasis on recency.
-    #     """
-    #     conn = sqlite3.connect(f"file:{self.scoring_db}?mode=ro", uri=True)
-    #     query = "SELECT score, created_at FROM miner_scores WHERE miner_hotkey=? ORDER BY created_at DESC LIMIT ?"
-    #     df = pd.read_sql_query(query, conn, params=(hot_key, max_rows))
-    #     conn.close()
-    #     if df.empty:
-    #         return 0.0, ""
-    #     # Reverse to chronological order for EMA calculation (oldest first)
-    #     df = df.iloc[::-1].reset_index(drop=True)
-    #     df['score_ema'] = df['score'].ewm(span=3, adjust=False).mean()
-    #     latest_ema = df['score_ema'].iloc[-1]  # EMA at the most recent point
-    #     latest_date = df['created_at'].iloc[-1]
-    #     return latest_ema, latest_date
 
     def score_miner(self, hot_key: str, top: int = 10) -> float:
         st = time.perf_counter()
@@ -129,12 +84,7 @@ class SKURelevanceScorer:
         if df is None or df.empty:
             logger.warning(f"No data found for miner {hot_key} in {self.source_db}")
             return 0.0
-
-        # df = df[df["bt_header_dendrite_status_code"] == "200"]
-        # if df.empty:
-        #     logger.warning(f"No successful responses (status code 200) for miner {hot_key}")
-        #     return 0.0
-
+   
         # Filter to only rows where query (SKU) exists in the catalog
         catalog_skus = set(p.sku for p in self.product_catalog)
         df = df[df["query"].isin(catalog_skus)]
@@ -164,11 +114,11 @@ class SKURelevanceScorer:
         for _, row in df.iterrows():
             try:
                 sku = row["query"].upper().strip()
-                miner_uid = row["miner_id"]
+                #miner_uid = row["miner_id"]
                 #batch_id = row["site_key"]
-                query_date = row["created_at"].strftime("%Y-%m-%d %H:%M:%S")
-                miner_model = row["model_name"].strip() 
-
+                #query_date = row["created_at"].strftime("%Y-%m-%d %H:%M:%S")
+                #miner_model = row["model_name"].strip()
+                #  
                 # if sku != "24-WB07" and sku != "MS11":
                 #     #print(f"SKIPPED SKU IS NOT 24-WB07 or MS11: {sku}")
                 #     continue
@@ -177,7 +127,7 @@ class SKURelevanceScorer:
                 if not p:
                     logger.warning(f"Product with SKU {sku} not found in catalog for miner {hot_key}")
                     continue
-                query_desc = p.name
+                #query_desc = p.name
                 miner_recs = row["response"]
                 if not miner_recs:
                     logger.warning(f"No recommendations found for SKU {sku} in miner {hot_key}")
@@ -189,7 +139,7 @@ class SKURelevanceScorer:
                     continue
                 created_at = row["created_at"]
                 logger.info(f"SKU \033[32m{p.sku}\033[0m recommended at {created_at}")
-                friendly_time = self.time_ago(created_at)
+                friendly_time = time_ago(created_at)
                 logger.info(f"Time since recommendation: \033[33m{friendly_time}\033[0m")
                 logger.info(f"NAME \033[32m{p.name}\033[0m")
 
@@ -228,7 +178,7 @@ class SKURelevanceScorer:
                 #     scores=llm_resuls                    
                 # )
 
-                # Fluke 100 detection: if 90%+ are 0 and only one 100, zero out all scores
+                # Fluke 100 detection: if 80%+ are 0 and only one 100, zero out all scores
                 num_zeros = scores.count(0)                
                 if len(scores) > 0 and num_zeros / len(scores) >= 0.80:
                     print(f"\033[31mFluke 100 detected for SKU {sku}: {scores} -- zeroing out\033[0m")
@@ -264,7 +214,7 @@ class SKURelevanceScorer:
         print(f"\033[32mFinal average score for miner {hot_key}: {avg_score}, Scaled: {scaled_score}\033[0m")
         elapsed = time.perf_counter() - st
         print(f"Duration: \033[33m{elapsed:0.2f} seconds\033[0m")
-                
+
         #self.save_final_score(hot_key, miner_model, scaled_score, elapsed, self.judge_model)
 
         return scaled_score
@@ -352,126 +302,4 @@ class SKURelevanceScorer:
         
         return prompt
 
-    def time_ago(self, dt: datetime) -> str:
-        """
-        Convert a datetime object to a human-friendly 'time ago' string.
-        If dt has no timezone, assume UTC.
-        """
-        if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
-        now = datetime.now(timezone.utc)
-        diff = now - dt
-
-        seconds = diff.total_seconds()
-        minutes = int(seconds // 60)
-        hours = int(seconds // 3600)
-        days = int(seconds // 86400)
-        weeks = int(seconds // 604800)
-
-        if seconds < 60:
-            return "just now"
-        elif minutes < 60:
-            return f"{minutes} minute{'s' if minutes != 1 else ''} ago"
-        elif hours < 24:
-            return f"{hours} hour{'s' if hours != 1 else ''} ago"
-        elif days < 7:
-            return f"{days} day{'s' if days != 1 else ''} ago"
-        elif weeks < 5:
-            return f"{weeks} week{'s' if weeks != 1 else ''} ago"
-        else:
-            return dt.strftime("%Y-%m-%d")
-        
-    def save_miner_scores(self, 
-                        query_date: str, 
-                        batch_id: str, 
-                        miner_hotkey: str, 
-                        miner_uid: str, 
-                        miner_model: str,
-                        query: str, 
-                        query_desc: str, 
-                        scores: List[ScoredResult]):
-        for score in scores:
-            self.upsert_record(
-                query_date=query_date,
-                batch_id=batch_id,
-                miner_hotkey=miner_hotkey,
-                miner_uid=miner_uid,
-                miner_model=miner_model,
-                original_query=query,
-                query_desc=query_desc,
-                result_sku=score.sku,
-                result_eval=score.reason_evaluation,
-                result_score=score.relevance_score                
-            )
-
-    def upsert_record(self, 
-                    query_date: str, 
-                    batch_id: str, 
-                    miner_hotkey: str,                     
-                    miner_uid: str, 
-                    miner_model: str,
-                    original_query: str, 
-                    query_desc: str, 
-                    result_sku: str, 
-                    result_eval: str, 
-                    result_score: float):
-        self.create_table_if_not_exists()
-        conn = sqlite3.connect(f"file:{self.scoring_db}?mode=rwc", uri=True)
-        cursor = conn.cursor()
-        created_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-        cursor.execute("""
-            INSERT INTO sku_relevance (batch_id, miner_hotkey, miner_uid, miner_model, query_date, query, query_desc, result_sku, result_eval, result_score, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (batch_id, miner_hotkey, miner_uid, miner_model, query_date, original_query, query_desc, result_sku, result_eval, result_score, created_at))
-        conn.commit()
-        conn.close()
     
-    def save_final_score(self, 
-                        miner_hotkey: str, 
-                        miner_model: str, 
-                        score: float,
-                        eval_duration: float,
-                        eval_model: str):
-        conn = sqlite3.connect(f"file:{self.scoring_db}?mode=rwc", uri=True)
-        cursor = conn.cursor()
-        created_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-        cursor.execute("""
-            INSERT INTO miner_scores (miner_hotkey, miner_model, score, created_at, eval_duration, eval_model)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (miner_hotkey, miner_model, score, created_at, eval_duration, eval_model))
-        conn.commit()
-        conn.close()
-
-    def create_table_if_not_exists(self):
-        conn = sqlite3.connect(f"file:{self.scoring_db}?mode=rwc", uri=True)
-        cursor = conn.cursor()
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS sku_relevance (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                batch_id TEXT,
-                miner_hotkey TEXT,
-                miner_uid TEXT,
-                miner_model TEXT,
-                query_date TEXT,                
-                query TEXT,
-                query_desc TEXT,
-                result_sku TEXT,
-                result_eval TEXT,
-                result_score REAL,
-                created_at TEXT
-            )
-        """)
-        conn.commit()
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS miner_scores (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                miner_hotkey TEXT,
-                miner_model TEXT,
-                score REAL,
-                created_at TEXT,                
-                eval_duration REAL,
-                eval_model TEXT 
-            )
-        """)
-        conn.commit()
-        conn.close()
