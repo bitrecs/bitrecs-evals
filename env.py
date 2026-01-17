@@ -164,16 +164,22 @@ class Actor:
             print("=" * 60)
             start = time.monotonic()
 
+            all_suites = '\n'.join([suite.value for suite in EVAL_SUITE])
+            logger.info(f"Evaluation Suites to run: \033[36m{all_suites}\033[0m")
+            logger.info(f"CONST Max_Iterations per Eval: \033[36m{CONST.TOP_RECORDS}\033[0m")
+
             #Debug variables:
             # for key, value in os.environ.items():
             #     logger.debug(f"ENV {key}={value}")
             
-            logger.info("Loading miner input...")         
+            logger.info("Loading miner input...")
             #miner_input_path = "input/miner_input.yaml"
             miner_artifact = self.load_miner_input_yaml(input_path=yaml_file_path)
             
             logger.info(f"Artifact ID: {miner_artifact.artifact_id}")
-            logger.info(f"Model: {miner_artifact.model}")
+            logger.info(f"Artifact Model: {miner_artifact.model}")
+            logger.info(f"Artifact Provider: {miner_artifact.provider}")
+            logger.info(f"Artifact Hotkey: {miner_artifact.miner_hotkey}")
             logger.info("Starting evaluation suites...")
             logger.info(f"Eval Suites to run: {EVAL_SUITE}, Top Records: {CONST.TOP_RECORDS}")
             run_id, results = self.run_eval_suites(miner_artifact)

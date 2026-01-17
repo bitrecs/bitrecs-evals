@@ -70,8 +70,8 @@ class BitrecsReasonEval(BaseEval):
             db.close()
 
     def init_baseline_reasons(self):
-        rows = 2
-        for idx in range(rows):
+        max_examples = 5
+        for idx in range(max_examples):
             reason = f"This is a baseline iteration number {idx+1}."
             logger.info(f"Reason Baseline {idx+1}: {reason}")
             
