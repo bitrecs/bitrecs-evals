@@ -4,6 +4,7 @@ import os
 import random
 import time
 import logging
+import secrets
 import pandas as pd
 from datetime import datetime, timezone
 from common.utils import rec_list_to_set
@@ -37,12 +38,12 @@ class BitrecsSkuEval(BaseEval):
         db.close()     
         db_path = db.database  
 
-        llm_provider = "OPEN_ROUTER"
-        llm_model = "mistralai/mistral-small-3.2-24b-instruct"
+        self.judge_llm_provider = "OPEN_ROUTER"
+        self.judge_llm_model = "mistralai/mistral-small-3.2-24b-instruct"
         
         self.sku_scorer = SKURelevanceScorer(source_db=db_path, 
-                                             judge_provider=llm_provider, 
-                                             judge_model=llm_model, 
+                                             judge_provider=self.judge_llm_provider, 
+                                             judge_model=self.judge_llm_model, 
                                              is_debug=False,
                                              run_id=run_id)
         self.debug_prompts = False
@@ -60,6 +61,8 @@ class BitrecsSkuEval(BaseEval):
         
         if len(self.holdout_df) < self.min_sample_size:
             raise ValueError(f"Holdout set size {len(self.holdout_df)} is less than minimum required {self.min_sample_size}")
+        
+        self.holdout_df = self.holdout_df.head(50)
 
     def eval_type(self) -> BitrecsEvaluationType:
         return BitrecsEvaluationType.BITRECS_SKU_DAILY
@@ -79,8 +82,9 @@ class BitrecsSkuEval(BaseEval):
             reason = f"This is a baseline iteration number {idx+1}."
             logger.info(f"Reason Baseline {idx+1}: {reason}")
             
-            random_product = random.choice(self.sku_scorer.product_catalog)
             num_recs = 5
+            #random_product = random.choice(self.sku_scorer.product_catalog)
+            random_product = secrets.choice(self.sku_scorer.product_catalog)            
             query = random_product.sku
             
             prompt_factory = PromptFactory(
