@@ -11,9 +11,12 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Dict, Dict, List, Tuple
 from dataclasses import asdict
-from rules_scorer import ReasonedProduct
-from commerce.product_factory import ProductFactory
+from llm.factory import LLMFactory
+from llm.llm_provider import LLM
+from llm.prompt_factory import PromptFactory
+from commerce.product_factory import CatalogProvider, ProductFactory
 from models.product import Product
+from models.reasoned_product import ReasonedProduct
 
 CURRENT_DIR = str(pathlib.Path(__file__).parent)
 logger = logging.getLogger(__name__)
@@ -44,109 +47,26 @@ class ScoredResult:
 
 
 class SKURelevanceScorer:
-    def __init__(self, source_db: str, llm, is_debug: bool = False):
-        self.source_db = source_db
+    def __init__(self, source_db: str, judge_provider: str, judge_model: str, is_debug: bool = False, run_id: str = ""):
+        self.source_db = source_db        
         if not os.path.exists(source_db):
             raise FileNotFoundError(f"Directory not found: {source_db}")
-        score_db_path = os.path.join(CURRENT_DIR, "sku_relevance.db")
-        self.is_debug = is_debug
-        if is_debug:
-            score_db_path = os.path.join(CURRENT_DIR, "sku_relevance_debug.db")
-        self.scoring_db = score_db_path        
+        self.run_id = run_id
+        if not self.run_id:
+            raise ValueError("run_id must be provided")
         
-        #Load product catalog
-        self.catalog = ProductFactory.product_1k()
-        assert len(self.catalog) > 0, "Catalog is empty"
-        self.llm = llm
-        self.llm.temperature = 0.0
-        self.llm.system_prompt = "You are a product relevance evaluator. Your task is to evaluate the relevance of recommended products based on a given product and their reasons for recommendation."         
-        self.create_table_if_not_exists()
+        self.judge_provider = judge_provider
+        if not judge_provider:
+            raise ValueError("judge_provider must be provided")
+        self.judge_model = judge_model
+        if not judge_model:
+            raise ValueError("judge_model must be provided")
 
-    def get_stats(self) -> dict:
-        unprocessed_count_24h = self.get_unprocessed_since2(days_back=1)
-        unprocessed_count_48h = self.get_unprocessed_since2(days_back=2)
-        unprocessed_count_72h = self.get_unprocessed_since2(days_back=3)
-
-        stats = {
-            "source_db": self.source_db,
-            "scoring_db": self.scoring_db,
-            "catalog_size": len(self.catalog),
-            "llm_model": self.llm.model,
-            "llm_temperature": self.llm.temperature,
-            "llm_system_prompt": self.llm.system_prompt,
-            "unprocessed_count_24h": unprocessed_count_24h,
-            "unprocessed_count_48h": unprocessed_count_48h,
-            "unprocessed_count_72h": unprocessed_count_72h,
-        }
-        return stats
-    
-   
-        
-    def get_unprocessed_since2(self, days_back: int = 1) -> List[str]:
-        # Get all miners from source_db
-        date_from = datetime.now(timezone.utc) - pd.Timedelta(days=days_back)
-        days_back_str = date_from.strftime("%Y-%m-%d %H:%M:%S")
-        conn_src = sqlite3.connect(f"file:{self.source_db}?mode=ro", uri=True)
-        query_src = """
-            SELECT DISTINCT bt_header_axon_hotkey
-            FROM miner_responses
-            WHERE created_at >= ? AND bt_header_dendrite_status_code = '200'
-        """
-        df_src = pd.read_sql_query(query_src, conn_src, params=(days_back_str,))
-        conn_src.close()
-
-        # Get all scored miners from scoring_db
-        conn_score = sqlite3.connect(f"file:{self.scoring_db}?mode=ro", uri=True)
-        query_score = "SELECT DISTINCT miner_hotkey FROM miner_scores WHERE created_at >= ?"
-        df_score = pd.read_sql_query(query_score, conn_score, params=(days_back_str,))
-        conn_score.close()
-
-        # Filter out scored miners
-        scored_miners = set(df_score['miner_hotkey'])
-        unscored_miners = [m for m in df_src['bt_header_axon_hotkey'] if m not in scored_miners]
-        return unscored_miners
-    
-    def get_random_last_topn_miners_since(self, top: int = 10) -> List[str]:        
-        conn_src = sqlite3.connect(f"file:{self.source_db}?mode=ro", uri=True)
-        one_month_old = (datetime.now(timezone.utc) - pd.Timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
-        two_weeks_old = (datetime.now(timezone.utc) - pd.Timedelta(days=14)).strftime("%Y-%m-%d %H:%M:%S")
-        one_week_old = (datetime.now(timezone.utc) - pd.Timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")
-        query_src = """
-            SELECT DISTINCT bt_header_axon_hotkey
-            FROM miner_responses
-            WHERE bt_header_dendrite_status_code = '200'
-            AND created_at >= ?
-            ORDER BY RANDOM()
-            LIMIT ?
-        """
-        df_src = pd.read_sql_query(query_src, conn_src, params=(two_weeks_old, top))
-        conn_src.close()
-        return list(df_src['bt_header_axon_hotkey'])
-    
-
-
-    def get_newest_miners_since(self, days_back: int = 3) -> List[str]:
-        """
-        Get miners (hotkeys) whose first appearance in the database is on or after the specified date.
-        These are "new" miners with no records before that date.
-        """
-        conn_src = sqlite3.connect(f"file:{self.source_db}?mode=ro", uri=True)
-        date_from = (datetime.now(timezone.utc) - pd.Timedelta(days=days_back)).strftime("%Y-%m-%d %H:%M:%S")
-        query_src = """
-            SELECT bt_header_axon_hotkey
-            FROM (
-                SELECT bt_header_axon_hotkey, MIN(created_at) AS first_appearance
-                FROM miner_responses
-                WHERE bt_header_dendrite_status_code = '200'
-                GROUP BY bt_header_axon_hotkey
-            )
-            WHERE first_appearance >= ?
-            ORDER BY first_appearance DESC
-        """
-        df_src = pd.read_sql_query(query_src, conn_src, params=(date_from,))
-        conn_src.close()
-        return list(df_src['bt_header_axon_hotkey'])
-
+        woo_products = ProductFactory.load_default_catalog(CatalogProvider.WOOCOMMERCE)
+        self.product_catalog = [Product(sku=p['sku'], name=p['name'], price=str(p['price'])) for p in woo_products]
+        if len(self.product_catalog) == 0:
+            raise ValueError("Product catalog is empty")
+        self.system_prompt = "You are a product relevance evaluator. Your task is to evaluate the relevance of recommended products based on a given product and their reasons for recommendation."
     
 
     def get_top_n_scorers(self, top: int = 10, days_back: int=14) -> List[str]:        
@@ -165,118 +85,62 @@ class SKURelevanceScorer:
         return list(df_score['miner_hotkey'])
 
     
-    def get_dataframe_by_miner(self, miner_hotkey: str) -> pd.DataFrame:
-        final_df = None
+    def get_dataframe_by_miner(self, miner_hotkey: str) -> pd.DataFrame:        
         conn = sqlite3.connect(f"file:{self.source_db}?mode=ro", uri=True)
-        df = pd.read_sql_query("SELECT * FROM miner_responses WHERE bt_header_axon_hotkey=?", conn, params=(miner_hotkey,))
-        print(f"loaded db from {self.source_db} for miner {miner_hotkey}")
-        if final_df is None:
-            final_df = df
-        else:
-            final_df = pd.concat([final_df, df], ignore_index=True) 
-        conn.close()
-        return final_df    
+        df = pd.read_sql_query("SELECT * FROM miner_responses WHERE hotkey=?", conn, params=(miner_hotkey,))
+        print(f"loaded db from {self.source_db} for miner {miner_hotkey}")      
+        return df
     
-    def get_miner_latest_score(self, hot_key: str) -> float:
-        """
-        Get the latest score for a given miner hotkey.
-        """
-        conn = sqlite3.connect(f"file:{self.scoring_db}?mode=ro", uri=True)
-        query = "SELECT score FROM miner_scores WHERE miner_hotkey=? ORDER BY created_at DESC LIMIT 1"
-        df = pd.read_sql_query(query, conn, params=(hot_key,))
-        conn.close()
-        if df.empty:
-            return 0.0
-        return df['score'].iloc[0]
-    
-    # def get_miner_latest_score_with_date(self, hot_key: str) -> Tuple[float, str]:
+    # def get_miner_latest_score(self, hot_key: str) -> float:
     #     """
     #     Get the latest score for a given miner hotkey.
     #     """
     #     conn = sqlite3.connect(f"file:{self.scoring_db}?mode=ro", uri=True)
-    #     query = "SELECT score, created_at FROM miner_scores WHERE miner_hotkey=? ORDER BY created_at DESC LIMIT 1"
+    #     query = "SELECT score FROM miner_scores WHERE miner_hotkey=? ORDER BY created_at DESC LIMIT 1"
     #     df = pd.read_sql_query(query, conn, params=(hot_key,))
     #     conn.close()
     #     if df.empty:
+    #         return 0.0
+    #     return df['score'].iloc[0]
+    
+    # def get_miner_latest_score_with_date_ema(self, hot_key: str, max_rows: int = 10) -> Tuple[float, str]:
+    #     """
+    #     Get the latest score for a given miner hotkey with exponential moving average,
+    #     using only the most recent max_rows scores for emphasis on recency.
+    #     """
+    #     conn = sqlite3.connect(f"file:{self.scoring_db}?mode=ro", uri=True)
+    #     query = "SELECT score, created_at FROM miner_scores WHERE miner_hotkey=? ORDER BY created_at DESC LIMIT ?"
+    #     df = pd.read_sql_query(query, conn, params=(hot_key, max_rows))
+    #     conn.close()
+    #     if df.empty:
     #         return 0.0, ""
-    #     return df['score'].iloc[0], df['created_at'].iloc[0]    
-    
-    def get_miner_latest_score_with_date_ema(self, hot_key: str, max_rows: int = 10) -> Tuple[float, str]:
-        """
-        Get the latest score for a given miner hotkey with exponential moving average,
-        using only the most recent max_rows scores for emphasis on recency.
-        """
-        conn = sqlite3.connect(f"file:{self.scoring_db}?mode=ro", uri=True)
-        query = "SELECT score, created_at FROM miner_scores WHERE miner_hotkey=? ORDER BY created_at DESC LIMIT ?"
-        df = pd.read_sql_query(query, conn, params=(hot_key, max_rows))
-        conn.close()
-        if df.empty:
-            return 0.0, ""
-        # Reverse to chronological order for EMA calculation (oldest first)
-        df = df.iloc[::-1].reset_index(drop=True)
-        df['score_ema'] = df['score'].ewm(span=3, adjust=False).mean()
-        latest_ema = df['score_ema'].iloc[-1]  # EMA at the most recent point
-        latest_date = df['created_at'].iloc[-1]
-        return latest_ema, latest_date
-     
-     
-    
-    def has_miner_been_scored_since(self, hot_key: str, days_back: int = 1) -> bool:
-        """
-        Check if a miner has already been scored.
-        """
-        date_from = datetime.now(timezone.utc) - pd.Timedelta(days=days_back)
-        days_back_str = date_from.strftime("%Y-%m-%d %H:%M:%S")
-        conn = sqlite3.connect(f"file:{self.scoring_db}?mode=ro", uri=True)
-        query = """
-            SELECT COUNT(*) as count
-            FROM miner_scores
-            WHERE miner_hotkey=? AND created_at >= ?
-        """
-        df = pd.read_sql_query(query, conn, params=(hot_key, days_back_str))
-        conn.close()
-        if df.empty or df['count'].iloc[0] == 0:
-            return False
-        return True      
+    #     # Reverse to chronological order for EMA calculation (oldest first)
+    #     df = df.iloc[::-1].reset_index(drop=True)
+    #     df['score_ema'] = df['score'].ewm(span=3, adjust=False).mean()
+    #     latest_ema = df['score_ema'].iloc[-1]  # EMA at the most recent point
+    #     latest_date = df['created_at'].iloc[-1]
+    #     return latest_ema, latest_date
 
-    def has_miner_been_scored_since_hours(self, hot_key: str, hours_back: int = 12) -> bool:
-        """
-        Check if a miner has already been scored
-        """
-        date_from = datetime.now(timezone.utc) - pd.Timedelta(hours=hours_back)
-        hours_back_str = date_from.strftime("%Y-%m-%d %H:%M:%S")
-        conn = sqlite3.connect(f"file:{self.scoring_db}?mode=ro", uri=True)
-        query = """
-            SELECT COUNT(*) as count
-            FROM miner_scores
-            WHERE miner_hotkey=? AND created_at >= ?
-        """
-        df = pd.read_sql_query(query, conn, params=(hot_key, hours_back_str))
-        conn.close()
-        if df.empty or df['count'].iloc[0] == 0:
-            return False
-        return True
-
-    def score_miner(self, hot_key: str = None, model: str = "gemma3", top: int = 10) -> float:
+    def score_miner(self, hot_key: str, top: int = 10) -> float:
         st = time.perf_counter()
         if not hot_key:
             raise ValueError("hot_key must be provided")
         df = self.get_dataframe_by_miner(hot_key)
         if df is None or df.empty:
             logger.warning(f"No data found for miner {hot_key} in {self.source_db}")
-            return 0.0    
-
-        df = df[df["bt_header_dendrite_status_code"] == "200"]
-        if df.empty:
-            logger.warning(f"No successful responses (status code 200) for miner {hot_key}")
             return 0.0
 
+        # df = df[df["bt_header_dendrite_status_code"] == "200"]
+        # if df.empty:
+        #     logger.warning(f"No successful responses (status code 200) for miner {hot_key}")
+        #     return 0.0
+
         # Filter to only rows where query (SKU) exists in the catalog
-        catalog_skus = set(p.sku for p in self.catalog)
+        catalog_skus = set(p.sku for p in self.product_catalog)
         df = df[df["query"].isin(catalog_skus)]
 
-        df["num_results"] = pd.to_numeric(df["num_results"], errors="coerce")
-        df = df[df["num_results"] > 3]
+        df["num_recs"] = pd.to_numeric(df["num_recs"], errors="coerce")
+        df = df[df["num_recs"] > 3]
 
         if df.empty:
             logger.warning(f"No matching products found for miner {hot_key} after filtering by catalog SKUs.")
@@ -300,26 +164,26 @@ class SKURelevanceScorer:
         for _, row in df.iterrows():
             try:
                 sku = row["query"].upper().strip()
-                miner_uid = row["miner_uid"]
-                batch_id = row["site_key"]
+                miner_uid = row["miner_id"]
+                #batch_id = row["site_key"]
                 query_date = row["created_at"].strftime("%Y-%m-%d %H:%M:%S")
-                miner_model = row["models_used"].strip() if "models_used" in row else "Unknown"
+                miner_model = row["model_name"].strip() 
 
                 # if sku != "24-WB07" and sku != "MS11":
                 #     #print(f"SKIPPED SKU IS NOT 24-WB07 or MS11: {sku}")
                 #     continue
 
-                p = next((prod for prod in self.catalog if prod.sku.strip().upper() == sku), None)
+                p = next((prod for prod in self.product_catalog if prod.sku.strip().upper() == sku), None)
                 if not p:
                     logger.warning(f"Product with SKU {sku} not found in catalog for miner {hot_key}")
                     continue
                 query_desc = p.name
-                miner_recs = row["results"]
+                miner_recs = row["response"]
                 if not miner_recs:
                     logger.warning(f"No recommendations found for SKU {sku} in miner {hot_key}")
                     continue
 
-                num_results = int(row["num_results"])
+                num_results = int(row["num_recs"])
                 reasoned_products = ReasonedProduct.from_json(miner_recs)
                 if len(reasoned_products) != num_results:
                     continue
@@ -335,41 +199,34 @@ class SKURelevanceScorer:
                 #logger.debug("------------------------------------")
                 prompt_length = len(prompt.split())
                 print(f"Prompt length for SKU {sku}: \033[32m{prompt_length} words\033[0m")
-                token_count = ProductFactory.get_token_count(prompt)
+                token_count = PromptFactory.get_token_count(prompt)
                 print(f"Token count for SKU {sku}: \033[32m{token_count} tokens\033[0m")
 
                 q_time = time.perf_counter()
-                self.llm.model = model
-                if "/" in model.lower():
-                    llm_result = self.llm.call_open_router(prompt)
-                    logger.info(f"Using OpenRouter model: {model}")                    
-                elif "gemini" in model.lower():
-                    llm_result = self.llm.call_gemini(prompt)
-                    logger.info(f"Using Gemini model: {model}")                    
-                else: #local
-                    llm_result = self.llm.ask_ollama(prompt)
-                    logger.info(f"Using OLLAMA model: {model}")
-                
-                if not llm_result:
-                    logger.error(f"LLM returned empty result for SKU {sku} in miner {hot_key}")
-                    continue
-                scored_results = ProductFactory.tryparse_llm(llm_result)
+
+                server = LLM.try_parse(self.judge_provider)
+                llm_output = LLMFactory.query_llm(server=server,
+                                                    model=self.judge_model,
+                                                    system_prompt=self.system_prompt,
+                                                    user_prompt=prompt,
+                                                    temp=0.0)
+                scored_results = PromptFactory.tryparse_llm(llm_output)
                 if not scored_results:
                     logger.error(f"Failed to parse LLM results for SKU {sku} in miner {hot_key}")
                     continue
                 llm_resuls = [ScoredResult(**r) for r in scored_results]
                 scores = [r.relevance_score for r in llm_resuls if isinstance(r.relevance_score, (int, float))]
 
-                self.save_miner_scores(
-                    query_date=query_date,
-                    batch_id=batch_id,
-                    miner_hotkey=hot_key,
-                    miner_uid=miner_uid,
-                    miner_model=miner_model,
-                    query=sku,
-                    query_desc=query_desc,
-                    scores=llm_resuls                    
-                )
+                # self.save_miner_scores(
+                #     query_date=query_date,
+                #     batch_id=self.run_id,
+                #     miner_hotkey=hot_key,
+                #     miner_uid=miner_uid,
+                #     miner_model=miner_model,
+                #     query=sku,
+                #     query_desc=query_desc,
+                #     scores=llm_resuls                    
+                # )
 
                 # Fluke 100 detection: if 90%+ are 0 and only one 100, zero out all scores
                 num_zeros = scores.count(0)                
@@ -404,9 +261,12 @@ class SKURelevanceScorer:
 
         avg_score = sum(trimmed) / len(trimmed)
         scaled_score = avg_score / 100
-        print(f"\033[32mAverage score of {top} records for miner {hot_key}: {avg_score}, scaled: {scaled_score} \033[0m")
+        print(f"\033[32mFinal average score for miner {hot_key}: {avg_score}, Scaled: {scaled_score}\033[0m")
         elapsed = time.perf_counter() - st
-        self.save_final_score(hot_key, miner_model, scaled_score, elapsed, self.llm.model)
+        print(f"Duration: \033[33m{elapsed:0.2f} seconds\033[0m")
+                
+        #self.save_final_score(hot_key, miner_model, scaled_score, elapsed, self.judge_model)
+
         return scaled_score
     
     def build_prompt_for_sku(self, num_results: int, query_product: Product, recs: List[ReasonedProduct]) -> str:
@@ -428,7 +288,7 @@ class SKURelevanceScorer:
     - A catalog can have thousands of products, so consider the recomendations as specific to the user shopping for the Original Product with limited space left in their cart.
     - Each recommendation should be considered in the context of the Original Product and the entire catalog.
     - Evaluate the recomendations holistically as a set, do the recommendations make sense together?
-    - Entire Catalog: {json.dumps([asdict(p) for p in self.catalog], separators=(',', ':'))}
+    - Entire Catalog: {json.dumps([asdict(p) for p in self.product_catalog], separators=(',', ':'))}
 
     # INPUT
     - Original Product SKU: {query_product.sku}

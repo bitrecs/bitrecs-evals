@@ -1,6 +1,7 @@
 import logging
 from typing import List, Dict
 from evals.bitrecs_basic_eval import BitrecsBasicEval
+from evals.bitrecs_sku_eval import BitrecsSkuEval
 from evals.eval_result import EvalResult
 from models.eval_type import BitrecsEvaluationType
 from models.miner_artifact import Artifact
@@ -27,6 +28,7 @@ class EvalFactory:
         BitrecsEvaluationType.BITRECS_BASIC_DAILY: BitrecsBasicEval,
         BitrecsEvaluationType.BITRECS_PROMPT_DAILY: BitrecsPromptEval,
         BitrecsEvaluationType.BITRECS_REASON_DAILY: BitrecsReasonEval,
+        BitrecsEvaluationType.BITRECS_SKU_DAILY: BitrecsSkuEval,
         BitrecsEvaluationType.AMAZON_PROMPT_100: AmazonPromptEval,
         BitrecsEvaluationType.AMAZON_PROMPT_500: AmazonPromptEval,
         BitrecsEvaluationType.AMAZON_PROMPT_1000: AmazonPromptEval
