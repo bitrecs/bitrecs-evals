@@ -1,7 +1,7 @@
-name: "dimi recommender"
+name: "bitrecs test recommender"
 version_num: "1"
 status: "screening_1"
-miner_hotkey: "5DNtKV1jPaWN5rPY5swJakWyVZRdBi87HKTLA1e5PTNsn123"
+miner_hotkey: "5CXoYTVrdgRnKjaQqdHFnWch8HMcZPxTfsBui5993Ddw5f5J"
 miner_uid: 42
 ip_address: ""
 provider: "CHUTES"

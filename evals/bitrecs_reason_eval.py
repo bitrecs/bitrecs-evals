@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 Evaluate individual sku reason statements for recommendations.
 Each reason statement is checked for validity using an LLM.
 
+Will load fresh baseline samples on init.
 
 """
 
