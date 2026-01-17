@@ -178,10 +178,11 @@ class SKURelevanceScorer:
                 #     scores=llm_resuls                    
                 # )
 
-                # Fluke 100 detection: if 80%+ are 0 and only one 100, zero out all scores
-                num_zeros = scores.count(0)                
-                if len(scores) > 0 and num_zeros / len(scores) >= 0.80:
-                    print(f"\033[31mFluke 100 detected for SKU {sku}: {scores} -- zeroing out\033[0m")
+                # Fluke detection: if 80%+ are 0 zero out all scores
+                fluke_threshold = 0.80
+                num_zeros = scores.count(0)
+                if len(scores) > 0 and num_zeros / len(scores) >= fluke_threshold:
+                    print(f"\033[31mFluke {fluke_threshold*100} detected for SKU {sku}: {scores} -- zeroing out\033[0m")
                     scores = [0 for _ in scores]
 
                 tavg_score = sum(scores) / len(scores)
@@ -203,13 +204,14 @@ class SKURelevanceScorer:
         if not all_scores:
             return 0.0
 
-        if len(all_scores) > 2:
-            trimmed = sorted(all_scores)[1:-1]  # drop lowest and highest
-            print(f"\033[33mTrimmed scores for miner {hot_key}: {trimmed}\033[0m")
-        else:
-            trimmed = all_scores
+        # if len(all_scores) > 2:
+        #     trimmed = sorted(all_scores)[1:-1]  # drop lowest and highest
+        #     print(f"\033[33mTrimmed scores for miner {hot_key}: {trimmed}\033[0m")
+        # else:
+        #     trimmed = all_scores
+        # avg_score = sum(trimmed) / len(trimmed)
 
-        avg_score = sum(trimmed) / len(trimmed)
+        avg_score = sum(all_scores) / len(all_scores)
         scaled_score = avg_score / 100
         print(f"\033[32mFinal average score for miner {hot_key}: {avg_score}, Scaled: {scaled_score}\033[0m")
         elapsed = time.perf_counter() - st
@@ -267,20 +269,19 @@ class SKURelevanceScorer:
     - Every recommendation should be near the Original Product's general purpose and should be related.
     - Every recommendation may traverse category taxonomy and adjacement categories but 80% of time they must be in the same category or adjacent categories.
     
-    <rules>    
-    - if Original Product is pet products recommending baby products is NOT ok.
-    - if Original Product is a bag recommending more bags is OK.
-    - if Original Product is from shorts recommending more shorts is OK only if they are from the same gender.
-    - if Original Product is from shoes recommending more shoes is OK only if they are from the same gender.
-    - if Original Product is from womans clothing, recommendaing more womans clothing is OK if the reason is specific and accurate.
-    - if Original Product is from womans clothing recommending mens clothing NOT ok.
-    - if Original Product is a accessory recommending similar products like olrder/newer/adjacent versions is OK.
-    - if Original Product is a bag, recommending a water bottle is NOT ok.
-    - if Original Product is from pants, recommending a water bottle is NOT ok.    
-    - if Original Product is from a category, recommending a completely separate category product is NOT ok unless the reason is specific and accurate.
-    - if Original Product is from Yoga category, recommending yoga equipment is NOT ok unless Original Product is yoga equipment.
-    - if Original Product is specific variant product with attributes like color and size, the recommendations should generally match those attributes for consistency.
-    - if Original Product is specific variant product with attributes like color and size, the recommendations should not be more of the same variant.     
+    <rules>
+    - Do not recommend products from unrelated categories. For example, if the original product is pet-related, do not recommend baby products.
+    - If the original product is a bag, recommending other bags is acceptable.
+    - If the original product is shorts, recommending more shorts is acceptable only if they are for the same gender.
+    - If the original product is shoes, recommending more shoes is acceptable only if they are for the same gender.
+    - If the original product is women's clothing, recommending more women's clothing is acceptable only if the reason is specific and accurate.
+    - Do not recommend men's clothing if the original product is women's clothing.
+    - If the original product is an accessory, recommending similar accessories (e.g., older/newer/adjacent versions) is acceptable.
+    - Do not recommend unrelated items like water bottles if the original product is a bag or pants.
+    - Do not recommend products from completely separate categories unless the reason is specific and accurate.
+    - If the original product is from the yoga category, do not recommend yoga equipment unless the original product is already yoga equipment.
+    - If the original product has specific attributes like color or size, recommendations should generally match those attributes for consistency.
+    - If the original product is a specific variant (e.g., with color or size), do not recommend more of the exact same variant.     
     </rules>
     
     # DECISIVENESS RULES    

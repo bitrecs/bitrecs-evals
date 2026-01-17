@@ -52,9 +52,8 @@ class BitrecsSkuEval(BaseEval):
 
         if len(self.holdout_df) == 0:
             if 1==1:
-                self.init_baseline_reasons()
-                df = self.load_recent_answers()
-                self.holdout_df = df
+                self.init_baseline_reasons()                
+                self.holdout_df = self.load_recent_answers()
                 if len(self.holdout_df) == 0:
                     logger.error(f"No data for hotkey {self.miner_artifact.miner_hotkey}")
                     raise ValueError(f"No recent miner responses found for {self.miner_artifact.miner_hotkey}")

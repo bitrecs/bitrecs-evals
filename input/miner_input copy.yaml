@@ -4,8 +4,8 @@ status: "screening_1"
 miner_hotkey: "5GLT5g8PA6XxfXkVbWeXxpfZGjfbQsRMGS3fksmZXYZjSt7z"
 miner_uid: 42
 ip_address: ""
-provider: "CHUTES"
-model: "Qwen/Qwen3-Next-80B-A3B-Instruct"
+provider: "OPEN_ROUTER"
+model: "x-ai/grok-4.1-fast"
 
 system_prompt_template: |
   You are an ecommerce helpful assistant, today's date is {{current_date}}.

@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 """
-Call provider using prompt and ensure catalog skus match
+Loads latest responses and evaluates catalog matching.
 
 """
 
@@ -33,12 +33,14 @@ class BitrecsCatalogEval(BaseEval):
         self.debug_prompts = False
 
     def eval_type(self) -> BitrecsEvaluationType:
-        return BitrecsEvaluationType.AMAZON_PROMPT_100
+        return None
     
     def run(self, max_iterations=10) -> EvalResult:
         """
         Run the Bitrecs catalog evaluation.
         """
+
+        raise NotImplementedError("Subclasses must implement the run method.")
         start_time = time.monotonic()
         count = 0
         success_count = 0
