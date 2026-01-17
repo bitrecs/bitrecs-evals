@@ -36,7 +36,8 @@ logging.getLogger('peewee').setLevel(logging.DEBUG)
 EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY, 
               BitrecsEvaluationType.BITRECS_REASON_DAILY, 
               BitrecsEvaluationType.BITRECS_SKU_DAILY, 
-              BitrecsEvaluationType.BITRECS_PROMPT_DAILY]
+              BitrecsEvaluationType.BITRECS_PROMPT_DAILY,
+              BitrecsEvaluationType.AMAZON_PROMPT_100]
 
 
 class Actor:

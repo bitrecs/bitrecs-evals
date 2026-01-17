@@ -12,3 +12,4 @@ peewee==3.18.3
 peewee-migrate==1.14.3
 fastapi
 uvicorn[standard]
+datasets>=4.5.0
