@@ -13,9 +13,7 @@ from .terms import POOR_REASONS
 MIN_REQUESTS = 1  
 SKU_DUPLICATION_THRESHOLD = 0.40
 
-# Scores recs based on rules applied to the reasoning provided for each product
-
-  
+# Scores recs based on rules applied to the reasoning provided for each product 
 
 
 class RulesScorer:
@@ -25,6 +23,8 @@ class RulesScorer:
         db_files = []       
         db_files.append(db_full_path)
         self.run_id = run_id
+        if not run_id:
+            raise ValueError("run_id must be provided to RulesScorer")
         
         if len(db_files) == 0:
             raise FileNotFoundError("No SQLite database files found in the specified directory")
@@ -34,10 +34,6 @@ class RulesScorer:
         
         self.db_files = db_files
         self.max_workers = max_workers
-        
-        #indexs_updated = self.init_indicies()
-        #print(f"Database indices updated: {indexs_updated}")
-
         self.poor_reasons = POOR_REASONS
 
     def init_indicies(self) -> bool:
@@ -73,7 +69,7 @@ class RulesScorer:
         for db_file in self.db_files:
             #conn = sqlite3.connect(db_file)
             conn = sqlite3.connect(f"file:{db_file}?mode=ro", uri=True)
-            df = pd.read_sql_query("SELECT * FROM miner_responses WHERE hotkey=?", conn, params=(miner_hotkey,))
+            df = pd.read_sql_query("SELECT * FROM miner_responses WHERE hotkey=? ORDER BY created_at DESC", conn, params=(miner_hotkey,))
             print(f"loaded db from {db_file} for miner {miner_hotkey}")
             if final_df is None:
                 final_df = df

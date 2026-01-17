@@ -23,7 +23,7 @@ def normalize_model_name(model_name: str) -> str:
     return normalized_model
 
 
-def time_ago(self, dt: datetime) -> str:
+def time_ago(dt: datetime) -> str:
         """
         Convert a datetime object to a human-friendly 'time ago' string.
         If dt has no timezone, assume UTC.
