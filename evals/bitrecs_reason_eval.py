@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 Evaluate individual sku reason statements for recommendations.
 Each reason statement is checked for validity using an LLM.
 
+
 """
 
 class BitrecsReasonEval(BaseEval):
@@ -33,7 +34,7 @@ class BitrecsReasonEval(BaseEval):
 
     pass_threshold = 0.3
     
-    def __init__(self,  run_id: str, miner_artifact: Artifact):
+    def __init__(self, run_id: str, miner_artifact: Artifact):
         super().__init__(run_id, miner_artifact)
 
         db.connect()
