@@ -24,7 +24,8 @@ logging.getLogger('peewee').setLevel(logging.WARNING)
 
 #EVAL_SUITE = [BitrecsEvaluationType.AMAZON_PROMPT_100]
 
-EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY, BitrecsEvaluationType.BITRECS_REASON_DAILY]
+#$EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY, BitrecsEvaluationType.BITRECS_REASON_DAILY]
+EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY, BitrecsEvaluationType.BITRECS_REASON_DAILY, BitrecsEvaluationType.BITRECS_SKU_DAILY]
 
 #EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY, BitrecsEvaluationType.BITRECS_REASON_DAILY, BitrecsEvaluationType.BITRECS_PROMPT_DAILY]
 

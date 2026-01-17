@@ -133,3 +133,5 @@ class BaseEval(ABC):
             logger.error(f"Failed to log miner response to DB: {e}")
         finally:
             db.close()
+
+    

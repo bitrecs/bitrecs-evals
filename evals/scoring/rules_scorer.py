@@ -1,15 +1,13 @@
-import ast
-import json
 import re
 import sqlite3
 import string
 import pandas as pd
 from typing import List, Tuple, Union
-from dataclasses import dataclass
 from datetime import datetime, timezone
-
+from models.miner_report import MinerReport
 from models.product import Product
 from commerce.product_factory import CatalogProvider, ProductFactory
+from models.reasoned_product import ReasonedProduct
 from .terms import POOR_REASONS
 
 MIN_REQUESTS = 1  
@@ -17,133 +15,7 @@ SKU_DUPLICATION_THRESHOLD = 0.40
 
 # Scores recs based on rules applied to the reasoning provided for each product
 
-@dataclass
-class ReasonedProduct:
-    sku : str
-    name : str
-    price : str
-    reason: str 
-    
-    @staticmethod
-    def from_json(json_str: str) -> List['ReasonedProduct']:
-        reasoned_products = []
-        try:            
-            items = json.loads(json_str)
-        except json.JSONDecodeError:
-            try:                
-                items = ast.literal_eval(json_str)
-            except (ValueError, SyntaxError) as e:
-                print(f"Failed to parse data: {e}")
-                return reasoned_products    
-        
-        for item in items:
-            if isinstance(item, dict):                
-                data = item
-            elif isinstance(item, str):                
-                try:
-                    data = json.loads(item)
-                except json.JSONDecodeError:
-                    try:
-                        data = ast.literal_eval(item)
-                    except:
-                        print(f"Failed to parse item: {item}")
-                        continue
-            else:
-                print(f"Unexpected item type: {type(item)}")
-                continue            
-            
-            if isinstance(data, dict):
-                rp = ReasonedProduct(
-                    sku=data.get("sku", ""),
-                    name=data.get("name", ""),
-                    price=data.get("price", ""),
-                    reason=data.get("reason", "")
-                )
-                reasoned_products.append(rp)
-    
-        return reasoned_products
-    
-
-
-class MinerReport:
-    run_id: str
-    created_at: str
-    scored_at: str
-    miner_hotkey: str
-    miner_uid: str
-    miner_ip: str
-    num_success: int
-    num_failures: int
-    
-    num_requests_evaluated: int
-    total_unique_products: int
-    avg_response_time: float
-
-    r_score: float # Rules Score (Reasoning Quality)
-    s_score: float # SKU Relevance Score (Reasoning Relevance)
-    f_score: float # Final Score
-
-    report_card: str
-    models_used: List[str] = []    
-    evaluator_notes: List[str] = []
-    rank: int = -1    
-
-    def to_dict(self):
-        return {
-            'created_at': self.created_at,
-            'scored_at': self.scored_at,
-            'miner_hotkey': self.miner_hotkey,
-            'miner_uid': self.miner_uid,
-            'miner_ip': self.miner_ip,
-            'num_success': self.num_success,
-            'num_failures': self.num_failures,
-            'num_requests_evaluated': self.num_requests_evaluated,
-            'total_unique_products': self.total_unique_products,
-            'avg_response_time': self.avg_response_time,
-            'r_score': self.r_score,
-            's_score': self.s_score,
-            'f_score': self.f_score,
-            'report_card': self.report_card,
-            'models_used': self.models_used,
-            'evalator_notes': self.evaluator_notes,
-            'rank': self.rank
-        }
-
-
-class BatchReport:    
-    batch_id: str
-    batch_date: str
-    query: str
-    avg_axon_process_time: float 
-    avg_dendrite_process_time: float
-    num_results: int
-    batch_elected_miner_uid: str    
-    batch_elected_miner_hotkey: str = ""
-    batch_elected_model: str = ""
-    batch_elected_result: str = ""
-    keys: List[str]
-    scores: List[float]
-    axon_status_codes: List[str]
-    dendrite_status_codes: List[str]   
-
-    def to_dict(self):
-        return {
-            'batch_id': self.batch_id,
-            'batch_date': self.batch_date,
-            'query': self.query,
-            'avg_axon_process_time': self.avg_axon_process_time,
-            'avg_dendrite_process_time': self.avg_dendrite_process_time,
-            'num_results': self.num_results,
-            'batch_elected_miner_uid': self.batch_elected_miner_uid,
-            'batch_elected_miner_hotkey': self.batch_elected_miner_hotkey,
-            'batch_elected_model': self.batch_elected_model,
-            'batch_elected_result': self.batch_elected_result,
-            'keys': self.keys,
-            'scores': self.scores,
-            'axon_status_codes': self.axon_status_codes,
-            'dendrite_status_codes': self.dendrite_status_codes
-        }
-    
+  
 
 
 class RulesScorer:
