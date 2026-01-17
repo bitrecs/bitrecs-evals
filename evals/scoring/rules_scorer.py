@@ -200,12 +200,11 @@ class RulesScorer:
         if self.check_cross_catalog_reasons(success_rows):
             miner_score = 0.0
             report.evaluator_notes.append("Flagged for cross-catalog copying of reasons.")
-            print(f"Miner {miner_hotkey} flagged for cross-catalog copying of reasons.")
-       
-        #success_count = int(len(filtered_df[filtered_df['bt_header_axon_status_code'] == '200']))
-        success_count = int(len(success_rows))
-
+            print(f"Miner {miner_hotkey} flagged for cross-catalog copying of reasons.")      
+        
+        
         total_count = len(filtered_df)
+        success_count = int(len(success_rows))
         success_rate = success_count / total_count if total_count > 0 else 0.0                
         
         # Enforce minimum success count
@@ -216,12 +215,12 @@ class RulesScorer:
 
 
         # Finalize report
-        report.r_score = miner_score
-        report.f_score = 0
+        report.r_score = miner_score        
         report.s_score = 0
-        report.num_requests_evaluated = len(filtered_df)
+        report.f_score = 0
+        report.num_requests_evaluated = success_count
         report.total_unique_products = len(total_products)
-        print(f"Final Score for miner {miner_hotkey}:\033[31m {report.r_score:.2f} \033[0m")
+        print(f"Final Rules Score for miner {miner_hotkey}:\033[31m {report.r_score:.2f} \033[0m")
         report.scored_at = datetime.now(tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
 
         print("\033[33m---------------RULES SCORE MINER END ---------------- \033[0m")

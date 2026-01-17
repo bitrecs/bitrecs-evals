@@ -131,7 +131,7 @@ class BitrecsReasonEval(BaseEval):
         eval_score = 0.0        
         hotkey = self.miner_artifact.miner_hotkey        
         try:
-            report = self.rules_scorer.score_miner(miner_hotkey=hotkey, days_ago=21, min_success=1)
+            report = self.rules_scorer.score_miner(miner_hotkey=hotkey, days_ago=7, min_success=1)
             logger.info(f"Notes for miner {hotkey}:")
             for note in report.evaluator_notes:
                 logger.info(f"  - {note}")

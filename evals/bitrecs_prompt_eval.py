@@ -28,6 +28,9 @@ class BitrecsPromptEval(BaseEval):
 
     min_sample_size = 3
 
+    
+    pass_threshold = 0.3
+
     def __init__(self, run_id: str, miner_artifact: Artifact = None):      
         super().__init__(run_id, miner_artifact)
         holdout_df = self.get_latest_holdout()
@@ -78,16 +81,17 @@ class BitrecsPromptEval(BaseEval):
 
         
         end_time = time.monotonic()
-        total_duration = end_time - start_time
-        #final_score = success_count / len(self.holdout_df)  # Standardized: float between 0 and 1
-        final_score = success_count / count if count > 0 else 0.0  # Standardized: float between 0 and 1
-        
-        #eval_success = (success_count == len(self.holdout_df))
+        total_duration = end_time - start_time        
+        final_score = success_count / count if count > 0 else 0.0                
         eval_success = False
-        if success_count >= max_iterations:
+
+        if final_score >= self.pass_threshold:
             eval_success = True
 
-        eval_success = True
+        # pass_threshold_count = int(self.pass_threshold * max_iterations)
+        # logger.info(f"Final score: {final_score:.2f} ({success_count}/{count}), Pass threshold count: {pass_threshold_count}")        
+        # if success_count >= pass_threshold_count:
+        #     eval_success = True        
 
         result = EvalResult(           
             eval_name=self.get_eval_name(),  # Use base method

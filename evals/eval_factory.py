@@ -28,7 +28,7 @@ class EvalFactory:
         BitrecsEvaluationType.BITRECS_BASIC_DAILY: BitrecsBasicEval,
         BitrecsEvaluationType.BITRECS_PROMPT_DAILY: BitrecsPromptEval,
         BitrecsEvaluationType.BITRECS_REASON_DAILY: BitrecsReasonEval,
-        BitrecsEvaluationType.BITRECS_SKU_DAILY: BitrecsSkuEval,
+        BitrecsEvaluationType.BITRECS_SKU_DAILY: BitrecsSkuEval,        
         BitrecsEvaluationType.AMAZON_PROMPT_100: AmazonPromptEval,
         BitrecsEvaluationType.AMAZON_PROMPT_500: AmazonPromptEval,
         BitrecsEvaluationType.AMAZON_PROMPT_1000: AmazonPromptEval
@@ -60,7 +60,7 @@ class EvalFactory:
             try:
                 logger.debug(f"\033[34mRunning eval type: {eval_type}\033[0m")
                 result = cls.run_eval(eval_type, miner_artifact, run_id, max_iterations)
-                results.append(result)
+                results.append(result)                
             except Exception as e:
                 # Log error and continue (don't fail all evals)
                 logger.error(f"Failed to run {eval_type} eval: {e}")

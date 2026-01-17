@@ -18,7 +18,7 @@ logging.basicConfig(level=CONST.LOG_LEVEL)
 logger = logging.getLogger(__name__)
 
 """
-Basic Template Evaluator
+Evaluate template schema validity for Bitrecs artifacts.
 
 """
 

@@ -63,7 +63,8 @@ def run_eval_suites(miner_artifact: Artifact, shuffle=False) -> Tuple[str, List[
             logger.error(f"\033[31m{result.eval_name} Failed! Score: {result.score:.2f}\033[0m")    
     
     total_score = sum(r.score for r in results) / len(results) if results else 0.0
-    logger.info(f"Aggregated Score: {total_score:.2f}")    
+    
+    logger.info(f"Aggregated Score: {total_score:.2f} from {len(results)} evals.")    
     logger.info(f"RUN COMPLETE for run ID: \033[34m{run_id}\033[0m")    
     return run_id, results
 
@@ -140,8 +141,8 @@ def generate_report_by_run_id(run_id: str) -> str:
                 report_lines.append("Result:\033[31m FAIL\033[0m")
 
             report_lines.append(f"Sample Size: {eval.rows_evaluated}")
-            report_lines.append(f"Provider: {eval.provider_name}")
-            report_lines.append(f"Model: {eval.model_name}")            
+            report_lines.append(f"Provider: \033[33m{eval.provider_name}\033[0m")
+            report_lines.append(f"Model: \033[36m{eval.model_name}\033[0m")
             report_lines.append(f"Duration: {eval.duration_seconds:.2f}s")
             report_lines.append(f"Score: {eval.score:.2f}")
             report_lines.append(f"Comments: {eval.comments}")
