@@ -192,8 +192,10 @@ class Actor:
             print("=" * 60)
             start = time.monotonic()
 
-            all_suites = '\n'.join([suite.value for suite in EVAL_SUITE])
-            logger.info(f"Evaluation Suites to run: \033[36m{all_suites}\033[0m")
+            # all_suites = '\n'.join([suite.value for suite in EVAL_SUITE])
+            # logger.info(f"Evaluation Suites to run: \033[36m{all_suites}\033[0m")
+            
+            logger.info(f"Evaluation Type to run: \033[36m{problem_type.value}\033[0m")
             logger.info(f"CONST Max_Iterations per Eval: \033[36m{CONST.TOP_RECORDS}\033[0m")
 
             #Debug variables:
