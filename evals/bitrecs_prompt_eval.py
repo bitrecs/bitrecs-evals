@@ -53,6 +53,10 @@ class BitrecsPromptEval(BaseEval):
         count = 0
         success_count = 0
         exception_count = 0
+        
+        #shuffle the holdout set for randomness
+        self.holdout_df = self.holdout_df.sample(frac=1).reset_index(drop=True)
+
         for idx, row in self.holdout_df.iterrows():
             if idx >= max_iterations:
                 break
