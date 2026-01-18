@@ -18,7 +18,10 @@ logging.basicConfig(level=CONST.LOG_LEVEL)
 logger = logging.getLogger(__name__)
 
 """
-Evaluate template schema validity for Bitrecs artifacts.
+Bitrecs Basic Template Validation
+
+check: ensures that the prompt templates are valid Jinja2 templates and only use allowed variables.
+data: N/A
 
 """
 
@@ -69,8 +72,19 @@ class BitrecsBasicEval(BaseEval):
 
         eval_success = result
         if eval_success:
-            final_score = 1.0        
             template_status = "OK"
+            # Add variance based on variable count
+            all_vars = set()
+            all_vars.update(self.get_template_variables(self.miner_artifact.system_prompt_template))
+            all_vars.update(self.get_template_variables(self.miner_artifact.user_prompt_template))
+            valid_vars_used = all_vars & VALID_TEMPLATE_VARIABLES
+            variable_count = len(valid_vars_used)
+            max_vars = len(VALID_TEMPLATE_VARIABLES)  # 8
+            variable_score = variable_count / max_vars if max_vars > 0 else 0.0
+            final_score = 0.5 + (variable_score * 0.5)  # Base 0.5 for passing validation, plus up to 0.5 for variables
+        else:
+            final_score = 0.0  # Fail validation = 0.0
+            
 
         result = EvalResult(           
             eval_name=self.get_eval_name(),
@@ -79,7 +93,7 @@ class BitrecsBasicEval(BaseEval):
             score=final_score,
             passed=eval_success,
             rows_evaluated=count,
-            details=f"Test result: {result}. TEMPLATE {template_status}.\nEvaluated {count} samples with {exception_count} exceptions for hotkey {self.miner_artifact.miner_hotkey}.\n{self.run_id}",
+            details=f"Test result: {result}. TEMPLATE {template_status}.\nScore: {final_score:.2f}.\nEvaluated {count} samples with {exception_count} exceptions for hotkey {self.miner_artifact.miner_hotkey}.\n{self.run_id}",
             duration_seconds=total_duration,
             temperature=self.miner_artifact.sampling_params.temperature,
             model_name=self.miner_artifact.model,
@@ -116,6 +130,15 @@ class BitrecsBasicEval(BaseEval):
         encoding = tiktoken.get_encoding(encoding_name)
         tokens = encoding.encode(prompt)
         return len(tokens)
+    
+    @staticmethod
+    def get_template_variables(template_str: str) -> set:
+        env = Environment()
+        ast = env.parse(template_str)
+        variables = set()
+        for node in ast.find_all(nodes.Name):
+            variables.add(node.name)
+        return variables
     
     @staticmethod
     def validate_artifact_template(agent: Artifact) -> Tuple[bool, str]:    

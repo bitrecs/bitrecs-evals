@@ -18,6 +18,9 @@ logger = logging.getLogger(__name__)
 
 """
 Evaluate how relevant each SKU recommendation is to the task
+check: if the recommended SKUs are relevant to the query SKU.
+data: loads fresh miner responses for the given miner artifact.
+
 """
 
 class BitrecsSkuEval(BaseEval):
@@ -134,7 +137,7 @@ class BitrecsSkuEval(BaseEval):
         eval_score = 0.0        
         hotkey = self.miner_artifact.miner_hotkey        
         try:
-            top = 2
+            top = 3
             miner_score = self.sku_scorer.score_miner(hot_key=hotkey, top=top)            
             eval_score = miner_score
             count = top

@@ -42,7 +42,7 @@ user_prompt_template: |
     Available products:
     <context>
     {{product_catalog}}
-    </context>
+    </context>   
 
     # OUTPUT REQUIREMENTS
     - Return ONLY a JSON array.
