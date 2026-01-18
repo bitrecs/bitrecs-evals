@@ -83,6 +83,27 @@ class Actor:
         # logger.info(f"Aggregated Score: {total_score:.2f}")        
         logger.info(f"RUN COMPLETE for run ID: \033[34m{run_id}\033[0m")
         return run_id, results
+    
+    def run_eval(self, miner_artifact: Artifact, eval_type: BitrecsEvaluationType) -> Tuple[str, List[EvalResult]]:
+        """Run evaluation suites."""
+        logger.info("Running eval suites...")    
+        run_id = secrets.token_hex(16)
+        logger.info(f"Eval Run ID: \033[35m{run_id}\033[0m")
+        logger.info(f"TOP RECORDS: \033[36m{CONST.TOP_RECORDS}\033[0m")
+
+        this_set = [eval_type]
+        results = EvalFactory.run_all_evals(run_id, miner_artifact, this_set, CONST.TOP_RECORDS)
+        
+        for result in results:
+            print(f"{result}")
+            self.log_eval_result_to_db(run_id, result, miner_artifact.miner_hotkey, miner_artifact.model, miner_artifact.provider)
+            if result.passed:
+                logger.info(f"\033[32m{result.eval_name} Passed! Score: {result.score:.2f}\033[0m")
+            else:
+                logger.error(f"\033[31m{result.eval_name} Failed! Score: {result.score:.2f}\033[0m")
+    
+        logger.info(f"RUN COMPLETE for run ID: \033[34m{run_id}\033[0m")
+        return run_id, results
 
     
     def log_eval_result_to_db(self, run_id: str, result: EvalResult, hotkey, model_name, provider_name):
@@ -151,7 +172,7 @@ class Actor:
         finally:
             db.close()
 
-    async def evaluate(self, yaml_file_path: str) -> dict:    
+    async def evaluate(self, yaml_file_path: str, problem_type: BitrecsEvaluationType) -> dict:    
         """
         Affine Entrypoint
         """
@@ -183,7 +204,8 @@ class Actor:
             logger.info(f"Artifact Hotkey: {miner_artifact.miner_hotkey}")
             logger.info("Starting evaluation suites...")
             logger.info(f"Eval Suites to run: {EVAL_SUITE}, Top Records: {CONST.TOP_RECORDS}")
-            run_id, results = self.run_eval_suites(miner_artifact)           
+            #run_id, results = self.run_eval_suites(miner_artifact)       
+            run_id, results = self.run_eval(miner_artifact, problem_type)
 
             logger.info("\033[35mEvaluation suites completed successfully. \033[0m")
             score = EvalResult.calculate_overall_score(results)
@@ -244,6 +266,7 @@ async def health_check():
 class EvaluateRequest(BaseModel):
     yaml_content: str
     run_token: str
+    problem_name: str
 
 @app.post("/evaluate")
 async def evaluate_endpoint(req: EvaluateRequest):
@@ -258,6 +281,8 @@ async def evaluate_endpoint(req: EvaluateRequest):
     # if env_token != req.run_token:
     #     logger.error("Invalid run token provided.")
     #     return {"error": "Invalid run token"}
+
+    eval_type = BitrecsEvaluationType(req.problem_name)
         
     try:
         data = yaml.safe_load(yaml_content)
@@ -271,7 +296,7 @@ async def evaluate_endpoint(req: EvaluateRequest):
         f.write(yaml_content)
         temp_path = f.name
     try:
-        result = await actor.evaluate(temp_path)
+        result = await actor.evaluate(temp_path, eval_type)
     finally:
         os.unlink(temp_path)
     return result
