@@ -298,6 +298,13 @@ async def get_db():
         filename='eval_runs.db'
     )
 
+@app.get("/evals")
+async def get_evals():
+    enabled_evals = [eval_type.value for eval_type in EVAL_SUITE]
+    return {"enabled_evaluations": enabled_evals}
+
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8081)
