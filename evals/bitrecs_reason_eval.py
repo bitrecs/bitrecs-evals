@@ -22,10 +22,10 @@ logger = logging.getLogger(__name__)
 
 
 """
-Evaluate individual sku reason statements for recommendations.
-Each reason statement is checked for validity using an LLM.
+Evaluate individual reason statements for recommendations.
 
-Will load fresh baseline samples on init.
+check: validity of reason statements for recommended SKUs against rules.
+data: loads fresh miner responses for the given miner artifact.
 
 """
 

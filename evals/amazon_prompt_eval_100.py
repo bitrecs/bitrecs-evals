@@ -23,11 +23,13 @@ logging.basicConfig(level=CONST.LOG_LEVEL)
 logger = logging.getLogger(__name__)
 
 """
-checks for sku exist in pair of bought together items with amazon data
+Amazon Prompt 100 Evaluation
+check: evaluates prompts on Amazon dataset for recommendation accuracy.
+data: Amazon recommendation dataset (100)
 
 """
 
-class AmazonPromptEval(BaseEval):
+class AmazonPromptEval100(BaseEval):
 
     min_sample_size = 3
     pass_threshold = 0.3
