@@ -1,17 +1,19 @@
 import logging
 from typing import List, Dict
-from evals.bitrecs_basic_eval import BitrecsBasicEval
-from evals.bitrecs_sku_eval import BitrecsSkuEval
-from evals.eval_result import EvalResult
-from models.eval_type import BitrecsEvaluationType
-from models.miner_artifact import Artifact
 from common import constants as CONST
 from datetime import datetime, timezone
+
+from models.eval_type import BitrecsEvaluationType
+from models.miner_artifact import Artifact
+
+from evals.eval_result import EvalResult
+from evals.bitrecs_basic_eval import BitrecsBasicEval
+from evals.bitrecs_sku_eval import BitrecsSkuEval
 from evals.bitrecs_catalog_eval import BitrecsCatalogEval
 from evals.bitrecs_prompt_eval import BitrecsPromptEval
 from evals.bitrecs_reason_eval import BitrecsReasonEval
 from evals.amazon_prompt_eval_100 import AmazonPromptEval100
-
+from evals.amazon_prompt_eval_500 import AmazonPromptEval500
 
 
 logging.basicConfig(level=CONST.LOG_LEVEL)
@@ -30,7 +32,7 @@ class EvalFactory:
         BitrecsEvaluationType.BITRECS_REASON_DAILY: BitrecsReasonEval,
         BitrecsEvaluationType.BITRECS_SKU_DAILY: BitrecsSkuEval,        
         BitrecsEvaluationType.AMAZON_PROMPT_100: AmazonPromptEval100,
-        BitrecsEvaluationType.AMAZON_PROMPT_500: AmazonPromptEval100,
+        BitrecsEvaluationType.AMAZON_PROMPT_500: AmazonPromptEval500,
         BitrecsEvaluationType.AMAZON_PROMPT_1000: AmazonPromptEval100
     }
     
