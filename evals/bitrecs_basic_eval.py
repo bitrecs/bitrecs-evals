@@ -24,7 +24,7 @@ check: ensures that the prompt templates are valid Jinja2 templates and only use
 data: N/A
 
 """
-
+MIN_PROMPT_TOKENS = 100
 MAX_PROMPT_TOKENS = 50_000
 MAX_SYSTEM_PROMPT_TOKENS = 10_000
 
@@ -166,11 +166,16 @@ class BitrecsBasicEval(BaseEval):
         if BitrecsBasicEval.get_token_count(agent.user_prompt_template) > 100_000:
             return False, "user_prompt_template must not exceed maximum token count"
         
+        if BitrecsBasicEval.get_token_count(agent.user_prompt_template) < MIN_PROMPT_TOKENS:
+            return False, "user_prompt_template is too short to be valid"
+        
         # if agent.status != 'screening_1':
         #     return False, "status must be 'screening_1' upon submission"
 
         if LLM.is_valid(agent.provider) == False:
             return False, f"provider '{agent.provider}' is not a valid LLM provider"
+        
+     
         
         try:
             Template(agent.system_prompt_template)
