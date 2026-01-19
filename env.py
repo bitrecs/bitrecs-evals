@@ -240,7 +240,7 @@ class Actor:
             
             logger.info(f"Local Run ID: \033[33m{run_id}\033[0m")
             logger.info(f"Bitrecs Run ID: \033[33m{bitrecs_run_id}\033[0m")
-            logger.info(f" FINAL SCORE \033[34m{score:.2f}\033[0m")
+            logger.info(f" FINAL SCORE \033[92;1m{score:.2f}\033[0m")
 
             return result
 

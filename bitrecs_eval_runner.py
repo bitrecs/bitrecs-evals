@@ -196,7 +196,7 @@ def main():
     write_log_to_output_file(run_log, output_path=f"output/eval_report_{run_id}.txt")
 
     final_score = EvalResult.calculate_overall_score(results)
-    logger.info(f"\033[34mFinal Overall Score: {final_score:.2f}\033[0m")
+    logger.info(f"\033[34mFinal Overall Score: \033[92;1m{final_score:.2f}\033[0m")
 
     
 
