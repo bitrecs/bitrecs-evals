@@ -10,41 +10,6 @@ from llm.open_router import OpenRouter
 class LLMFactory:
 
     @staticmethod
-    async def async_llm_call(server: LLM, 
-                             model: str, 
-                             messages: List[Dict[str, str]], 
-                             temperature: float, 
-                             max_tokens: int, 
-                             top_p: float, 
-                             stop: Optional[List[str]] = None) -> str:
-        """
-        Async wrapper for LLM calls. Parses messages to extract system and user prompts,
-        then calls the synchronous query_llm in a thread pool.
-        
-        Note: max_tokens, top_p, and stop parameters are not yet supported by all interfaces.
-        They will be passed where possible (e.g., OpenRouter).
-        """
-        # Parse messages to extract system and user prompts
-        system_prompt = ""
-        user_prompt = ""
-        for msg in messages:
-            if msg.get('role') == 'system':
-                system_prompt = msg.get('content', '')
-            elif msg.get('role') == 'user':
-                user_prompt = msg.get('content', '')
-        
-        # Call sync method in thread pool
-        return await asyncio.to_thread(
-            LLMFactory.query_llm,
-            server=server,
-            model=model,
-            system_prompt=system_prompt,
-            temp=temperature,
-            user_prompt=user_prompt
-        )   
-  
-
-    @staticmethod
     def query_llm(server: LLM, model: str, 
                   system_prompt="You are a helpful assistant", 
                   temp=0.0, user_prompt="") -> str:
@@ -75,6 +40,43 @@ class LLMFactory:
             #     return PerplexityInterface(model, system_prompt, temp).query(user_prompt)
             case _:
                 raise ValueError("Unknown LLM server")
+
+    # @staticmethod
+    # async def async_llm_call(server: LLM, 
+    #                          model: str, 
+    #                          messages: List[Dict[str, str]], 
+    #                          temperature: float, 
+    #                          max_tokens: int, 
+    #                          top_p: float, 
+    #                          stop: Optional[List[str]] = None) -> str:
+    #     """
+    #     Async wrapper for LLM calls. Parses messages to extract system and user prompts,
+    #     then calls the synchronous query_llm in a thread pool.
+        
+    #     Note: max_tokens, top_p, and stop parameters are not yet supported by all interfaces.
+    #     They will be passed where possible (e.g., OpenRouter).
+    #     """
+    #     # Parse messages to extract system and user prompts
+    #     system_prompt = ""
+    #     user_prompt = ""
+    #     for msg in messages:
+    #         if msg.get('role') == 'system':
+    #             system_prompt = msg.get('content', '')
+    #         elif msg.get('role') == 'user':
+    #             user_prompt = msg.get('content', '')
+        
+    #     # Call sync method in thread pool
+    #     return await asyncio.to_thread(
+    #         LLMFactory.query_llm,
+    #         server=server,
+    #         model=model,
+    #         system_prompt=system_prompt,
+    #         temp=temperature,
+    #         user_prompt=user_prompt
+    #     )   
+  
+
+   
             
 
 class OpenRouterInterface:
