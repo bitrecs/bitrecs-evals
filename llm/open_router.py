@@ -62,31 +62,54 @@ class OpenRouter:
         }
         
         timeout = (5, 60) #connect, read timeout
-        try:
-            with httpx.Client(timeout=timeout) as client:
-                if CONST.LOG_LEVEL <= logging.DEBUG:
-                    start_time = time.perf_counter()
-                    content = data["messages"][0]["content"]
-                    token_count = PromptFactory.get_token_count(content)
-                    logger.debug(f"OPEN_ROUTER request token count: {token_count} tokens")
-                response = client.post(
-                    url,
-                    headers=headers,
-                    json=data
-                )
-                response.raise_for_status()
-                data = response.json()
-                if CONST.LOG_LEVEL <= logging.DEBUG:
-                    end_time = time.perf_counter()
-                    duration = end_time - start_time
-                    logger.debug(f"OPEN_ROUTER request completed in {duration:.2f}s")
-                #print(data)
-                return data['choices'][0]['message']['content']
-        except httpx.ConnectTimeout:
-            raise TimeoutError(f"OpenRouter connect timed out after {timeout[0]}s")
-        except httpx.ReadTimeout:
-            raise TimeoutError(f"OpenRouter read timed out after {timeout[1]}s")
-        except httpx.HTTPStatusError as e:
-            raise RuntimeError(f"OpenRouter request failed: {e}") from e
-        except httpx.RequestError as e:
-            raise RuntimeError(f"OpenRouter request failed: {e}") from e
+        max_retries = 3
+        for attempt in range(max_retries + 1):
+            try:
+                with httpx.Client(timeout=timeout) as client:
+                    if CONST.LOG_LEVEL <= logging.DEBUG:
+                        start_time = time.perf_counter()
+                        content = data["messages"][0]["content"]
+                        token_count = PromptFactory.get_token_count(content)
+                        logger.debug(f"OPEN_ROUTER request token count: {token_count} tokens")
+                    response = client.post(
+                        url,
+                        headers=headers,
+                        json=data
+                    )
+                    response.raise_for_status()
+                    data = response.json()
+                    if CONST.LOG_LEVEL <= logging.DEBUG:
+                        end_time = time.perf_counter()
+                        duration = end_time - start_time
+                        logger.debug(f"OPEN_ROUTER request completed in {duration:.2f}s")
+                    #print(data)
+                    return data['choices'][0]['message']['content']
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 429 and attempt < max_retries:
+                    wait_time = 2 ** attempt  # Exponential backoff: 1s, 2s, 4s
+                    logger.warning(f"429 received, retrying in {wait_time}s (attempt {attempt + 1}/{max_retries + 1})")
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    raise RuntimeError(f"OpenRouter request failed: {e}") from e
+            except httpx.ConnectTimeout:
+                if attempt < max_retries:
+                    wait_time = 2 ** attempt
+                    logger.warning(f"Connect timeout, retrying in {wait_time}s (attempt {attempt + 1}/{max_retries + 1})")
+                    time.sleep(wait_time)
+                    continue
+                raise TimeoutError(f"OpenRouter connect timed out after {timeout[0]}s")
+            except httpx.ReadTimeout:
+                if attempt < max_retries:
+                    wait_time = 2 ** attempt
+                    logger.warning(f"Read timeout, retrying in {wait_time}s (attempt {attempt + 1}/{max_retries + 1})")
+                    time.sleep(wait_time)
+                    continue
+                raise TimeoutError(f"OpenRouter read timed out after {timeout[1]}s")
+            except httpx.RequestError as e:
+                if attempt < max_retries:
+                    wait_time = 2 ** attempt
+                    logger.warning(f"Request error, retrying in {wait_time}s (attempt {attempt + 1}/{max_retries + 1})")
+                    time.sleep(wait_time)
+                    continue
+                raise RuntimeError(f"OpenRouter request failed: {e}") from e
