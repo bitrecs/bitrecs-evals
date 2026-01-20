@@ -55,7 +55,7 @@ class BitrecsSkuEval(BaseEval):
         if len(self.holdout_df) < self.min_sample_size:
             raise ValueError(f"Holdout set size {len(self.holdout_df)} is less than minimum required {self.min_sample_size}")
         
-        self.holdout_df = self.holdout_df.head(50)
+        #self.holdout_df = self.holdout_df.head(50)
 
     def eval_type(self) -> BitrecsEvaluationType:
         return BitrecsEvaluationType.BITRECS_SKU_DAILY
