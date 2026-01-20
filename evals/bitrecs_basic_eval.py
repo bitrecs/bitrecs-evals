@@ -24,6 +24,9 @@ logger = logging.getLogger(__name__)
 Bitrecs Basic Template Validation
 
 check: ensures templates are valid Jinja2 templates and only use allowed variables.
+check: ensures prompt lengths are within specified token limits.
+check: ensures miner_hotkey is a valid S58 address.
+check: ensures prompts are safe from injection attacks using a safety LLM.
 data: N/A
 
 """
