@@ -55,7 +55,7 @@ class BitrecsSafeEval(BaseEval):
             template_status = "SAFE" if prompt_safe else "UNSAFE"
 
         except Exception as e:
-            logger.error(f"Exception during evaluation: {e}")
+            logger.error(f"Exception during evaluation: {e}")            
             traceback.print_exc()
             exception_count += 1
         end_time = time.monotonic()
@@ -65,7 +65,7 @@ class BitrecsSafeEval(BaseEval):
         if eval_success:
             final_score = 1.0
 
-        result = EvalResult(           
+        result = EvalResult(
             eval_name=self.get_eval_name(),
             created_at=datetime.now(timezone.utc).isoformat(),
             hot_key=self.miner_artifact.miner_hotkey,
@@ -92,12 +92,7 @@ class BitrecsSafeEval(BaseEval):
         report_lines.append(f"Miner Hotkey: {self.miner_artifact.miner_hotkey}")
         report_lines.append(f"Model: {self.miner_artifact.model}")
         report_lines.append(f"Provider: {self.miner_artifact.provider}")
-        return "\n".join(report_lines)    
-   
-    def get_eval_name(self) -> str:
-        this_type = self.eval_type()
-        name = str(this_type)
-        return name
+        return "\n".join(report_lines)
     
     @staticmethod
     def is_hotkey_valid(hotkey: str) -> bool:

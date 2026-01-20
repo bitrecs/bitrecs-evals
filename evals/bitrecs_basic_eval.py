@@ -26,9 +26,6 @@ check: ensures prompts are safe from injection attacks using a safety LLM.
 data: N/A
 
 """
-# MIN_PROMPT_TOKENS = 100
-# MAX_PROMPT_TOKENS = 50_000
-# MAX_SYSTEM_PROMPT_TOKENS = 10_000
 
 VALID_TEMPLATE_VARIABLES = {
     'current_date',
@@ -49,7 +46,7 @@ class BitrecsBasicEval(BaseEval):
     def eval_type(self) -> BitrecsEvaluationType:
         return BitrecsEvaluationType.BITRECS_BASIC_DAILY
 
-    def run(self, sample_size=10) -> EvalResult:
+    def run(self, sample_size = 10) -> EvalResult:
         """
         Run the Bitrecs prompt evaluation.
         """
@@ -123,12 +120,7 @@ class BitrecsBasicEval(BaseEval):
     def validate_template(self) -> Tuple[bool, str]:
         validated, reason = BitrecsBasicEval.validate_artifact_template(self.miner_artifact)
         logger.info(f"Template validation result: {validated}, Reason: {reason}")        
-        return validated, reason
-
-    def get_eval_name(self) -> str:
-        this_type = self.eval_type()
-        name = str(this_type)
-        return name
+        return validated, reason  
     
     @staticmethod
     def is_hotkey_valid(hotkey: str) -> bool:
