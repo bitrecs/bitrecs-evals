@@ -3,6 +3,7 @@ from typing import List, Dict
 from common import constants as CONST
 from datetime import datetime, timezone
 
+from evals.bitrecs_safe_prompt import BitrecsSafeEval
 from models.eval_type import BitrecsEvaluationType
 from models.miner_artifact import Artifact
 
@@ -28,6 +29,7 @@ class EvalFactory:
     
     _registry: Dict[BitrecsEvaluationType, type] = {
         BitrecsEvaluationType.BITRECS_BASIC_DAILY: BitrecsBasicEval,
+        BitrecsEvaluationType.BITRECS_SAFE_DAILY: BitrecsSafeEval,
         BitrecsEvaluationType.BITRECS_PROMPT_DAILY: BitrecsPromptEval,
         BitrecsEvaluationType.BITRECS_REASON_DAILY: BitrecsReasonEval,
         BitrecsEvaluationType.BITRECS_SKU_DAILY: BitrecsSkuEval,        
