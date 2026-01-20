@@ -4,7 +4,6 @@ import traceback
 import pandas as pd
 from datetime import datetime, timezone
 from common import constants as CONST
-from db.models.eval import Miner, MinerResponse, db
 from evals.eval_result import EvalResult
 from llm.factory import LLMFactory
 from llm.llm_provider import LLM

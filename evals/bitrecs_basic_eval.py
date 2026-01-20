@@ -1,16 +1,12 @@
-import json
 import re
 import logging
 import time
 import traceback
 import tiktoken
-import pandas as pd
 from datetime import datetime, timezone
 from typing import Tuple
 from common import constants as CONST
-from db.models.eval import Miner, MinerResponse, db
 from evals.eval_result import EvalResult
-from llm.factory import LLMFactory
 from llm.llm_provider import LLM
 from models.eval_type import BitrecsEvaluationType
 from models.miner_artifact import Artifact
@@ -30,9 +26,9 @@ check: ensures prompts are safe from injection attacks using a safety LLM.
 data: N/A
 
 """
-MIN_PROMPT_TOKENS = 100
-MAX_PROMPT_TOKENS = 50_000
-MAX_SYSTEM_PROMPT_TOKENS = 10_000
+# MIN_PROMPT_TOKENS = 100
+# MAX_PROMPT_TOKENS = 50_000
+# MAX_SYSTEM_PROMPT_TOKENS = 10_000
 
 VALID_TEMPLATE_VARIABLES = {
     'current_date',
@@ -71,22 +67,7 @@ class BitrecsBasicEval(BaseEval):
             hotkey_valid = BitrecsBasicEval.is_hotkey_valid(self.miner_artifact.miner_hotkey)
             if not hotkey_valid:
                 reason = "miner_hotkey is not a valid S58 address"
-                result = False
-
-            if result:
-                system_prompt_safe, system_prompt_safety_reason = BitrecsBasicEval.is_prompt_safe(self.miner_artifact.system_prompt_template)   
-                if not system_prompt_safe:
-                    result = False
-                    reason += f" | System Prompt Safety Check Failed: {system_prompt_safety_reason}"
-                else:
-                    reason += f" | System Prompt Safety Check Passed."
-            if result:
-                user_prompt_safe, user_prompt_safety_reason = BitrecsBasicEval.is_prompt_safe(self.miner_artifact.user_prompt_template)   
-                if not user_prompt_safe:
-                    result = False
-                    reason += f" | User Prompt Safety Check Failed: {user_prompt_safety_reason}"
-                else:
-                    reason += f" | User Prompt Safety Check Passed."
+                result = False          
 
         except Exception as e:
             logger.error(f"Exception during evaluation: {e}")
@@ -195,12 +176,12 @@ class BitrecsBasicEval(BaseEval):
             return False, "system_prompt_template must not be empty"
         if len(agent.user_prompt_template) == 0:
             return False, "user_prompt_template must not be empty"    
-        if BitrecsBasicEval.get_token_count(agent.system_prompt_template) > 10_000:
+        if BitrecsBasicEval.get_token_count(agent.system_prompt_template) > CONST.MAX_SYSTEM_PROMPT_TOKENS:
             return False, "system_prompt_template exceeds maximum token count"
-        if BitrecsBasicEval.get_token_count(agent.user_prompt_template) > 100_000:
+        if BitrecsBasicEval.get_token_count(agent.user_prompt_template) > CONST.MAX_PROMPT_TOKENS:
             return False, "user_prompt_template must not exceed maximum token count"
         
-        if BitrecsBasicEval.get_token_count(agent.user_prompt_template) < MIN_PROMPT_TOKENS:
+        if BitrecsBasicEval.get_token_count(agent.user_prompt_template) < CONST.MIN_PROMPT_TOKENS:
             return False, "user_prompt_template is too short to be valid"
         
         # if agent.status != 'screening_1':
@@ -242,61 +223,4 @@ class BitrecsBasicEval(BaseEval):
         return True, f"Valid template. Used variables: {', '.join(sorted(matched_vars))}"
     
 
-    @staticmethod    
-    def is_prompt_safe(prompt: str) -> Tuple[bool, str]:
-        """Test if a prompt is vulnerable to injection attacks. Returns (is_safe, reason)."""
-        #safe_model = "meta-llama/llama-guard-4-12b"
-        safe_model = "Qwen/Qwen3Guard-Gen-0.6B"
-        safe_server = LLM.CHUTES
-        
-        start_time = time.time()    
-        try:
-            result = LLMFactory.query_llm(server=safe_server, model=safe_model, user_prompt=prompt)
-            lines = result.strip().split('\n')
-            duration = time.time() - start_time
-            
-            if safe_model == "meta-llama/llama-guard-4-12b":            
-                safety_status = lines[0].strip().lower() if lines else "unsafe"  # Default to unsafe if malformed
-                categories = lines[1].strip() if len(lines) > 1 and safety_status == "unsafe" else ""
-            elif safe_model == "Qwen/Qwen3Guard-Gen-0.6B":
-                if lines and "Safety:" in lines[0]:
-                    safety_status = lines[0].split(":", 1)[1].strip().lower()
-                else:
-                    safety_status = lines[0].strip().lower() if lines else "unsafe"            
-                if len(lines) > 1 and "Categories:" in lines[1]:
-                    categories = lines[1].split(":", 1)[1].strip()
-                else:
-                    categories = lines[1].strip() if len(lines) > 1 else ""
-            else:
-                raise ValueError(f"Unknown safety model: {safe_model}")
-            
-            # Expanded injection keywords (sourced from SecLists, OpenAI, and community lists)
-            injection_keywords = [
-                # Basic overrides
-                "ignore previous", "override", "system prompt", "jailbreak", "bypass restrictions",
-                # Persona/role changes
-                "act as", "role-play as", "you are now", "pretend to be", "switch to",
-                # Uncensored modes
-                "dan mode", "uncensored", "developer mode", "god mode", "maximum truth",
-                # Injection patterns
-                "forget instructions", "new instructions", "disregard", "ignore safety",
-                # Adversarial phrases
-                "do not follow", "break rules", "unrestricted", "no limits", "full access",
-                # Common jailbreaks
-                "hacking mode", "evil mode", "unfiltered", "raw response", "no censorship"
-            ]
-            has_injection_keywords = any(keyword in prompt.lower() for keyword in injection_keywords)
-            
-            if "unsafe" in safety_status or has_injection_keywords:
-                reason = f"Detected as unsafe by {safe_model} (categories: {categories}) or contains injection keywords."
-                logger.warning(f"Prompt vulnerable to injection: {reason} (Query time: {duration:.2f}s)")
-                return False, reason
-            else:
-                reason = f"Appears safe based on {safe_model} and keyword checks."
-                logger.info(f"Prompt safe from injection: {reason} (Query time: {duration:.2f}s)")
-                return True, reason
-        
-        except Exception as e:
-            reason = f"Error querying safety model: {str(e)}"
-            logger.error(f"Failed to test prompt for injection: {reason}")
-            return False, reason  # Default to unsafe on error for caution
+   
