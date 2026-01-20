@@ -61,14 +61,20 @@ class BitrecsBasicEval(BaseEval):
         start_time = time.monotonic()
         final_score = 0.0
         template_status = "ERROR"
+        reason = "NA"
         try:
-            result = self.validate_template()    
+            result, reason = self.validate_template()
         except Exception as e:
             logger.error(f"Exception during evaluation: {e}")
             traceback.print_exc()
             exception_count += 1
         end_time = time.monotonic()
         total_duration = end_time - start_time
+
+        hotkey_valid = BitrecsBasicEval.is_hotkey_valid(self.miner_artifact.miner_hotkey)
+        if not hotkey_valid:
+            reason = "miner_hotkey is not a valid S58 address"
+            result = False
 
         eval_success = result
         if eval_success:
@@ -93,7 +99,7 @@ class BitrecsBasicEval(BaseEval):
             score=final_score,
             passed=eval_success,
             rows_evaluated=count,
-            details=f"Test result: {result}. TEMPLATE {template_status}.\nScore: {final_score:.2f}.\nEvaluated {count} samples with {exception_count} exceptions for hotkey {self.miner_artifact.miner_hotkey}.\n{self.run_id}",
+            details=f"Test result: {result}. TEMPLATE {template_status}.\nScore: {final_score:.2f}.\n{reason}\nEvaluated {count} samples with {exception_count} exceptions for hotkey {self.miner_artifact.miner_hotkey}.\n{self.run_id}",
             duration_seconds=total_duration,
             temperature=self.miner_artifact.sampling_params.temperature,
             model_name=self.miner_artifact.model,
@@ -115,15 +121,28 @@ class BitrecsBasicEval(BaseEval):
         report_lines.append(f"Provider: {self.miner_artifact.provider}")
         return "\n".join(report_lines)
     
-    def validate_template(self) -> bool:
+    def validate_template(self) -> Tuple[bool, str]:
         validated, reason = BitrecsBasicEval.validate_artifact_template(self.miner_artifact)
         logger.info(f"Template validation result: {validated}, Reason: {reason}")        
-        return validated
+        return validated, reason
 
     def get_eval_name(self) -> str:
         this_type = self.eval_type()
         name = str(this_type)
         return name
+    
+    @staticmethod
+    def is_hotkey_valid(hotkey: str) -> bool:
+        if not isinstance(hotkey, str) or len(hotkey) != 48:
+            return False
+        
+        # regex s58 address        
+        import re
+        pattern = r"^5[1-9A-HJ-NP-Za-km-z]{47}$"
+        if re.match(pattern, hotkey):
+            return True
+        return False
+
 
     @staticmethod
     def get_token_count(prompt: str, encoding_name: str="o200k_base") -> int:

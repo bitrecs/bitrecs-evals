@@ -71,6 +71,8 @@ class Actor:
 
     def run_eval_suites(self, miner_artifact: Artifact) -> Tuple[str, List[EvalResult]]:
         """Run evaluation suites."""
+        raise NotImplementedError("Use run_eval with specific eval type instead.")
+    
         logger.info("Running eval suites...")    
         run_id = secrets.token_hex(16)
         logger.info(f"Eval Run ID: \033[35m{run_id}\033[0m")
@@ -190,10 +192,7 @@ class Actor:
             print(f"Local: {datetime.now().isoformat()}")
             print(f"UTC:   {datetime.now(timezone.utc).isoformat()}")
             print("=" * 60)
-            start = time.monotonic()
-
-            # all_suites = '\n'.join([suite.value for suite in EVAL_SUITE])
-            # logger.info(f"Evaluation Suites to run: \033[36m{all_suites}\033[0m")
+            start = time.monotonic()        
             
             logger.info(f"Evaluation Type to run: \033[36m{problem_type.value}\033[0m")
             logger.info(f"CONST Max_Iterations per Eval: \033[36m{CONST.TOP_RECORDS}\033[0m")
@@ -210,12 +209,14 @@ class Actor:
             logger.info(f"Artifact Model: {miner_artifact.model}")
             logger.info(f"Artifact Provider: {miner_artifact.provider}")
             logger.info(f"Artifact Hotkey: {miner_artifact.miner_hotkey}")
-            logger.info("Starting evaluation suites...")
-            logger.info(f"Eval Suites to run: {EVAL_SUITE}, Top Records: {CONST.TOP_RECORDS}")
-            #run_id, results = self.run_eval_suites(miner_artifact)       
-            run_id, results = self.run_eval(miner_artifact, problem_type)
+            #logger.info("Starting evaluation suites...")
+            #logger.info(f"Eval Suites to run: {EVAL_SUITE}, Top Records: {CONST.TOP_RECORDS}")
+            #run_id, results = self.run_eval_suites(miner_artifact)      
 
-            logger.info("\033[35mEvaluation suites completed successfully. \033[0m")
+            logger.info(f"Starting evaluation... of problem: {problem_type.value}") 
+            run_id, results = self.run_eval(miner_artifact, problem_type)
+            logger.info("\033[35mEvaluation completed successfully. \033[0m")
+            
             score = EvalResult.calculate_overall_score(results)
             end = time.monotonic()
             duration = round(end - start, 8)
