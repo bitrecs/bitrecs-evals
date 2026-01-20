@@ -1,13 +1,9 @@
-import ast
-import json
-import os
 import random
 import time
 import logging
 import pandas as pd
 from datetime import datetime, timezone
-from common.utils import rec_list_to_set
-from db.models.eval import db, Miner, MinerResponse
+from db.models.eval import db
 from evals.base_eval import BaseEval 
 from evals.eval_result import EvalResult
 from evals.scoring.rules_scorer import RulesScorer
