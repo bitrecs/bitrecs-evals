@@ -28,9 +28,7 @@ data: latest holdout set with context, query, ground_truth_sku, winning_response
 
 class BitrecsPromptEval(BaseEval):
 
-    min_sample_size = 3
-
-    
+    min_sample_size = 3        
     pass_threshold = 0.3
 
     def __init__(self, run_id: str, miner_artifact: Artifact = None):      
@@ -93,12 +91,7 @@ class BitrecsPromptEval(BaseEval):
 
         if final_score >= self.pass_threshold:
             eval_success = True
-
-        # pass_threshold_count = int(self.pass_threshold * max_iterations)
-        # logger.info(f"Final score: {final_score:.2f} ({success_count}/{count}), Pass threshold count: {pass_threshold_count}")        
-        # if success_count >= pass_threshold_count:
-        #     eval_success = True        
-
+    
         result = EvalResult(           
             eval_name=self.get_eval_name(),  # Use base method
             created_at=datetime.now(timezone.utc).isoformat(),

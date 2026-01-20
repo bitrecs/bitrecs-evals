@@ -1,3 +1,5 @@
+import json
+import re
 import logging
 import time
 import traceback
@@ -8,6 +10,7 @@ from typing import Tuple
 from common import constants as CONST
 from db.models.eval import Miner, MinerResponse, db
 from evals.eval_result import EvalResult
+from llm.factory import LLMFactory
 from llm.llm_provider import LLM
 from models.eval_type import BitrecsEvaluationType
 from models.miner_artifact import Artifact
@@ -20,7 +23,7 @@ logger = logging.getLogger(__name__)
 """
 Bitrecs Basic Template Validation
 
-check: ensures that the prompt templates are valid Jinja2 templates and only use allowed variables.
+check: ensures templates are valid Jinja2 templates and only use allowed variables.
 data: N/A
 
 """
@@ -39,9 +42,7 @@ VALID_TEMPLATE_VARIABLES = {
     'order_json'
 }
 
-class BitrecsBasicEval(BaseEval):
-
-    min_row_count = 3
+class BitrecsBasicEval(BaseEval):    
 
     def __init__(self, run_id: str, miner_artifact: Artifact):
         super().__init__(run_id, miner_artifact)
@@ -64,6 +65,26 @@ class BitrecsBasicEval(BaseEval):
         reason = "NA"
         try:
             result, reason = self.validate_template()
+            hotkey_valid = BitrecsBasicEval.is_hotkey_valid(self.miner_artifact.miner_hotkey)
+            if not hotkey_valid:
+                reason = "miner_hotkey is not a valid S58 address"
+                result = False
+
+            if result:
+                system_prompt_safe, system_prompt_safety_reason = BitrecsBasicEval.is_prompt_safe(self.miner_artifact.system_prompt_template)   
+                if not system_prompt_safe:
+                    result = False
+                    reason += f" | System Prompt Safety Check Failed: {system_prompt_safety_reason}"
+                else:
+                    reason += f" | System Prompt Safety Check Passed."
+            if result:
+                user_prompt_safe, user_prompt_safety_reason = BitrecsBasicEval.is_prompt_safe(self.miner_artifact.user_prompt_template)   
+                if not user_prompt_safe:
+                    result = False
+                    reason += f" | User Prompt Safety Check Failed: {user_prompt_safety_reason}"
+                else:
+                    reason += f" | User Prompt Safety Check Passed."
+
         except Exception as e:
             logger.error(f"Exception during evaluation: {e}")
             traceback.print_exc()
@@ -71,15 +92,10 @@ class BitrecsBasicEval(BaseEval):
         end_time = time.monotonic()
         total_duration = end_time - start_time
 
-        hotkey_valid = BitrecsBasicEval.is_hotkey_valid(self.miner_artifact.miner_hotkey)
-        if not hotkey_valid:
-            reason = "miner_hotkey is not a valid S58 address"
-            result = False
-
         eval_success = result
         if eval_success:
             template_status = "OK"
-            # Add variance based on variable count
+            # Add variance based on variable usage count
             all_vars = set()
             all_vars.update(self.get_template_variables(self.miner_artifact.system_prompt_template))
             all_vars.update(self.get_template_variables(self.miner_artifact.user_prompt_template))
@@ -89,8 +105,7 @@ class BitrecsBasicEval(BaseEval):
             variable_score = variable_count / max_vars if max_vars > 0 else 0.0
             final_score = 0.5 + (variable_score * 0.5)  # Base 0.5 for passing validation, plus up to 0.5 for variables
         else:
-            final_score = 0.0  # Fail validation = 0.0
-            
+            final_score = 0.0  # Fail validation = 0.0            
 
         result = EvalResult(           
             eval_name=self.get_eval_name(),
@@ -135,14 +150,11 @@ class BitrecsBasicEval(BaseEval):
     def is_hotkey_valid(hotkey: str) -> bool:
         if not isinstance(hotkey, str) or len(hotkey) != 48:
             return False
-        
-        # regex s58 address        
-        import re
+        # regex s58 address
         pattern = r"^5[1-9A-HJ-NP-Za-km-z]{47}$"
         if re.match(pattern, hotkey):
             return True
         return False
-
 
     @staticmethod
     def get_token_count(prompt: str, encoding_name: str="o200k_base") -> int:
@@ -194,8 +206,6 @@ class BitrecsBasicEval(BaseEval):
         if LLM.is_valid(agent.provider) == False:
             return False, f"provider '{agent.provider}' is not a valid LLM provider"
         
-     
-        
         try:
             Template(agent.system_prompt_template)
         except TemplateSyntaxError as e:
@@ -227,3 +237,63 @@ class BitrecsBasicEval(BaseEval):
         
         logger.info(f"\033[32mTemplate validation successful. Used variables: {', '.join(sorted(matched_vars))} \033[0m")
         return True, f"Valid template. Used variables: {', '.join(sorted(matched_vars))}"
+    
+
+    @staticmethod    
+    def is_prompt_safe(prompt: str) -> Tuple[bool, str]:
+        """Test if a prompt is vulnerable to injection attacks. Returns (is_safe, reason)."""
+        #safe_model = "meta-llama/llama-guard-4-12b"
+        safe_model = "Qwen/Qwen3Guard-Gen-0.6B"
+        safe_server = LLM.CHUTES
+        
+        start_time = time.time()    
+        try:
+            result = LLMFactory.query_llm(server=safe_server, model=safe_model, user_prompt=prompt)
+            lines = result.strip().split('\n')
+            duration = time.time() - start_time
+            
+            if safe_model == "meta-llama/llama-guard-4-12b":            
+                safety_status = lines[0].strip().lower() if lines else "unsafe"  # Default to unsafe if malformed
+                categories = lines[1].strip() if len(lines) > 1 and safety_status == "unsafe" else ""
+            elif safe_model == "Qwen/Qwen3Guard-Gen-0.6B":
+                if lines and "Safety:" in lines[0]:
+                    safety_status = lines[0].split(":", 1)[1].strip().lower()
+                else:
+                    safety_status = lines[0].strip().lower() if lines else "unsafe"            
+                if len(lines) > 1 and "Categories:" in lines[1]:
+                    categories = lines[1].split(":", 1)[1].strip()
+                else:
+                    categories = lines[1].strip() if len(lines) > 1 else ""
+            else:
+                raise ValueError(f"Unknown safety model: {safe_model}")
+            
+            # Expanded injection keywords (sourced from SecLists, OpenAI, and community lists)
+            injection_keywords = [
+                # Basic overrides
+                "ignore previous", "override", "system prompt", "jailbreak", "bypass restrictions",
+                # Persona/role changes
+                "act as", "role-play as", "you are now", "pretend to be", "switch to",
+                # Uncensored modes
+                "dan mode", "uncensored", "developer mode", "god mode", "maximum truth",
+                # Injection patterns
+                "forget instructions", "new instructions", "disregard", "ignore safety",
+                # Adversarial phrases
+                "do not follow", "break rules", "unrestricted", "no limits", "full access",
+                # Common jailbreaks
+                "hacking mode", "evil mode", "unfiltered", "raw response", "no censorship"
+            ]
+            has_injection_keywords = any(keyword in prompt.lower() for keyword in injection_keywords)
+            
+            if "unsafe" in safety_status or has_injection_keywords:
+                reason = f"Detected as unsafe by {safe_model} (categories: {categories}) or contains injection keywords."
+                logger.warning(f"Prompt vulnerable to injection: {reason} (Query time: {duration:.2f}s)")
+                return False, reason
+            else:
+                reason = f"Appears safe based on {safe_model} and keyword checks."
+                logger.info(f"Prompt safe from injection: {reason} (Query time: {duration:.2f}s)")
+                return True, reason
+        
+        except Exception as e:
+            reason = f"Error querying safety model: {str(e)}"
+            logger.error(f"Failed to test prompt for injection: {reason}")
+            return False, reason  # Default to unsafe on error for caution
