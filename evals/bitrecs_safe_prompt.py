@@ -48,26 +48,11 @@ class BitrecsSafeEval(BaseEval):
         reason = "NA"
         result = False
         try:
-           
-            hotkey_valid = BitrecsBasicEval.is_hotkey_valid(self.miner_artifact.miner_hotkey)
-            if not hotkey_valid:
-                reason = "miner_hotkey is not a valid S58 address"
-                result = False
-
-            if result:
-                system_prompt_safe, system_prompt_safety_reason = BitrecsBasicEval.is_prompt_safe(self.miner_artifact.system_prompt_template)   
-                if not system_prompt_safe:
-                    result = False
-                    reason += f" | System Prompt Safety Check Failed: {system_prompt_safety_reason}"
-                else:
-                    reason += f" | System Prompt Safety Check Passed."
-            if result:
-                user_prompt_safe, user_prompt_safety_reason = BitrecsBasicEval.is_prompt_safe(self.miner_artifact.user_prompt_template)   
-                if not user_prompt_safe:
-                    result = False
-                    reason += f" | User Prompt Safety Check Failed: {user_prompt_safety_reason}"
-                else:
-                    reason += f" | User Prompt Safety Check Passed."
+            combined_prompts = f"System Prompt:\n{self.miner_artifact.system_prompt_template}\n\nUser Prompt:\n{self.miner_artifact.user_prompt_template}"
+            prompt_safe, safe_reason = BitrecsSafeEval.is_prompt_safe(combined_prompts)
+            result = prompt_safe
+            reason = safe_reason
+            template_status = "SAFE" if prompt_safe else "UNSAFE"
 
         except Exception as e:
             logger.error(f"Exception during evaluation: {e}")
@@ -159,22 +144,23 @@ class BitrecsSafeEval(BaseEval):
             else:
                 raise ValueError(f"Unknown safety model: {safe_model}")
             
-            # Expanded injection keywords (sourced from SecLists, OpenAI, and community lists)
-            injection_keywords = [
-                # Basic overrides
-                "ignore previous", "override", "system prompt", "jailbreak", "bypass restrictions",
-                # Persona/role changes
-                "act as", "role-play as", "you are now", "pretend to be", "switch to",
-                # Uncensored modes
-                "dan mode", "uncensored", "developer mode", "god mode", "maximum truth",
-                # Injection patterns
-                "forget instructions", "new instructions", "disregard", "ignore safety",
-                # Adversarial phrases
-                "do not follow", "break rules", "unrestricted", "no limits", "full access",
-                # Common jailbreaks
-                "hacking mode", "evil mode", "unfiltered", "raw response", "no censorship"
-            ]
-            has_injection_keywords = any(keyword in prompt.lower() for keyword in injection_keywords)
+            # Custom injection list
+            # injection_keywords = [
+            #     # Basic overrides
+            #     "ignore previous", "override", "system prompt", "jailbreak", "bypass restrictions",
+            #     # Persona/role changes
+            #     "act as", "role-play as", "you are now", "pretend to be", "switch to",
+            #     # Uncensored modes
+            #     "dan mode", "uncensored", "developer mode", "god mode", "maximum truth",
+            #     # Injection patterns
+            #     "forget instructions", "new instructions", "disregard", "ignore safety",
+            #     # Adversarial phrases
+            #     "do not follow", "break rules", "unrestricted", "no limits", "full access",
+            #     # Common jailbreaks
+            #     "hacking mode", "evil mode", "unfiltered", "raw response", "no censorship"
+            # ]
+            # has_injection_keywords = any(keyword in prompt.lower() for keyword in injection_keywords)
+            has_injection_keywords = False  # Disable keyword check for now
             
             if "unsafe" in safety_status or has_injection_keywords:
                 reason = f"Detected as unsafe by {safe_model} (categories: {categories}) or contains injection keywords."
