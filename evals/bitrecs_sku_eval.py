@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 """
 Evaluate how relevant each SKU recommendation is to the task
-check: if the recommended SKUs are relevant to the query SKU.
+check: if the recommended SKUs are relevant to the query SKU using llm judge
 data: loads fresh miner responses for the given miner artifact.
 
 """
@@ -46,16 +46,11 @@ class BitrecsSkuEval(BaseEval):
                                              run_id=run_id)
         self.debug_prompts = False
 
-        df = self.load_recent_answers()
-        self.holdout_df = df
+        if 1==1:
+            self.init_baseline_reasons()
 
-        if len(self.holdout_df) == 0:
-            if 1==1:
-                self.init_baseline_reasons()                
-                self.holdout_df = self.load_recent_answers()
-                if len(self.holdout_df) == 0:
-                    logger.error(f"No data for hotkey {self.miner_artifact.miner_hotkey}")
-                    raise ValueError(f"No recent miner responses found for {self.miner_artifact.miner_hotkey}")
+        df = self.load_recent_answers()
+        self.holdout_df = df      
         
         if len(self.holdout_df) < self.min_sample_size:
             raise ValueError(f"Holdout set size {len(self.holdout_df)} is less than minimum required {self.min_sample_size}")
