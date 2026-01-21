@@ -39,7 +39,7 @@ logging.getLogger('peewee').setLevel(logging.WARNING)
 EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY, BitrecsEvaluationType.BITRECS_SAFE_DAILY,
               BitrecsEvaluationType.BITRECS_PROMPT_DAILY, ]
 
-EVAL_SUITE = [BitrecsEvaluationType.BITRECS_SAFE_DAILY]
+#EVAL_SUITE = [BitrecsEvaluationType.BITRECS_SAFE_DAILY]
               
 
 
