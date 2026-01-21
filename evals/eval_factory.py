@@ -18,11 +18,13 @@ from evals.amazon_automotive_500 import AmazonAutomotive500
 from evals.amazon_baby_products_100 import AmazonBabyProducts100
 from evals.amazon_baby_products_1000 import AmazonBabyProducts1000
 from evals.amazon_baby_products_500 import AmazonBabyProducts500
+from evals.amazon_beauty_and_personal_care_100 import AmazonBeautyAndPersonalCare100
+from evals.amazon_beauty_and_personal_care_1000 import AmazonBeautyAndPersonalCare1000
+from evals.amazon_beauty_and_personal_care_500 import AmazonBeautyAndPersonalCare500
 from evals.amazon_fashion_100 import AmazonFashion100
-
-
-from evals.amazon_fashion_1000 import AmazonFashion1000
 from evals.amazon_fashion_500 import AmazonFashion500
+from evals.amazon_fashion_1000 import AmazonFashion1000
+
 from evals.bitrecs_safe_prompt import BitrecsSafeEval
 from models.eval_type import BitrecsEvaluationType
 from models.miner_artifact import Artifact
@@ -30,7 +32,7 @@ from models.miner_artifact import Artifact
 from evals.eval_result import EvalResult
 from evals.bitrecs_basic_eval import BitrecsBasicEval
 from evals.bitrecs_sku_eval import BitrecsSkuEval
-from evals.bitrecs_catalog_eval import BitrecsCatalogEval
+
 from evals.bitrecs_prompt_eval import BitrecsPromptEval
 from evals.bitrecs_reason_eval import BitrecsReasonEval
 from evals.amazon_fashion_100 import AmazonFashion100
@@ -81,6 +83,11 @@ class EvalFactory:
         BitrecsEvaluationType.AMAZON_BABY_PRODUCTS_100: AmazonBabyProducts100,
         BitrecsEvaluationType.AMAZON_BABY_PRODUCTS_500: AmazonBabyProducts500,
         BitrecsEvaluationType.AMAZON_BABY_PRODUCTS_1000: AmazonBabyProducts1000,
+
+        BitrecsEvaluationType.AMAZON_BEAUTY_AND_PERSONAL_CARE_100: AmazonBeautyAndPersonalCare100,
+        BitrecsEvaluationType.AMAZON_BEAUTY_AND_PERSONAL_CARE_500: AmazonBeautyAndPersonalCare500,
+        BitrecsEvaluationType.AMAZON_BEAUTY_AND_PERSONAL_CARE_1000: AmazonBeautyAndPersonalCare1000,
+
         
         BitrecsEvaluationType.AMAZON_VIDEO_GAMES_100: AmazonVideoGames100,        
         BitrecsEvaluationType.AMAZON_VIDEO_GAMES_500: AmazonVideoGames500,

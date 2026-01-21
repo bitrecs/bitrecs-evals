@@ -1,4 +1,3 @@
-
 from enum import Enum
 
 class BitrecsEvaluationType(str, Enum):
@@ -6,11 +5,7 @@ class BitrecsEvaluationType(str, Enum):
     BITRECS_BASIC_DAILY = "bitrecs_basic_daily"
     BITRECS_PROMPT_DAILY = "bitrecs_prompt_daily"
     BITRECS_REASON_DAILY = "bitrecs_reason_daily"
-    BITRECS_SKU_DAILY = "bitrecs_sku_daily"
-
-    AMAZON_PROMPT_100 = "amazon_prompt_100"
-    AMAZON_PROMPT_500 = "amazon_prompt_500"
-    AMAZON_PROMPT_1000 = "amazon_prompt_1000"
+    BITRECS_SKU_DAILY = "bitrecs_sku_daily"    
 
     AMAZON_ALL_BEAUTY_100 = "amazon_all_beauty_100"    
     AMAZON_ALL_BEAUTY_500 = "amazon_all_beauty_500"
@@ -35,6 +30,10 @@ class BitrecsEvaluationType(str, Enum):
     AMAZON_BABY_PRODUCTS_100 = "amazon_baby_products_100"
     AMAZON_BABY_PRODUCTS_500 = "amazon_baby_products_500"
     AMAZON_BABY_PRODUCTS_1000 = "amazon_baby_products_1000"
+
+    AMAZON_BEAUTY_AND_PERSONAL_CARE_100 = "amazon_beauty_and_personal_care_100"    
+    AMAZON_BEAUTY_AND_PERSONAL_CARE_500 = "amazon_beauty_and_personal_care_500"
+    AMAZON_BEAUTY_AND_PERSONAL_CARE_1000 = "amazon_beauty_and_personal_care_1000"
 
     AMAZON_VIDEO_GAMES_100 = "amazon_video_games_100"    
     AMAZON_VIDEO_GAMES_500 = "amazon_video_games_500"
