@@ -81,22 +81,16 @@ class BitrecsEvaluationType(str, Enum):
     AMAZON_PET_SUPPLIES_1000 = "amazon_pet_supplies_1000"    
     AMAZON_SOFTWARE_100 = "amazon_software_100"    
     AMAZON_SOFTWARE_500 = "amazon_software_500"
-    AMAZON_SOFTWARE_1000 = "amazon_software_1000"
-    #Sports_and_Outdoors
+    AMAZON_SOFTWARE_1000 = "amazon_software_1000"    
     AMAZON_SPORTS_AND_OUTDOORS_100 = "amazon_sports_and_outdoors_100"    
     AMAZON_SPORTS_AND_OUTDOORS_500 = "amazon_sports_and_outdoors_500"
-    AMAZON_SPORTS_AND_OUTDOORS_1000 = "amazon_sports_and_outdoors_1000"
-    #Tools_and_Home_Improvement
+    AMAZON_SPORTS_AND_OUTDOORS_1000 = "amazon_sports_and_outdoors_1000"    
     AMAZON_TOOLS_AND_HOME_IMPROVEMENT_100 = "amazon_tools_and_home_improvement_100"    
     AMAZON_TOOLS_AND_HOME_IMPROVEMENT_500 = "amazon_tools_and_home_improvement_500"
-    AMAZON_TOOLS_AND_HOME_IMPROVEMENT_1000 = "amazon_tools_and_home_improvement_1000"
-    #Toys_and_Games
+    AMAZON_TOOLS_AND_HOME_IMPROVEMENT_1000 = "amazon_tools_and_home_improvement_1000"    
     AMAZON_TOYS_AND_GAMES_100 = "amazon_toys_and_games_100"    
     AMAZON_TOYS_AND_GAMES_500 = "amazon_toys_and_games_500"
     AMAZON_TOYS_AND_GAMES_1000 = "amazon_toys_and_games_1000"
-
-
     AMAZON_VIDEO_GAMES_100 = "amazon_video_games_100"    
     AMAZON_VIDEO_GAMES_500 = "amazon_video_games_500"
     AMAZON_VIDEO_GAMES_1000 = "amazon_video_games_1000"
-    
