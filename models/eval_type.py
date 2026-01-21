@@ -39,6 +39,32 @@ class BitrecsEvaluationType(str, Enum):
     AMAZON_BOOKS_500 = "amazon_books_500"
     AMAZON_BOOKS_1000 = "amazon_books_1000"
 
+    AMAZON_CDS_AND_VINYL_100 = "amazon_cds_and_vinyl_100"    
+    AMAZON_CDS_AND_VINYL_500 = "amazon_cds_and_vinyl_500"
+    AMAZON_CDS_AND_VINYL_1000 = "amazon_cds_and_vinyl_1000"
+    
+    AMAZON_CELL_PHONES_AND_ACCESSORIES_100 = "amazon_cell_phones_and_accessories_100"    
+    AMAZON_CELL_PHONES_AND_ACCESSORIES_500 = "amazon_cell_phones_and_accessories_500"
+    AMAZON_CELL_PHONES_AND_ACCESSORIES_1000 = "amazon_cell_phones_and_accessories_1000"
+
+    AMAZON_CLOTHING_SHOES_AND_JEWELRY_100 = "amazon_clothing_shoes_and_jewelry_100"    
+    AMAZON_CLOTHING_SHOES_AND_JEWELRY_500 = "amazon_clothing_shoes_and_jewelry_500"
+    AMAZON_CLOTHING_SHOES_AND_JEWELRY_1000 = "amazon_clothing_shoes_and_jewelry_1000"
+
+    AMAZON_DIGITAL_MUSIC_100 = "amazon_digital_music_100"    
+    AMAZON_DIGITAL_MUSIC_500 = "amazon_digital_music_500"
+    AMAZON_DIGITAL_MUSIC_1000 = "amazon_digital_music_1000"
+
+    AMAZON_ELECTRONICS_100 = "amazon_electronics_100"    
+    AMAZON_ELECTRONICS_500 = "amazon_electronics_500"
+    AMAZON_ELECTRONICS_1000 = "amazon_electronics_1000"
+    
+    AMAZON_GROCERY_AND_GOURMET_FOOD_100 = "amazon_grocery_and_gourmet_food_100"    
+    AMAZON_GROCERY_AND_GOURMET_FOOD_500 = "amazon_grocery_and_gourmet_food_500"
+    AMAZON_GROCERY_AND_GOURMET_FOOD_1000 = "amazon_grocery_and_gourmet_food_1000"
+
+
+
     AMAZON_VIDEO_GAMES_100 = "amazon_video_games_100"    
     AMAZON_VIDEO_GAMES_500 = "amazon_video_games_500"
     AMAZON_VIDEO_GAMES_1000 = "amazon_video_games_1000"
