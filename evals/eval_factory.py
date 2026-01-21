@@ -1,8 +1,8 @@
 import logging
-from typing import List, Dict
-from common import constants as CONST
 from datetime import datetime, timezone
+from typing import List, Dict
 
+from common import constants as CONST
 from evals.amazon_all_beauty_100 import AmazonAllBeauty100
 from evals.amazon_all_beauty_1000 import AmazonAllBeauty1000
 from evals.amazon_all_beauty_500 import AmazonAllBeauty500
@@ -40,9 +40,8 @@ from evals.amazon_electronics_100 import AmazonElectronics100
 from evals.amazon_electronics_1000 import AmazonElectronics1000
 from evals.amazon_electronics_500 import AmazonElectronics500
 from evals.amazon_fashion_100 import AmazonFashion100
-from evals.amazon_fashion_500 import AmazonFashion500
 from evals.amazon_fashion_1000 import AmazonFashion1000
-
+from evals.amazon_fashion_500 import AmazonFashion500
 from evals.amazon_grocery_and_gourmet_food_100 import AmazonGroceryAndGourmetFood100
 from evals.amazon_grocery_and_gourmet_food_1000 import AmazonGroceryAndGourmetFood1000
 from evals.amazon_grocery_and_gourmet_food_500 import AmazonGroceryAndGourmetFood500
@@ -52,20 +51,17 @@ from evals.amazon_handmade_products_500 import AmazonHandmadeProducts500
 from evals.amazon_health_and_household_100 import AmazonHealthAndHousehold100
 from evals.amazon_health_and_household_1000 import AmazonHealthAndHousehold1000
 from evals.amazon_health_and_household_500 import AmazonHealthAndHousehold500
-from evals.amazon_health_and_personal_care_1000 import AmazonHealthAndPersonalCare1000
+from evals.amazon_health_and_personal_care_100 import AmazonHealthAndPersonalCare100
 from evals.amazon_health_and_personal_care_1000 import AmazonHealthAndPersonalCare1000
 from evals.amazon_health_and_personal_care_500 import AmazonHealthAndPersonalCare500
-from evals.amazon_health_and_personal_care_100 import AmazonHealthAndPersonalCare100
-from evals.amazon_home_and_kitchen_1000 import AmazonHomeAndKitchen1000
-from evals.amazon_home_and_kitchen_1000 import AmazonHomeAndKitchen1000
 from evals.amazon_home_and_kitchen_100 import AmazonHomeAndKitchen100
+from evals.amazon_home_and_kitchen_1000 import AmazonHomeAndKitchen1000
 from evals.amazon_home_and_kitchen_500 import AmazonHomeAndKitchen500
 from evals.amazon_industrial_and_scientific_100 import AmazonIndustrialAndScientific100
 from evals.amazon_industrial_and_scientific_1000 import AmazonIndustrialAndScientific1000
 from evals.amazon_industrial_and_scientific_500 import AmazonIndustrialAndScientific500
 from evals.amazon_movies_and_tv_100 import AmazonMoviesAndTV100
 from evals.amazon_movies_and_tv_1000 import AmazonMoviesAndTV1000
-from evals.amazon_movies_and_tv_500 import AmazonMoviesAndTV500
 from evals.amazon_movies_and_tv_500 import AmazonMoviesAndTV500
 from evals.amazon_musical_instruments_100 import AmazonMusicalInstruments100
 from evals.amazon_musical_instruments_1000 import AmazonMusicalInstruments1000
@@ -77,6 +73,7 @@ from evals.amazon_patio_lawn_and_garden_100 import AmazonPatioLawnAndGarden100
 from evals.amazon_patio_lawn_and_garden_1000 import AmazonPatioLawnAndGarden1000
 from evals.amazon_patio_lawn_and_garden_500 import AmazonPatioLawnAndGarden500
 from evals.amazon_pet_supplies_100 import AmazonPetSupplies100
+from evals.amazon_patio_lawn_and_garden_1000 import AmazonPatioLawnAndGarden1000
 from evals.amazon_pet_supplies_1000 import AmazonPetSupplies1000
 from evals.amazon_pet_supplies_500 import AmazonPetSupplies500
 from evals.amazon_software_100 import AmazonSoftware100
@@ -85,34 +82,26 @@ from evals.amazon_software_500 import AmazonSoftware500
 from evals.amazon_sports_and_outdoors_100 import AmazonSportsAndOutdoors100
 from evals.amazon_sports_and_outdoors_1000 import AmazonSportsAndOutdoors1000
 from evals.amazon_sports_and_outdoors_500 import AmazonSportsAndOutdoors500
+from evals.amazon_tools_and_home_improvement_100 import AmazonToolsAndHomeImprovement100
 from evals.amazon_tools_and_home_improvement_1000 import AmazonToolsAndHomeImprovement1000
 from evals.amazon_tools_and_home_improvement_500 import AmazonToolsAndHomeImprovement500
-from evals.amazon_tools_and_home_improvement_100 import AmazonToolsAndHomeImprovement100
 from evals.amazon_toys_and_games_100 import AmazonToysAndGames100
 from evals.amazon_toys_and_games_1000 import AmazonToysAndGames1000
-from evals.amazon_toys_and_games_1000 import AmazonToysAndGames1000
 from evals.amazon_toys_and_games_500 import AmazonToysAndGames500
+from evals.amazon_video_games_100 import AmazonVideoGames100
+from evals.amazon_video_games_1000 import AmazonVideoGames1000
+from evals.amazon_video_games_500 import AmazonVideoGames500
+from evals.bitrecs_basic_eval import BitrecsBasicEval
+from evals.bitrecs_prompt_eval import BitrecsPromptEval
+from evals.bitrecs_reason_eval import BitrecsReasonEval
 from evals.bitrecs_safe_prompt import BitrecsSafeEval
+from evals.bitrecs_sku_eval import BitrecsSkuEval
+from evals.eval_result import EvalResult
 from models.eval_type import BitrecsEvaluationType
 from models.miner_artifact import Artifact
 
-from evals.eval_result import EvalResult
-from evals.bitrecs_basic_eval import BitrecsBasicEval
-from evals.bitrecs_sku_eval import BitrecsSkuEval
-
-from evals.bitrecs_prompt_eval import BitrecsPromptEval
-from evals.bitrecs_reason_eval import BitrecsReasonEval
-from evals.amazon_fashion_100 import AmazonFashion100
-
-from evals.amazon_video_games_100 import AmazonVideoGames100
-from evals.amazon_video_games_500 import AmazonVideoGames500
-from evals.amazon_video_games_1000 import AmazonVideoGames1000
-
-
-
 logging.basicConfig(level=CONST.LOG_LEVEL)
 logger = logging.getLogger(__name__)
-
 
 class EvalFactory:
     """
@@ -231,12 +220,12 @@ class EvalFactory:
         BitrecsEvaluationType.AMAZON_SPORTS_AND_OUTDOORS_1000: AmazonSportsAndOutdoors1000,
 
         BitrecsEvaluationType.AMAZON_TOOLS_AND_HOME_IMPROVEMENT_100: AmazonToolsAndHomeImprovement100,        
-        BitrecsEvaluationType.AMAZON_TOOLS_AND_HOME_IMPROVEMENT_500: AmazonToolsAndHomeImprovement500,
-        BitrecsEvaluationType.AMAZON_TOOLS_AND_HOME_IMPROVEMENT_1000: AmazonToolsAndHomeImprovement1000,
-
         BitrecsEvaluationType.AMAZON_TOYS_AND_GAMES_100: AmazonToysAndGames100,        
         BitrecsEvaluationType.AMAZON_TOYS_AND_GAMES_500: AmazonToysAndGames500,
         BitrecsEvaluationType.AMAZON_TOYS_AND_GAMES_1000: AmazonToysAndGames1000,
+        
+        BitrecsEvaluationType.AMAZON_TOOLS_AND_HOME_IMPROVEMENT_500: AmazonToolsAndHomeImprovement500,
+        BitrecsEvaluationType.AMAZON_TOOLS_AND_HOME_IMPROVEMENT_1000: AmazonToolsAndHomeImprovement1000,
         
         BitrecsEvaluationType.AMAZON_VIDEO_GAMES_100: AmazonVideoGames100,        
         BitrecsEvaluationType.AMAZON_VIDEO_GAMES_500: AmazonVideoGames500,
