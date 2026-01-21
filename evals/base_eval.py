@@ -19,6 +19,13 @@ class BaseEval(ABC):
     Abstract base class for all evaluation suites.
     Ensures standardized invocation and result reporting.
     """
+    @property
+    def sample_size(self) -> int:        
+        return 3
+    
+    @property
+    def pass_threshold(self) -> float:
+        return 0.3
     
     def __init__(self, run_id: str, miner_artifact: Artifact):      
         if not run_id:

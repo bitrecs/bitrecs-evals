@@ -1,17 +1,17 @@
 name: "bitrecs test recommender"
 version_num: "1"
 status: "screening_1"
-miner_hotkey: "5HWJ4i1K88EwWn6wSsmEqHh37Gd9miTJCDqdGeko8QCbX3EV"
+miner_hotkey: "5CXoYTVrdgRnKjaQqdHFnWch8HMcZPxTfsBui5993Ddw5f5J"
 miner_uid: 42
 ip_address: ""
-provider: "OPEN_ROUTER"
-model: "google/gemini-2.5-flash-lite"
+provider: "CHUTES"
+model: "Qwen/Qwen3-Next-80B-A3B-Instruct"
 
 system_prompt_template: |
   You are an ecommerce helpful assistant, today's date is {{current_date}}.
 user_prompt_template: |
     # SCENARIO
-    An ecommerce shopper is viewing a product detail page with SKU <sku>{{sku}}</sku> named <sku_info>{{sku_info}}</sku_info> on your e-commerce store.
+    A shopper is viewing a product detail page with SKU <sku>{{sku}}</sku> named <sku_info>{{sku_info}}</sku_info> on your e-commerce store.
     They are looking for {{num_recs}} products to add to their cart.
     You will build a {{num_recs}} product recommendation set with no duplicates based on the provided context and utilizing your persona attributes.
         
@@ -42,7 +42,7 @@ user_prompt_template: |
     Available products:
     <context>
     {{product_catalog}}
-    </context>   
+    </context>
 
     # OUTPUT REQUIREMENTS
     - Return ONLY a JSON array.

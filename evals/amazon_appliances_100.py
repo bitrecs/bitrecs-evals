@@ -1,46 +1,51 @@
-import logging
+
 import time
 import traceback
 import pandas as pd
+import logging
 from datetime import datetime, timezone
 from common import constants as CONST
+from common.hf_utils import sample_dataset
+from common.utils import rec_list_to_set
 from evals.eval_result import EvalResult
 from llm.factory import LLMFactory
 from llm.llm_provider import LLM
 from llm.prompt_factory import PromptFactory
+from models.amazon_size import AmazonDatasetSize
 from models.eval_type import BitrecsEvaluationType
 from models.miner_artifact import Artifact
-from common.utils import rec_list_to_set
 from evals.base_eval import BaseEval
+from models.product import Product
 
 
 logging.basicConfig(level=CONST.LOG_LEVEL)
 logger = logging.getLogger(__name__)
 
 """
-Evaluates prompt effectiveness for product recommendations.
-
-check: if the ground truth SKU is in the LLM's recommended SKUs.
-data: latest holdout set with context, query, ground_truth_sku, winning_response
+Amazon Appliances 100 Evaluation
+check: evaluates prompts on Amazon dataset for recommendation accuracy.
+data: Amazon recommendation dataset (100)
 
 """
 
-class BitrecsPromptEval(BaseEval):
-   
-
-    def __init__(self, run_id: str, miner_artifact: Artifact = None):      
+class AmazonAppliances100(BaseEval):
+ 
+    def __init__(self, run_id: str, miner_artifact: Artifact = None):
         super().__init__(run_id, miner_artifact)
-        holdout_df = self.get_latest_holdout()
-        self.holdout_df = holdout_df
+
+        size = AmazonDatasetSize(100)
+        folder_name = "Appliances"
+
+        sample_data = sample_dataset(folder_name=folder_name, size=size.value, sample_size=self.sample_size)
+        self.holdout_df = sample_data
         logger.info(f"Loaded holdout set with {len(self.holdout_df)} records.")
         if len(self.holdout_df) < self.sample_size:
             raise ValueError(f"Holdout set size {len(self.holdout_df)} is less than minimum required {self.sample_size}")        
-        self.debug_prompts = False
 
     def eval_type(self) -> BitrecsEvaluationType:
-        return BitrecsEvaluationType.BITRECS_PROMPT_DAILY
+        return BitrecsEvaluationType.AMAZON_APPLIANCES_100   
 
-    def run(self, max_iterations=10) -> EvalResult:
+    def run(self, max_iterations = 10) -> EvalResult:
         """
         Run the Bitrecs prompt evaluation.
         """
@@ -48,10 +53,6 @@ class BitrecsPromptEval(BaseEval):
         count = 0
         success_count = 0
         exception_count = 0
-        
-        #shuffle the holdout set for randomness
-        self.holdout_df = self.holdout_df.sample(frac=1).reset_index(drop=True)
-
         for idx, row in self.holdout_df.iterrows():
             if idx >= max_iterations:
                 break
@@ -60,6 +61,18 @@ class BitrecsPromptEval(BaseEval):
                 st = time.monotonic()
                 ctx = row.get('context', '')
                 logger.info(f"Context length: {len(str(ctx))} characters")
+
+                products = Product.try_parse_context_strict(ctx)
+                logger.info(f"Parsed {len(products)} products from context.")
+                if len(products) < CONST.MIN_PRODUCTS_PER_CONTEXT:
+                    logger.warning(f"Insufficient products in context ({len(products)}). Minimum required is {CONST.MIN_PRODUCTS_PER_CONTEXT}. Skipping row.")
+                    exception_count += 1
+                    continue
+                if len(products) > CONST.MAX_PRODUCTS_PER_CONTEXT:
+                    logger.warning(f"Too many products in context ({len(products)}). Maximum allowed is {CONST.MAX_PRODUCTS_PER_CONTEXT}. Skipping row.")
+                    exception_count += 1
+                    continue
+
                 eval_result = self.evaluate_row(row)                
                 et = time.monotonic()
                 duration = et - st
@@ -85,12 +98,11 @@ class BitrecsPromptEval(BaseEval):
         total_duration = end_time - start_time        
         final_score = success_count / count if count > 0 else 0.0                
         eval_success = False
-
         if final_score >= self.pass_threshold:
-            eval_success = True
-    
+            eval_success = True     
+
         result = EvalResult(           
-            eval_name=self.get_eval_name(),  # Use base method
+            eval_name=self.get_eval_name(),
             created_at=datetime.now(timezone.utc).isoformat(),
             hot_key=self.miner_artifact.miner_hotkey,
             score=final_score,
@@ -102,15 +114,14 @@ class BitrecsPromptEval(BaseEval):
             model_name=self.miner_artifact.model,
             provider_name=self.miner_artifact.provider,
             run_id=self.run_id
-        )        
-
+        )
         return result
     
     def evaluate_row(self, row: pd.Series) -> bool:
         """
         Evaluate a single row from the holdout set.
         """
-        
+
         created_at = row.get('created_at', '')
         query = row.get('query', '')
         ground_truth_sku = row.get('ground_truth_sku', '')
@@ -132,13 +143,12 @@ class BitrecsPromptEval(BaseEval):
             miner_artifact=self.miner_artifact,
             sku=query,
             products=products,
-            num_recs=num_recs,
-            debug=self.debug_prompts
+            num_recs=num_recs            
         )
         
         temperature = self.miner_artifact.sampling_params.temperature
-        model = self.miner_artifact.model
-      
+        model = self.miner_artifact.model        
+       
         st = time.monotonic()
         system_prompt, user_prompt = prompt_factory.generate_prompt()
         server = LLM.try_parse(provider)
@@ -168,5 +178,5 @@ class BitrecsPromptEval(BaseEval):
             duration=durtion
         )
 
-        return result    
-    
+        return result
+   
