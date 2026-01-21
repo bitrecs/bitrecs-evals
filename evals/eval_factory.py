@@ -24,10 +24,28 @@ from evals.amazon_beauty_and_personal_care_500 import AmazonBeautyAndPersonalCar
 from evals.amazon_books_100 import AmazonBooks100
 from evals.amazon_books_1000 import AmazonBooks1000
 from evals.amazon_books_500 import AmazonBooks500
+from evals.amazon_cds_and_vinyl_100 import AmazonCdsAndVinyl100
+from evals.amazon_cds_and_vinyl_1000 import AmazonCdsAndVinyl1000
+from evals.amazon_cds_and_vinyl_500 import AmazonCdsAndVinyl500
+from evals.amazon_cellphones_and_accessories_100 import AmazonCellPhonesAndAccessories100
+from evals.amazon_cellphones_and_accessories_1000 import AmazonCellPhonesAndAccessories1000
+from evals.amazon_cellphones_and_accessories_500 import AmazonCellPhonesAndAccessories500
+from evals.amazon_clothing_shoes_and_jewelry_100 import AmazonClothingShoesAndJewelry100
+from evals.amazon_clothing_shoes_and_jewelry_1000 import AmazonClothingShoesAndJewelry1000
+from evals.amazon_clothing_shoes_and_jewelry_500 import AmazonClothingShoesAndJewelry500
+from evals.amazon_digital_music_100 import AmazonDigitalMusic100
+from evals.amazon_digital_music_1000 import AmazonDigitalMusic1000
+from evals.amazon_digital_music_500 import AmazonDigitalMusic500
+from evals.amazon_electronics_100 import AmazonElectronics100
+from evals.amazon_electronics_1000 import AmazonElectronics1000
+from evals.amazon_electronics_500 import AmazonElectronics500
 from evals.amazon_fashion_100 import AmazonFashion100
 from evals.amazon_fashion_500 import AmazonFashion500
 from evals.amazon_fashion_1000 import AmazonFashion1000
 
+from evals.amazon_grocery_and_gourmet_food_100 import AmazonGroceryAndGourmetFood100
+from evals.amazon_grocery_and_gourmet_food_1000 import AmazonGroceryAndGourmetFood1000
+from evals.amazon_grocery_and_gourmet_food_500 import AmazonGroceryAndGourmetFood500
 from evals.bitrecs_safe_prompt import BitrecsSafeEval
 from models.eval_type import BitrecsEvaluationType
 from models.miner_artifact import Artifact
@@ -94,6 +112,29 @@ class EvalFactory:
         BitrecsEvaluationType.AMAZON_BOOKS_100: AmazonBooks100,
         BitrecsEvaluationType.AMAZON_BOOKS_500: AmazonBooks500,
         BitrecsEvaluationType.AMAZON_BOOKS_1000: AmazonBooks1000,
+
+        BitrecsEvaluationType.AMAZON_CDS_AND_VINYL_100: AmazonCdsAndVinyl100,
+        BitrecsEvaluationType.AMAZON_CDS_AND_VINYL_500: AmazonCdsAndVinyl500,
+        BitrecsEvaluationType.AMAZON_CDS_AND_VINYL_1000: AmazonCdsAndVinyl1000,
+
+        BitrecsEvaluationType.AMAZON_CELL_PHONES_AND_ACCESSORIES_100: AmazonCellPhonesAndAccessories100,
+        BitrecsEvaluationType.AMAZON_CELL_PHONES_AND_ACCESSORIES_500: AmazonCellPhonesAndAccessories500,
+        BitrecsEvaluationType.AMAZON_CELL_PHONES_AND_ACCESSORIES_1000: AmazonCellPhonesAndAccessories1000,
+
+        BitrecsEvaluationType.AMAZON_CLOTHING_SHOES_AND_JEWELRY_100: AmazonClothingShoesAndJewelry100,
+        BitrecsEvaluationType.AMAZON_CLOTHING_SHOES_AND_JEWELRY_500: AmazonClothingShoesAndJewelry500,
+        BitrecsEvaluationType.AMAZON_CLOTHING_SHOES_AND_JEWELRY_1000: AmazonClothingShoesAndJewelry1000,      
+        BitrecsEvaluationType.AMAZON_DIGITAL_MUSIC_100: AmazonDigitalMusic100,
+        BitrecsEvaluationType.AMAZON_DIGITAL_MUSIC_500: AmazonDigitalMusic500,
+        BitrecsEvaluationType.AMAZON_DIGITAL_MUSIC_1000: AmazonDigitalMusic1000,
+
+        BitrecsEvaluationType.AMAZON_ELECTRONICS_100: AmazonElectronics100,
+        BitrecsEvaluationType.AMAZON_ELECTRONICS_500: AmazonElectronics500,
+        BitrecsEvaluationType.AMAZON_ELECTRONICS_1000: AmazonElectronics1000,
+
+        BitrecsEvaluationType.AMAZON_GROCERY_AND_GOURMET_FOOD_100: AmazonGroceryAndGourmetFood100,
+        BitrecsEvaluationType.AMAZON_GROCERY_AND_GOURMET_FOOD_500: AmazonGroceryAndGourmetFood500,
+        BitrecsEvaluationType.AMAZON_GROCERY_AND_GOURMET_FOOD_1000: AmazonGroceryAndGourmetFood1000,
 
         
         BitrecsEvaluationType.AMAZON_VIDEO_GAMES_100: AmazonVideoGames100,        
