@@ -73,6 +73,25 @@ from evals.amazon_musical_instruments_500 import AmazonMusicalInstruments500
 from evals.amazon_office_products_100 import AmazonOfficeProducts100
 from evals.amazon_office_products_1000 import AmazonOfficeProducts1000
 from evals.amazon_office_products_500 import AmazonOfficeProducts500
+from evals.amazon_patio_lawn_and_garden_100 import AmazonPatioLawnAndGarden100
+from evals.amazon_patio_lawn_and_garden_1000 import AmazonPatioLawnAndGarden1000
+from evals.amazon_patio_lawn_and_garden_500 import AmazonPatioLawnAndGarden500
+from evals.amazon_pet_supplies_100 import AmazonPetSupplies100
+from evals.amazon_pet_supplies_1000 import AmazonPetSupplies1000
+from evals.amazon_pet_supplies_500 import AmazonPetSupplies500
+from evals.amazon_software_100 import AmazonSoftware100
+from evals.amazon_software_1000 import AmazonSoftware1000
+from evals.amazon_software_500 import AmazonSoftware500
+from evals.amazon_sports_and_outdoors_100 import AmazonSportsAndOutdoors100
+from evals.amazon_sports_and_outdoors_1000 import AmazonSportsAndOutdoors1000
+from evals.amazon_sports_and_outdoors_500 import AmazonSportsAndOutdoors500
+from evals.amazon_tools_and_home_improvement_1000 import AmazonToolsAndHomeImprovement1000
+from evals.amazon_tools_and_home_improvement_500 import AmazonToolsAndHomeImprovement500
+from evals.amazon_tools_and_home_improvement_100 import AmazonToolsAndHomeImprovement100
+from evals.amazon_toys_and_games_100 import AmazonToysAndGames100
+from evals.amazon_toys_and_games_1000 import AmazonToysAndGames1000
+from evals.amazon_toys_and_games_1000 import AmazonToysAndGames1000
+from evals.amazon_toys_and_games_500 import AmazonToysAndGames500
 from evals.bitrecs_safe_prompt import BitrecsSafeEval
 from models.eval_type import BitrecsEvaluationType
 from models.miner_artifact import Artifact
@@ -195,6 +214,29 @@ class EvalFactory:
         BitrecsEvaluationType.AMAZON_OFFICE_PRODUCTS_500: AmazonOfficeProducts500,
         BitrecsEvaluationType.AMAZON_OFFICE_PRODUCTS_1000: AmazonOfficeProducts1000,
 
+        BitrecsEvaluationType.AMAZON_PATIO_LAWN_AND_GARDEN_100: AmazonPatioLawnAndGarden100,
+        BitrecsEvaluationType.AMAZON_PATIO_LAWN_AND_GARDEN_500: AmazonPatioLawnAndGarden500,
+        BitrecsEvaluationType.AMAZON_PATIO_LAWN_AND_GARDEN_1000: AmazonPatioLawnAndGarden1000,
+
+        BitrecsEvaluationType.AMAZON_PET_SUPPLIES_100: AmazonPetSupplies100,
+        BitrecsEvaluationType.AMAZON_PET_SUPPLIES_500: AmazonPetSupplies500,
+        BitrecsEvaluationType.AMAZON_PET_SUPPLIES_1000: AmazonPetSupplies1000,
+
+        BitrecsEvaluationType.AMAZON_SOFTWARE_100: AmazonSoftware100,
+        BitrecsEvaluationType.AMAZON_SOFTWARE_500: AmazonSoftware500,
+        BitrecsEvaluationType.AMAZON_SOFTWARE_1000: AmazonSoftware1000,
+
+        BitrecsEvaluationType.AMAZON_SPORTS_AND_OUTDOORS_100: AmazonSportsAndOutdoors100,        
+        BitrecsEvaluationType.AMAZON_SPORTS_AND_OUTDOORS_500: AmazonSportsAndOutdoors500,
+        BitrecsEvaluationType.AMAZON_SPORTS_AND_OUTDOORS_1000: AmazonSportsAndOutdoors1000,
+
+        BitrecsEvaluationType.AMAZON_TOOLS_AND_HOME_IMPROVEMENT_100: AmazonToolsAndHomeImprovement100,        
+        BitrecsEvaluationType.AMAZON_TOOLS_AND_HOME_IMPROVEMENT_500: AmazonToolsAndHomeImprovement500,
+        BitrecsEvaluationType.AMAZON_TOOLS_AND_HOME_IMPROVEMENT_1000: AmazonToolsAndHomeImprovement1000,
+
+        BitrecsEvaluationType.AMAZON_TOYS_AND_GAMES_100: AmazonToysAndGames100,        
+        BitrecsEvaluationType.AMAZON_TOYS_AND_GAMES_500: AmazonToysAndGames500,
+        BitrecsEvaluationType.AMAZON_TOYS_AND_GAMES_1000: AmazonToysAndGames1000,
         
         BitrecsEvaluationType.AMAZON_VIDEO_GAMES_100: AmazonVideoGames100,        
         BitrecsEvaluationType.AMAZON_VIDEO_GAMES_500: AmazonVideoGames500,
