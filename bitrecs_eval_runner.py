@@ -35,7 +35,7 @@ logging.getLogger('fsspec').setLevel(logging.WARNING)
 # EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY, BitrecsEvaluationType.BITRECS_SAFE_DAILY,
 #               BitrecsEvaluationType.BITRECS_PROMPT_DAILY, ]
 
-EVAL_SUITE = [BitrecsEvaluationType.AMAZON_BEAUTY_AND_PERSONAL_CARE_100,]
+EVAL_SUITE = [BitrecsEvaluationType.AMAZON_BOOKS_100,]
               
 
 

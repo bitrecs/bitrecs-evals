@@ -21,6 +21,9 @@ from evals.amazon_baby_products_500 import AmazonBabyProducts500
 from evals.amazon_beauty_and_personal_care_100 import AmazonBeautyAndPersonalCare100
 from evals.amazon_beauty_and_personal_care_1000 import AmazonBeautyAndPersonalCare1000
 from evals.amazon_beauty_and_personal_care_500 import AmazonBeautyAndPersonalCare500
+from evals.amazon_books_100 import AmazonBooks100
+from evals.amazon_books_1000 import AmazonBooks1000
+from evals.amazon_books_500 import AmazonBooks500
 from evals.amazon_fashion_100 import AmazonFashion100
 from evals.amazon_fashion_500 import AmazonFashion500
 from evals.amazon_fashion_1000 import AmazonFashion1000
@@ -87,6 +90,10 @@ class EvalFactory:
         BitrecsEvaluationType.AMAZON_BEAUTY_AND_PERSONAL_CARE_100: AmazonBeautyAndPersonalCare100,
         BitrecsEvaluationType.AMAZON_BEAUTY_AND_PERSONAL_CARE_500: AmazonBeautyAndPersonalCare500,
         BitrecsEvaluationType.AMAZON_BEAUTY_AND_PERSONAL_CARE_1000: AmazonBeautyAndPersonalCare1000,
+
+        BitrecsEvaluationType.AMAZON_BOOKS_100: AmazonBooks100,
+        BitrecsEvaluationType.AMAZON_BOOKS_500: AmazonBooks500,
+        BitrecsEvaluationType.AMAZON_BOOKS_1000: AmazonBooks1000,
 
         
         BitrecsEvaluationType.AMAZON_VIDEO_GAMES_100: AmazonVideoGames100,        
