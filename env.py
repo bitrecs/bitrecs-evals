@@ -25,9 +25,14 @@ app = FastAPI()
 logging.basicConfig(level=CONST.LOG_LEVEL)
 logger = logging.getLogger(__name__)
 
-logging.getLogger('httpcore').setLevel(logging.DEBUG)
-logging.getLogger('httpx').setLevel(logging.DEBUG)
-logging.getLogger('peewee').setLevel(logging.DEBUG)
+# logging.getLogger('httpcore').setLevel(logging.DEBUG)
+# logging.getLogger('httpx').setLevel(logging.DEBUG)
+# logging.getLogger('peewee').setLevel(logging.DEBUG)
+
+if 1==1:
+    logging.getLogger('httpcore').setLevel(logging.WARNING)
+    logging.getLogger('httpx').setLevel(logging.WARNING)
+    logging.getLogger('peewee').setLevel(logging.WARNING)
 
 # Bitrecs Production Eval Suite
 
