@@ -22,19 +22,19 @@ logging.basicConfig(level=CONST.LOG_LEVEL)
 logger = logging.getLogger(__name__)
 
 """
-Amazon All Beauty 500 Evaluation
+Amazon Books 1000 Evaluation
 check: evaluates prompts on Amazon dataset for recommendation accuracy.
-data: Amazon recommendation dataset (500)
+data: Amazon recommendation dataset (1000)
 
 """
 
-class AmazonAllBeauty500(BaseEval):
+class AmazonBooks1000(BaseEval):
  
     def __init__(self, run_id: str, miner_artifact: Artifact = None):
         super().__init__(run_id, miner_artifact)
 
-        size = AmazonDatasetSize(500)
-        folder_name = "All_Beauty"
+        size = AmazonDatasetSize(1000)
+        folder_name = "Books"
 
         sample_data = sample_dataset(folder_name=folder_name, size=size.value, sample_size=self.sample_size)
         self.holdout_df = sample_data
@@ -43,7 +43,7 @@ class AmazonAllBeauty500(BaseEval):
             raise ValueError(f"Holdout set size {len(self.holdout_df)} is less than minimum required {self.sample_size}")        
 
     def eval_type(self) -> BitrecsEvaluationType:
-        return BitrecsEvaluationType.AMAZON_ALL_BEAUTY_500   
+        return BitrecsEvaluationType.AMAZON_BOOKS_1000   
 
     def run(self, max_iterations = 10) -> EvalResult:
         """

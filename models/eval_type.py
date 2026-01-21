@@ -35,6 +35,10 @@ class BitrecsEvaluationType(str, Enum):
     AMAZON_BEAUTY_AND_PERSONAL_CARE_500 = "amazon_beauty_and_personal_care_500"
     AMAZON_BEAUTY_AND_PERSONAL_CARE_1000 = "amazon_beauty_and_personal_care_1000"
 
+    AMAZON_BOOKS_100 = "amazon_books_100"    
+    AMAZON_BOOKS_500 = "amazon_books_500"
+    AMAZON_BOOKS_1000 = "amazon_books_1000"
+
     AMAZON_VIDEO_GAMES_100 = "amazon_video_games_100"    
     AMAZON_VIDEO_GAMES_500 = "amazon_video_games_500"
     AMAZON_VIDEO_GAMES_1000 = "amazon_video_games_1000"

@@ -48,7 +48,7 @@ EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY,
               #BitrecsEvaluationType.BITRECS_REASON_DAILY, 
               #BitrecsEvaluationType.BITRECS_SKU_DAILY, 
               BitrecsEvaluationType.BITRECS_PROMPT_DAILY,
-              BitrecsEvaluationType.AMAZON_PROMPT_100]
+              BitrecsEvaluationType.AMAZON_ALL_BEAUTY_100]
 
 
 class Actor:
@@ -72,30 +72,7 @@ class Actor:
             return artifact
         except Exception as e:
             raise ValueError(f"Failed to parse YAML into Artifact: {e}")
-
-
-    def run_eval_suites(self, miner_artifact: Artifact) -> Tuple[str, List[EvalResult]]:
-        """Run evaluation suites."""
-        raise NotImplementedError("Use run_eval with specific eval type instead.")
     
-        logger.info("Running eval suites...")    
-        run_id = secrets.token_hex(16)
-        logger.info(f"Eval Run ID: \033[35m{run_id}\033[0m")
-        logger.info(f"TOP RECORDS: \033[36m{CONST.TOP_RECORDS}\033[0m")
-        results = EvalFactory.run_all_evals(run_id, miner_artifact, EVAL_SUITE, CONST.TOP_RECORDS)
-        
-        for result in results:
-            print(f"{result}")
-            self.log_eval_result_to_db(run_id, result, miner_artifact.miner_hotkey, miner_artifact.model, miner_artifact.provider)
-            if result.passed:
-                logger.info(f"\033[32m{result.eval_name} Passed! Score: {result.score:.2f}\033[0m")
-            else:
-                logger.error(f"\033[31m{result.eval_name} Failed! Score: {result.score:.2f}\033[0m")    
-        
-        # total_score = sum(r.score for r in results) / len(results) if results else 0.0
-        # logger.info(f"Aggregated Score: {total_score:.2f}")        
-        logger.info(f"RUN COMPLETE for run ID: \033[34m{run_id}\033[0m")
-        return run_id, results
     
     def run_eval(self, miner_artifact: Artifact, eval_type: BitrecsEvaluationType) -> Tuple[str, List[EvalResult]]:
         """Run evaluation suites."""
