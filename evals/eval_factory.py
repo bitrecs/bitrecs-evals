@@ -46,6 +46,16 @@ from evals.amazon_fashion_1000 import AmazonFashion1000
 from evals.amazon_grocery_and_gourmet_food_100 import AmazonGroceryAndGourmetFood100
 from evals.amazon_grocery_and_gourmet_food_1000 import AmazonGroceryAndGourmetFood1000
 from evals.amazon_grocery_and_gourmet_food_500 import AmazonGroceryAndGourmetFood500
+from evals.amazon_handmade_products_100 import AmazonHandmadeProducts100
+from evals.amazon_handmade_products_1000 import AmazonHandmadeProducts1000
+from evals.amazon_handmade_products_500 import AmazonHandmadeProducts500
+from evals.amazon_health_and_household_100 import AmazonHealthAndHousehold100
+from evals.amazon_health_and_household_1000 import AmazonHealthAndHousehold1000
+from evals.amazon_health_and_household_500 import AmazonHealthAndHousehold500
+from evals.amazon_health_and_personal_care_1000 import AmazonHealthAndPersonalCare1000
+from evals.amazon_health_and_personal_care_1000 import AmazonHealthAndPersonalCare1000
+from evals.amazon_health_and_personal_care_500 import AmazonHealthAndPersonalCare500
+from evals.amazon_health_and_personal_care_100 import AmazonHealthAndPersonalCare100
 from evals.bitrecs_safe_prompt import BitrecsSafeEval
 from models.eval_type import BitrecsEvaluationType
 from models.miner_artifact import Artifact
@@ -135,6 +145,18 @@ class EvalFactory:
         BitrecsEvaluationType.AMAZON_GROCERY_AND_GOURMET_FOOD_100: AmazonGroceryAndGourmetFood100,
         BitrecsEvaluationType.AMAZON_GROCERY_AND_GOURMET_FOOD_500: AmazonGroceryAndGourmetFood500,
         BitrecsEvaluationType.AMAZON_GROCERY_AND_GOURMET_FOOD_1000: AmazonGroceryAndGourmetFood1000,
+
+        BitrecsEvaluationType.AMAZON_HANDMADE_PRODUCTS_100: AmazonHandmadeProducts100,
+        BitrecsEvaluationType.AMAZON_HANDMADE_PRODUCTS_500: AmazonHandmadeProducts500,
+        BitrecsEvaluationType.AMAZON_HANDMADE_PRODUCTS_1000: AmazonHandmadeProducts1000,
+
+        BitrecsEvaluationType.AMAZON_HEALTH_AND_HOUSEHOLD_100: AmazonHealthAndHousehold100,
+        BitrecsEvaluationType.AMAZON_HEALTH_AND_HOUSEHOLD_500: AmazonHealthAndHousehold500,
+        BitrecsEvaluationType.AMAZON_HEALTH_AND_HOUSEHOLD_1000: AmazonHealthAndHousehold1000,
+
+        BitrecsEvaluationType.AMAZON_HEALTH_AND_PERSONAL_CARE_100: AmazonHealthAndPersonalCare100,
+        BitrecsEvaluationType.AMAZON_HEALTH_AND_PERSONAL_CARE_500: AmazonHealthAndPersonalCare500,
+        BitrecsEvaluationType.AMAZON_HEALTH_AND_PERSONAL_CARE_1000: AmazonHealthAndPersonalCare1000,
 
         
         BitrecsEvaluationType.AMAZON_VIDEO_GAMES_100: AmazonVideoGames100,        

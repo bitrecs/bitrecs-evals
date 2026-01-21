@@ -63,6 +63,18 @@ class BitrecsEvaluationType(str, Enum):
     AMAZON_GROCERY_AND_GOURMET_FOOD_500 = "amazon_grocery_and_gourmet_food_500"
     AMAZON_GROCERY_AND_GOURMET_FOOD_1000 = "amazon_grocery_and_gourmet_food_1000"
 
+    AMAZON_HANDMADE_PRODUCTS_100 = "amazon_handmade_products_100"    
+    AMAZON_HANDMADE_PRODUCTS_500 = "amazon_handmade_products_500"
+    AMAZON_HANDMADE_PRODUCTS_1000 = "amazon_handmade_products_1000"
+
+    AMAZON_HEALTH_AND_HOUSEHOLD_100 = "amazon_health_and_household_100"    
+    AMAZON_HEALTH_AND_HOUSEHOLD_500 = "amazon_health_and_household_500"
+    AMAZON_HEALTH_AND_HOUSEHOLD_1000 = "amazon_health_and_household_1000"
+
+
+    AMAZON_HEALTH_AND_PERSONAL_CARE_100 = "amazon_health_and_personal_care_100"    
+    AMAZON_HEALTH_AND_PERSONAL_CARE_500 = "amazon_health_and_personal_care_500"
+    AMAZON_HEALTH_AND_PERSONAL_CARE_1000 = "amazon_health_and_personal_care_1000"
 
 
     AMAZON_VIDEO_GAMES_100 = "amazon_video_games_100"    
