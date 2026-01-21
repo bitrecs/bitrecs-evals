@@ -56,6 +56,23 @@ from evals.amazon_health_and_personal_care_1000 import AmazonHealthAndPersonalCa
 from evals.amazon_health_and_personal_care_1000 import AmazonHealthAndPersonalCare1000
 from evals.amazon_health_and_personal_care_500 import AmazonHealthAndPersonalCare500
 from evals.amazon_health_and_personal_care_100 import AmazonHealthAndPersonalCare100
+from evals.amazon_home_and_kitchen_1000 import AmazonHomeAndKitchen1000
+from evals.amazon_home_and_kitchen_1000 import AmazonHomeAndKitchen1000
+from evals.amazon_home_and_kitchen_100 import AmazonHomeAndKitchen100
+from evals.amazon_home_and_kitchen_500 import AmazonHomeAndKitchen500
+from evals.amazon_industrial_and_scientific_100 import AmazonIndustrialAndScientific100
+from evals.amazon_industrial_and_scientific_1000 import AmazonIndustrialAndScientific1000
+from evals.amazon_industrial_and_scientific_500 import AmazonIndustrialAndScientific500
+from evals.amazon_movies_and_tv_100 import AmazonMoviesAndTV100
+from evals.amazon_movies_and_tv_1000 import AmazonMoviesAndTV1000
+from evals.amazon_movies_and_tv_500 import AmazonMoviesAndTV500
+from evals.amazon_movies_and_tv_500 import AmazonMoviesAndTV500
+from evals.amazon_musical_instruments_100 import AmazonMusicalInstruments100
+from evals.amazon_musical_instruments_1000 import AmazonMusicalInstruments1000
+from evals.amazon_musical_instruments_500 import AmazonMusicalInstruments500
+from evals.amazon_office_products_100 import AmazonOfficeProducts100
+from evals.amazon_office_products_1000 import AmazonOfficeProducts1000
+from evals.amazon_office_products_500 import AmazonOfficeProducts500
 from evals.bitrecs_safe_prompt import BitrecsSafeEval
 from models.eval_type import BitrecsEvaluationType
 from models.miner_artifact import Artifact
@@ -157,6 +174,26 @@ class EvalFactory:
         BitrecsEvaluationType.AMAZON_HEALTH_AND_PERSONAL_CARE_100: AmazonHealthAndPersonalCare100,
         BitrecsEvaluationType.AMAZON_HEALTH_AND_PERSONAL_CARE_500: AmazonHealthAndPersonalCare500,
         BitrecsEvaluationType.AMAZON_HEALTH_AND_PERSONAL_CARE_1000: AmazonHealthAndPersonalCare1000,
+
+        BitrecsEvaluationType.AMAZON_HOME_AND_KITCHEN_100: AmazonHomeAndKitchen100,
+        BitrecsEvaluationType.AMAZON_HOME_AND_KITCHEN_500: AmazonHomeAndKitchen500,
+        BitrecsEvaluationType.AMAZON_HOME_AND_KITCHEN_1000: AmazonHomeAndKitchen1000,
+
+        BitrecsEvaluationType.AMAZON_INDUSTRIAL_AND_SCIENTIFIC_100: AmazonIndustrialAndScientific100,
+        BitrecsEvaluationType.AMAZON_INDUSTRIAL_AND_SCIENTIFIC_500: AmazonIndustrialAndScientific500,
+        BitrecsEvaluationType.AMAZON_INDUSTRIAL_AND_SCIENTIFIC_1000: AmazonIndustrialAndScientific1000,
+
+        BitrecsEvaluationType.AMAZON_MOVIES_AND_TV_100: AmazonMoviesAndTV100,
+        BitrecsEvaluationType.AMAZON_MOVIES_AND_TV_500: AmazonMoviesAndTV500,
+        BitrecsEvaluationType.AMAZON_MOVIES_AND_TV_1000: AmazonMoviesAndTV1000,
+
+        BitrecsEvaluationType.AMAZON_MUSICAL_INSTRUMENTS_100: AmazonMusicalInstruments100,
+        BitrecsEvaluationType.AMAZON_MUSICAL_INSTRUMENTS_500: AmazonMusicalInstruments500,
+        BitrecsEvaluationType.AMAZON_MUSICAL_INSTRUMENTS_1000: AmazonMusicalInstruments1000,
+
+        BitrecsEvaluationType.AMAZON_OFFICE_PRODUCTS_100: AmazonOfficeProducts100,
+        BitrecsEvaluationType.AMAZON_OFFICE_PRODUCTS_500: AmazonOfficeProducts500,
+        BitrecsEvaluationType.AMAZON_OFFICE_PRODUCTS_1000: AmazonOfficeProducts1000,
 
         
         BitrecsEvaluationType.AMAZON_VIDEO_GAMES_100: AmazonVideoGames100,        

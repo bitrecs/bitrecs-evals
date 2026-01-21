@@ -76,6 +76,30 @@ class BitrecsEvaluationType(str, Enum):
     AMAZON_HEALTH_AND_PERSONAL_CARE_500 = "amazon_health_and_personal_care_500"
     AMAZON_HEALTH_AND_PERSONAL_CARE_1000 = "amazon_health_and_personal_care_1000"
 
+    
+    AMAZON_HOME_AND_KITCHEN_100 = "amazon_home_and_kitchen_100"    
+    AMAZON_HOME_AND_KITCHEN_500 = "amazon_home_and_kitchen_500"
+    AMAZON_HOME_AND_KITCHEN_1000 = "amazon_home_and_kitchen_1000"
+    
+    AMAZON_INDUSTRIAL_AND_SCIENTIFIC_100 = "amazon_industrial_and_scientific_100"    
+    AMAZON_INDUSTRIAL_AND_SCIENTIFIC_500 = "amazon_industrial_and_scientific_500"
+    AMAZON_INDUSTRIAL_AND_SCIENTIFIC_1000 = "amazon_industrial_and_scientific_1000"
+
+    AMAZON_MOVIES_AND_TV_100 = "amazon_movies_and_tv_100"    
+    AMAZON_MOVIES_AND_TV_500 = "amazon_movies_and_tv_500"
+    AMAZON_MOVIES_AND_TV_1000 = "amazon_movies_and_tv_1000"
+
+    #Musical_Instruments
+    AMAZON_MUSICAL_INSTRUMENTS_100 = "amazon_musical_instruments_100"    
+    AMAZON_MUSICAL_INSTRUMENTS_500 = "amazon_musical_instruments_500"
+    AMAZON_MUSICAL_INSTRUMENTS_1000 = "amazon_musical_instruments_1000"
+
+    #Office_Products
+    AMAZON_OFFICE_PRODUCTS_100 = "amazon_office_products_100"    
+    AMAZON_OFFICE_PRODUCTS_500 = "amazon_office_products_500"
+    AMAZON_OFFICE_PRODUCTS_1000 = "amazon_office_products_1000"
+
+
 
     AMAZON_VIDEO_GAMES_100 = "amazon_video_games_100"    
     AMAZON_VIDEO_GAMES_500 = "amazon_video_games_500"
