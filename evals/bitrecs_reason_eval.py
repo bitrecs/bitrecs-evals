@@ -25,11 +25,8 @@ data: loads fresh miner responses for the given miner artifact.
 
 """
 
-class BitrecsReasonEval(BaseEval):
-  
-    min_sample_size = 2
-
-    pass_threshold = 0.3
+class BitrecsReasonEval(BaseEval):  
+   
     
     def __init__(self, run_id: str, miner_artifact: Artifact):
         super().__init__(run_id, miner_artifact)
@@ -52,8 +49,8 @@ class BitrecsReasonEval(BaseEval):
             logger.error(f"No data for hotkey {self.miner_artifact.miner_hotkey}")
             raise ValueError(f"No recent miner responses found for {self.miner_artifact.miner_hotkey}")
         
-        if len(self.holdout_df) < self.min_sample_size:
-            raise ValueError(f"Holdout set size {len(self.holdout_df)} is less than minimum required {self.min_sample_size}")
+        if len(self.holdout_df) < self.sample_size:
+            raise ValueError(f"Holdout set size {len(self.holdout_df)} is less than minimum required {self.sample_size}")
 
     def eval_type(self) -> BitrecsEvaluationType:
         return BitrecsEvaluationType.BITRECS_REASON_DAILY
@@ -142,8 +139,8 @@ class BitrecsReasonEval(BaseEval):
             logger.error(f"Exception during evaluation: {e}")
             exception_count += 1     
         end_time = time.monotonic()
-        total_duration = end_time - start_time        
-        eval_success = eval_score >= self.pass_threshold        
+        total_duration = end_time - start_time
+        eval_success = eval_score >= self.pass_threshold
 
         result = EvalResult(
             eval_name=self.get_eval_name(),

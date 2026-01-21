@@ -23,11 +23,8 @@ data: loads fresh miner responses for the given miner artifact.
 
 """
 
-class BitrecsSkuEval(BaseEval):
-  
-    min_sample_size = 2
-
-    pass_threshold = 0.3
+class BitrecsSkuEval(BaseEval):  
+   
     
     def __init__(self, run_id: str, miner_artifact: Artifact):
         super().__init__(run_id, miner_artifact)
@@ -52,8 +49,8 @@ class BitrecsSkuEval(BaseEval):
         df = self.load_recent_answers()
         self.holdout_df = df      
         
-        if len(self.holdout_df) < self.min_sample_size:
-            raise ValueError(f"Holdout set size {len(self.holdout_df)} is less than minimum required {self.min_sample_size}")
+        if len(self.holdout_df) < self.sample_size:
+            raise ValueError(f"Holdout set size {len(self.holdout_df)} is less than minimum required {self.sample_size}")
         
         #self.holdout_df = self.holdout_df.head(50)
 
@@ -140,9 +137,9 @@ class BitrecsSkuEval(BaseEval):
             logger.error(f"Exception during evaluation: {e}")
             exception_count += 1     
         end_time = time.monotonic()
-        total_duration = end_time - start_time        
-        eval_success = eval_score >= self.pass_threshold        
-
+        total_duration = end_time - start_time
+        eval_success = eval_score >= self.pass_threshold
+        
         result = EvalResult(
             eval_name=self.get_eval_name(),
             created_at=datetime.now(timezone.utc).isoformat(),
