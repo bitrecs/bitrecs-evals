@@ -151,7 +151,7 @@ class BitrecsPromptEval(BaseEval):
         logger.info(f"LLM Output: {llm_output}")
         logger.info(f"Recommended SKUs: {recommended_skus}")
         et = time.monotonic()
-        durtion = et - st
+        duration = et - st
 
         rec_set = rec_list_to_set(recommended_skus)
         if ground_truth_sku in rec_set:
@@ -165,7 +165,7 @@ class BitrecsPromptEval(BaseEval):
             query=query,
             num_recs=num_recs,
             recommended_skus=recommended_skus,
-            duration=durtion
+            duration=duration
         )
 
         return result    

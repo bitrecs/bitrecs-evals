@@ -159,7 +159,7 @@ class AmazonIndustrialAndScientific500(BaseEval):
         logger.info(f"LLM Output: {llm_output}")
         logger.info(f"Recommended SKUs: {recommended_skus}")
         et = time.monotonic()
-        durtion = et - st
+        duration = et - st
 
         rec_set = rec_list_to_set(recommended_skus)
         ground_truth_lower = ground_truth_sku.lower()
@@ -176,7 +176,7 @@ class AmazonIndustrialAndScientific500(BaseEval):
             query=query,
             num_recs=num_recs,
             recommended_skus=recommended_skus,
-            duration=durtion
+            duration=duration
         )
 
         return result
