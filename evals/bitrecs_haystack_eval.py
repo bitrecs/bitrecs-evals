@@ -31,11 +31,6 @@ class BitrecsHaystackEval(BaseEval):
     @property
     def pass_threshold(self) -> float:
         return 0.6
-    
-    @property
-    def tolerance_seconds_per_query(self) -> float:
-        return 12.0 #max seconds we're allowing for a rec
-
 
     def __init__(self, run_id: str, miner_artifact: Artifact = None):      
         super().__init__(run_id, miner_artifact)
@@ -62,8 +57,7 @@ class BitrecsHaystackEval(BaseEval):
             reason = f"This is a Haystack evaluation iteration number {idx+1}."
             logger.info(f"Haystack Eval {idx+1}: {reason}")
             
-            random_product = secrets.choice(self.product_catalog)
-            #num_recs = self.num_recs
+            random_product = secrets.choice(self.product_catalog)            
             query = random_product.sku
             
             try:
@@ -84,7 +78,7 @@ class BitrecsHaystackEval(BaseEval):
                 tokens = PromptFactory.get_token_count(system_prompt + user_prompt)
                 logger.info(f"Prompt Tokens: {tokens}")
                 
-                if 1==1:
+                if 1==2:
                     logger.info(f"System Prompt: {system_prompt}")
                     logger.info(f"User Prompt: {user_prompt}")
 
