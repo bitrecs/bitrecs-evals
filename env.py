@@ -33,6 +33,7 @@ if 1==1:
     logging.getLogger('httpcore').setLevel(logging.WARNING)
     logging.getLogger('httpx').setLevel(logging.WARNING)
     logging.getLogger('peewee').setLevel(logging.WARNING)
+    logging.getLogger('fsspec').setLevel(logging.WARNING)
 
 # Bitrecs Production Eval Suite
 

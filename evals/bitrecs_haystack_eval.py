@@ -1,3 +1,4 @@
+import json
 import logging
 import secrets
 import time
@@ -18,38 +19,31 @@ logging.basicConfig(level=CONST.LOG_LEVEL)
 logger = logging.getLogger(__name__)
 
 """
-Evaluates quality of service (QoS) for product recommendations.
+Evaluates needle in a haystack of sku in catalog
 
-check: ensure Model / Provider meets QoS standards.
+check: ensure Model / Provider can meet selection standards.
 data: local product catalog
 
 """
 
-class BitrecsQoSEval(BaseEval):
-
+class BitrecsHaystackEval(BaseEval):
+   
     @property
-    def accuracy_threshold(self) -> float:
-        return 0.6  #Minimum accuracy score to pass
-    
-    @property
-    def duration_threshold(self) -> float:
-        return 0.6  # Minimum duration score to pass
+    def pass_threshold(self) -> float:
+        return 0.6
     
     @property
     def tolerance_seconds_per_query(self) -> float:
-        return 12.0 # max duration we're allowing for a rec
+        return 12.0 #max seconds we're allowing for a rec
 
-    @property
-    def num_recs(self) -> int:
-        return 5
 
-    def __init__(self, run_id: str, miner_artifact: Artifact = None):
+    def __init__(self, run_id: str, miner_artifact: Artifact = None):      
         super().__init__(run_id, miner_artifact)
 
         woo_products = ProductFactory.load_default_catalog(CatalogProvider.WOOCOMMERCE)
         self.product_catalog = [Product(sku=p['sku'], name=p['name'], price=str(p['price'])) for p in woo_products]
         if len(self.product_catalog) == 0:
-            raise ValueError("Product catalog is empty")
+            raise ValueError("Product catalog is empty")            
        
 
     def eval_type(self) -> BitrecsEvaluationType:
@@ -65,24 +59,34 @@ class BitrecsQoSEval(BaseEval):
         exception_count = 0
         
         for idx in range(self.sample_size):
-            reason = f"This is a QoS evaluation iteration number {idx+1}."
-            logger.info(f"QoS Eval {idx+1}: {reason}")
+            reason = f"This is a Haystack evaluation iteration number {idx+1}."
+            logger.info(f"Haystack Eval {idx+1}: {reason}")
             
             random_product = secrets.choice(self.product_catalog)
-            num_recs = self.num_recs
+            #num_recs = self.num_recs
             query = random_product.sku
             
             try:
-                prompt_factory = PromptFactory(
-                    miner_artifact=self.miner_artifact,
-                    sku=query,
-                    products=self.product_catalog,
-                    num_recs=num_recs,
-                    debug=False
-                )
-                system_prompt, user_prompt = prompt_factory.generate_prompt()  # Generate once
+
+                system_prompt = "You are a helpful assistant." #TODO: Use artfact system prompt?
+                products = json.dumps([{'sku': p.sku, 'name': p.name, 'price': p.price} for p in self.product_catalog])
+                
+                user_prompt = f"""
+                # Instructions:
+
+                Return the element with sku = {query} from the following list of products: {products}
+                \n
+                \n
+                # Return Format:
+
+                [{{"sku": "<sku>", "name": "<name>", "price": "<price>"}}, ...] """
+
                 tokens = PromptFactory.get_token_count(system_prompt + user_prompt)
                 logger.info(f"Prompt Tokens: {tokens}")
+                
+                if 1==1:
+                    logger.info(f"System Prompt: {system_prompt}")
+                    logger.info(f"User Prompt: {user_prompt}")
 
                 temperature = self.miner_artifact.sampling_params.temperature
                 model = self.miner_artifact.model
@@ -97,39 +101,37 @@ class BitrecsQoSEval(BaseEval):
                                                     temp=temperature)
                 et = time.monotonic()
                 duration = et - st
-                recommended_skus = PromptFactory.tryparse_llm(llm_output)
-                #logger.info(f"LLM Output: {llm_output}")
+                matched_sku = PromptFactory.tryparse_llm(llm_output)
                 logger.info(f"Query : {query}")
+                logger.info(f"Matched SKU: {matched_sku}")
                 logger.info(f"Duration : {et - st:.2f} seconds")
                 
-                # Just validate we got the expected number of recommendations               
-                if len(recommended_skus) == num_recs:
+                if len(matched_sku) == 1 and matched_sku[0]["sku"] == query:
                     success_count += 1
-                    logger.info(f"QoS Eval Passed: Received {num_recs} valid recommendations.")
+                    logger.info(f"Haystack Eval Passed: Received 1 valid recommendation.")
                 else:
-                    logger.warning(f"QoS Eval Failed: Expected {num_recs} valid recommendations, got {len(recommended_skus)}")
+                    logger.warning(f"Haystack Eval Failed: Expected 1 valid recommendation, got {len(matched_sku)}")
                 count += 1
 
                 self.log_miner_response(
                     run_id=self.run_id,
                     query=query,
-                    num_recs=num_recs,
-                    recommended_skus=recommended_skus,
+                    num_recs=1,
+                    recommended_skus=matched_sku,
                     duration=duration
                 )
             except Exception as e:
                 exception_count += 1
-                logger.error(f"Exception in QoS Eval {idx+1}: {e}")
-                count += 1  # Still count the attempt
-
+                logger.error(f"Exception in Haystack Eval {idx+1}: {e}")
+                count += 1  # Still count the attempt        
         
         end_time = time.monotonic()
         total_duration = end_time - start_time        
-        accuracy_score = success_count / count if count > 0 else 0.0
-        expected_max_duration = self.sample_size * self.tolerance_seconds_per_query
-        duration_score = max(0, 1 - (total_duration / expected_max_duration))
-        final_score = accuracy_score * duration_score
-        eval_success = (accuracy_score >= self.accuracy_threshold) and (duration_score >= self.duration_threshold)
+        final_score = success_count / count if count > 0 else 0.0                
+        eval_success = False
+
+        if final_score >= self.pass_threshold:
+            eval_success = True    
         
         result = EvalResult(           
             eval_name=self.get_eval_name(),
@@ -138,7 +140,7 @@ class BitrecsQoSEval(BaseEval):
             score=final_score,
             passed=eval_success,
             rows_evaluated=count,
-            details=f"Evaluated {count} of {self.sample_size} rows with {exception_count} exceptions (max_iterations {max_iterations}). Accuracy: {accuracy_score:.2f}, Duration Score: {duration_score:.2f}.",
+            details=f"Evaluated {count} of {self.sample_size} rows with {exception_count} exceptions (max_iterations {max_iterations}).",
             duration_seconds=total_duration,
             temperature=self.miner_artifact.sampling_params.temperature,
             model_name=self.miner_artifact.model,
