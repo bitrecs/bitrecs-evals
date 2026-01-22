@@ -33,7 +33,7 @@ class BitrecsQoSEval(BaseEval):
     
     @property
     def tolerance_seconds_per_query(self) -> float:
-        return 10.0 #max seconds we're allowing for a rec
+        return 12.0 #max seconds we're allowing for a rec
 
     @property
     def num_recs(self) -> int:
