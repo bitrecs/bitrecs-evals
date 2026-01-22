@@ -6,7 +6,6 @@ import tiktoken
 from datetime import datetime, timezone
 from typing import Tuple
 from common import constants as CONST
-from evals.bitrecs_basic_eval import BitrecsBasicEval
 from evals.eval_result import EvalResult
 from llm.factory import LLMFactory
 from llm.llm_provider import LLM

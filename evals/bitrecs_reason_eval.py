@@ -1,4 +1,4 @@
-import random
+import secrets
 import time
 import logging
 import pandas as pd
@@ -70,7 +70,7 @@ class BitrecsReasonEval(BaseEval):
             reason = f"This is a baseline iteration number {idx+1}."
             logger.info(f"Reason Baseline {idx+1}: {reason}")
             
-            random_product = random.choice(self.rules_scorer.product_catalog)
+            random_product = secrets.choice(self.rules_scorer.product_catalog)
             num_recs = 5
             query = random_product.sku
             
@@ -102,14 +102,14 @@ class BitrecsReasonEval(BaseEval):
             logger.info(f"Query : {query}")
             logger.info(f"Recommended SKUs: {recommended_skus}")
             et = time.monotonic()
-            durtion = et - st
+            duration = et - st
 
             self.log_miner_response(
                 run_id=self.run_id,
                 query=query,
                 num_recs=num_recs,
                 recommended_skus=recommended_skus,
-                duration=durtion
+                duration=duration
             )
 
     
