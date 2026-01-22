@@ -164,11 +164,13 @@ class AmazonArtsCraftsAndSewing1000(BaseEval):
         duration = et - st
 
         rec_set = rec_list_to_set(recommended_skus)
-        if ground_truth_sku in rec_set:
+        ground_truth_lower = ground_truth_sku.lower()
+        rec_set_lower = {sku.lower() for sku in rec_set}
+        if ground_truth_lower in rec_set_lower:
             logger.info(f"\033[32mGround truth SKU {ground_truth_sku} found in recommendations: {recommended_skus}\033[0m")
             result = True
         else:
-            result = False      
+            result = False    
 
         self.log_miner_response(
             run_id=self.run_id,

@@ -92,23 +92,7 @@ class BitrecsSafeEval(BaseEval):
         report_lines.append(f"Model: {self.miner_artifact.model}")
         report_lines.append(f"Provider: {self.miner_artifact.provider}")
         return "\n".join(report_lines)
-    
-    @staticmethod
-    def is_hotkey_valid(hotkey: str) -> bool:
-        if not isinstance(hotkey, str) or len(hotkey) != 48:
-            return False
-        # regex s58 address
-        pattern = r"^5[1-9A-HJ-NP-Za-km-z]{47}$"
-        if re.match(pattern, hotkey):
-            return True
-        return False
-
-    @staticmethod
-    def get_token_count(prompt: str, encoding_name: str="o200k_base") -> int:
-        encoding = tiktoken.get_encoding(encoding_name)
-        tokens = encoding.encode(prompt)
-        return len(tokens)   
- 
+  
 
     @staticmethod    
     def is_prompt_safe(prompt: str) -> Tuple[bool, str]:

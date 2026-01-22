@@ -33,7 +33,11 @@ class BitrecsQoSEval(BaseEval):
     
     @property
     def tolerance_seconds_per_query(self) -> float:
-        return 10.0
+        return 10.0 #max seconds we're allowing for a rec
+
+    @property
+    def num_recs(self) -> int:
+        return 5
 
     def __init__(self, run_id: str, miner_artifact: Artifact = None):      
         super().__init__(run_id, miner_artifact)
@@ -56,58 +60,63 @@ class BitrecsQoSEval(BaseEval):
         success_count = 0
         exception_count = 0
         
-        #max_examples = 1
         for idx in range(self.sample_size):
             reason = f"This is a QoS evaluation iteration number {idx+1}."
             logger.info(f"QoS Eval {idx+1}: {reason}")
             
             random_product = secrets.choice(self.product_catalog)
-            num_recs = 5
+            num_recs = self.num_recs
             query = random_product.sku
             
-            prompt_factory = PromptFactory(
-                miner_artifact=self.miner_artifact,
-                sku=query,
-                products=self.product_catalog,
-                num_recs=num_recs,
-                debug=False
-            )
-            system_prompt, user_prompt = prompt_factory.generate_prompt()
-            tokens = PromptFactory.get_token_count(system_prompt + user_prompt)
-            logger.info(f"Prompt Tokens: {tokens}")
+            try:
+                prompt_factory = PromptFactory(
+                    miner_artifact=self.miner_artifact,
+                    sku=query,
+                    products=self.product_catalog,
+                    num_recs=num_recs,
+                    debug=False
+                )
+                system_prompt, user_prompt = prompt_factory.generate_prompt()  # Generate once
+                tokens = PromptFactory.get_token_count(system_prompt + user_prompt)
+                logger.info(f"Prompt Tokens: {tokens}")
 
-            temperature = self.miner_artifact.sampling_params.temperature
-            model = self.miner_artifact.model
-            provider = self.miner_artifact.provider
+                temperature = self.miner_artifact.sampling_params.temperature
+                model = self.miner_artifact.model
+                provider = self.miner_artifact.provider
 
-            st = time.monotonic()
-            system_prompt, user_prompt = prompt_factory.generate_prompt()
-            server = LLM.try_parse(provider)
-            llm_output = LLMFactory.query_llm(server=server,
-                                                model=model,
-                                                system_prompt=system_prompt,
-                                                user_prompt=user_prompt,
-                                                temp=temperature)
-            et = time.monotonic()
-            duration = et - st
-            recommended_skus = PromptFactory.tryparse_llm(llm_output)
-            #logger.info(f"LLM Output: {llm_output}")
-            logger.info(f"Query : {query}")
-            logger.info(f"Duration : {et - st:.2f} seconds")
-            if len(recommended_skus) == num_recs:
-                success_count += 1
-                logger.info(f"QoS Eval Passed: Received {num_recs} recommendations as expected.")
-            else:
-                logger.warning(f"QoS Eval Failed: Expected {num_recs} recommendations, got {len(recommended_skus)}")
-            count += 1
+                st = time.monotonic()
+                server = LLM.try_parse(provider)
+                llm_output = LLMFactory.query_llm(server=server,
+                                                    model=model,
+                                                    system_prompt=system_prompt,
+                                                    user_prompt=user_prompt,
+                                                    temp=temperature)
+                et = time.monotonic()
+                duration = et - st
+                recommended_skus = PromptFactory.tryparse_llm(llm_output)
+                #logger.info(f"LLM Output: {llm_output}")
+                logger.info(f"Query : {query}")
+                logger.info(f"Duration : {et - st:.2f} seconds")
+                
+                # Just validate we got the expected number of recommendations               
+                if len(recommended_skus) == num_recs:
+                    success_count += 1
+                    logger.info(f"QoS Eval Passed: Received {num_recs} valid recommendations.")
+                else:
+                    logger.warning(f"QoS Eval Failed: Expected {num_recs} valid recommendations, got {len(recommended_skus)}")
+                count += 1
 
-            self.log_miner_response(
-                run_id=self.run_id,
-                query=query,
-                num_recs=num_recs,
-                recommended_skus=recommended_skus,
-                duration=duration
-            )
+                self.log_miner_response(
+                    run_id=self.run_id,
+                    query=query,
+                    num_recs=num_recs,
+                    recommended_skus=recommended_skus,
+                    duration=duration
+                )
+            except Exception as e:
+                exception_count += 1
+                logger.error(f"Exception in QoS Eval {idx+1}: {e}")
+                count += 1  # Still count the attempt
 
         
         end_time = time.monotonic()
@@ -125,7 +134,7 @@ class BitrecsQoSEval(BaseEval):
             score=final_score,
             passed=eval_success,
             rows_evaluated=count,
-            details=f"Evaluated {count} of {self.sample_size} rows with {exception_count} exceptions (max_iterations {max_iterations}).",
+            details=f"Evaluated {count} of {self.sample_size} rows with {exception_count} exceptions (max_iterations {max_iterations}). Accuracy: {accuracy_score:.2f}, Duration Score: {duration_score:.2f}.",
             duration_seconds=total_duration,
             temperature=self.miner_artifact.sampling_params.temperature,
             model_name=self.miner_artifact.model,
