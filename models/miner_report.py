@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List
 
 
 class MinerReport:
@@ -24,7 +24,7 @@ class MinerReport:
     evaluator_notes: List[str] = []
     rank: int = -1    
 
-    def to_dict(self):
+    def to_dict(self) -> Dict:
         return {
             'created_at': self.created_at,
             'scored_at': self.scored_at,
