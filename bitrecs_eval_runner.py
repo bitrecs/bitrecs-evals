@@ -36,7 +36,6 @@ logging.getLogger('fsspec').setLevel(logging.WARNING)
 #               BitrecsEvaluationType.BITRECS_PROMPT_DAILY, ]
 
 EVAL_SUITE = [BitrecsEvaluationType.BITRECS_QOS_DAILY,]
-              
 
 
 def load_miner_input_yaml(input_path=None) -> Artifact:
