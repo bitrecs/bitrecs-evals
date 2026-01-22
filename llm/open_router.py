@@ -61,8 +61,8 @@ class OpenRouter:
             "temperature": self.temp
         }
         
-        timeout = (5, 60) #connect, read timeout
-        max_retries = 3
+        timeout = (3, 30)  # Reduced connect/read timeouts
+        max_retries = 1  # Reduced to 1 retry (2 total attempts)
         for attempt in range(max_retries + 1):
             try:
                 with httpx.Client(timeout=timeout) as client:
@@ -86,7 +86,7 @@ class OpenRouter:
                     return data['choices'][0]['message']['content']
             except httpx.HTTPStatusError as e:
                 if e.response.status_code == 429 and attempt < max_retries:
-                    wait_time = 2 ** attempt  # Exponential backoff: 1s, 2s, 4s
+                    wait_time = 1 * (attempt + 1)  # Linear backoff: 1s, 2s
                     logger.warning(f"429 received, retrying in {wait_time}s (attempt {attempt + 1}/{max_retries + 1})")
                     time.sleep(wait_time)
                     continue
@@ -94,21 +94,21 @@ class OpenRouter:
                     raise RuntimeError(f"OpenRouter request failed: {e}") from e
             except httpx.ConnectTimeout:
                 if attempt < max_retries:
-                    wait_time = 2 ** attempt
+                    wait_time = 1 * (attempt + 1)
                     logger.warning(f"Connect timeout, retrying in {wait_time}s (attempt {attempt + 1}/{max_retries + 1})")
                     time.sleep(wait_time)
                     continue
                 raise TimeoutError(f"OpenRouter connect timed out after {timeout[0]}s")
             except httpx.ReadTimeout:
                 if attempt < max_retries:
-                    wait_time = 2 ** attempt
+                    wait_time = 1 * (attempt + 1)
                     logger.warning(f"Read timeout, retrying in {wait_time}s (attempt {attempt + 1}/{max_retries + 1})")
                     time.sleep(wait_time)
                     continue
                 raise TimeoutError(f"OpenRouter read timed out after {timeout[1]}s")
             except httpx.RequestError as e:
                 if attempt < max_retries:
-                    wait_time = 2 ** attempt
+                    wait_time = 1 * (attempt + 1)
                     logger.warning(f"Request error, retrying in {wait_time}s (attempt {attempt + 1}/{max_retries + 1})")
                     time.sleep(wait_time)
                     continue
