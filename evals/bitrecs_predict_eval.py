@@ -48,9 +48,8 @@ class BitrecsPredictEval(BaseEval):
         super().__init__(run_id, miner_artifact)
 
         db = sqlite3.connect(DB_PATH)
-        db.row_factory = sqlite3.Row
-        predictor = OrderForecasting(db)
-        self.predictor = predictor     
+        db.row_factory = sqlite3.Row        
+        self.predictor = OrderForecasting(db)
 
     def eval_type(self) -> BitrecsEvaluationType:
         return BitrecsEvaluationType.BITRECS_PREDICT_DAILY
@@ -309,16 +308,17 @@ class BitrecsPredictEval(BaseEval):
         tc = PromptFactory.get_token_count(user_prompt)
         logger.info(f"Token count: {tc}")
         
-        #model = "google/gemini-3-flash-preview"
         model = self.miner_artifact.model
-        server = LLM.OPEN_ROUTER
-        
+        provider = self.miner_artifact.provider
+        temp = self.miner_artifact.sampling_params.temperature
+        server = LLM.try_parse(provider)
+        #server = LLM.OPEN_ROUTER
         logger.info(f"Using model:  \033[1;32m {model} \033[0m")
         st = time.perf_counter()
         llm_response = LLMFactory.query_llm(server=server,
                                     model=model, 
                                     system_prompt=system_prompt, 
-                                    temp=0.0, 
+                                    temp=temp, 
                                     user_prompt=user_prompt)
         et = time.perf_counter()
         logger.info(f"LLM response time: {et - st:0.2f} seconds")    
