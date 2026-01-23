@@ -93,6 +93,7 @@ from evals.amazon_video_games_1000 import AmazonVideoGames1000
 from evals.amazon_video_games_500 import AmazonVideoGames500
 from evals.bitrecs_basic_eval import BitrecsBasicEval
 from evals.bitrecs_haystack_eval import BitrecsHaystackEval
+from evals.bitrecs_predict_eval import BitrecsPredictEval
 from evals.bitrecs_prompt_eval import BitrecsPromptEval
 from evals.bitrecs_qos_eval import BitrecsQoSEval
 from evals.bitrecs_reason_eval import BitrecsReasonEval
@@ -119,6 +120,7 @@ class EvalFactory:
         BitrecsEvaluationType.BITRECS_PROMPT_DAILY: BitrecsPromptEval,
         BitrecsEvaluationType.BITRECS_REASON_DAILY: BitrecsReasonEval,
         BitrecsEvaluationType.BITRECS_SKU_DAILY: BitrecsSkuEval,        
+        BitrecsEvaluationType.BITRECS_PREDICT_DAILY: BitrecsPredictEval,
         
         BitrecsEvaluationType.AMAZON_ALL_BEAUTY_100: AmazonAllBeauty100,
         BitrecsEvaluationType.AMAZON_ALL_BEAUTY_500: AmazonAllBeauty500,  
