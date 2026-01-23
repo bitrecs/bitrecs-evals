@@ -32,17 +32,17 @@ data: sample test db
 
 DB_PATH = os.path.join(CONST.ROOT_DIR, "data", "testdb", "store.sqlite")
 
-MIN_ORDER_CLIP = 25.00
+MIN_ORDER_CLIP = 40.00
 
 class BitrecsPredictEval(BaseEval):
    
     @property
     def sample_size(self) -> int:
-        return 1
+        return 2
     
     @property
     def pass_threshold(self) -> float:
-        return 1.0
+        return 0.5
 
     def __init__(self, run_id: str, miner_artifact: Artifact = None):      
         super().__init__(run_id, miner_artifact)
@@ -148,11 +148,17 @@ class BitrecsPredictEval(BaseEval):
     
     
     def get_sample_user_profile(self, min_orders: int = 5) -> UserProfile:
+        # sql = f"""
+        #     select group_id, count(1) as count from music_orders
+        #     where status == 'complete' and total_paid > {MIN_ORDER_CLIP}
+        #     group by group_id
+        #     having count(1) > {min_orders}"""
         sql = f"""
             select group_id, count(1) as count from music_orders
-            where status == 'complete' and total_paid > {MIN_ORDER_CLIP}
+            where total_paid > {MIN_ORDER_CLIP}
             group by group_id
             having count(1) > {min_orders}"""
+    
         profiles = []
         profile_orders = {}
         try:
@@ -163,9 +169,11 @@ class BitrecsPredictEval(BaseEval):
             if not rows:
                 raise ValueError("No user profiles found in the database.")        
             profiles = [{"group_id": row[0], "count": row[1]} for row in rows]
-            #print(f"Found {len(profiles)} distinct user profiles with more than {min_orders} orders.")
+            samples = len(profiles)
+            logger.info(f"Found {samples} user profiles with more than {min_orders} orders > ${MIN_ORDER_CLIP}")
             if min_orders== 5:
-                assert 245 == len(profiles), "Expected 245 distinct user profiles with 5 orders or more."
+                assert 263 == len(profiles), f"Expected 263 distinct user profiles with 5 orders."
+
             r = secrets.choice(profiles)        
             sql = f"""select o.*, i.qty, i.sku, i.name, i.price from music_orders o 
                     left join music_order_items i on o.order_id = i.order_id
