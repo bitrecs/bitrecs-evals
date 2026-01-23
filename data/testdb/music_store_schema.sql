@@ -87,3 +87,24 @@ SELECT
 FROM music_orders o
 LEFT JOIN music_order_items i ON i.order_id = o.order_id
 LEFT JOIN music_products   p ON p.sku     = i.sku;
+
+
+
+UPDATE music_orders
+SET updated_at = CASE
+    WHEN LENGTH(updated_at) = 13 THEN
+        -- Convert YY-MM-DD H:MM to YYYY-MM-DD HH:MM:SS
+        '20' || SUBSTR(updated_at, 1, 2) || '-' ||  -- Year: 20YY
+        SUBSTR(updated_at, 4, 2) || '-' ||          -- Month: MM
+        SUBSTR(updated_at, 7, 2) || ' ' ||          -- Day: DD
+        '0' || SUBSTR(updated_at, 10, 4) || ':00'   -- Time: 0H:MM + :00
+    WHEN LENGTH(updated_at) = 14 THEN
+        -- Convert YY-MM-DD HH:MM to YYYY-MM-DD HH:MM:SS
+        '20' || SUBSTR(updated_at, 1, 2) || '-' ||  -- Year: 20YY
+        SUBSTR(updated_at, 4, 2) || '-' ||          -- Month: MM
+        SUBSTR(updated_at, 7, 2) || ' ' ||          -- Day: DD
+        SUBSTR(updated_at, 10, 5) || ':00'          -- Time: HH:MM + :00
+    ELSE
+        -- Full format already good; leave as-is
+        updated_at
+END;
