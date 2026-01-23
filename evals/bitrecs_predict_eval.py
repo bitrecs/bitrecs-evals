@@ -32,7 +32,7 @@ data: sample test db
 
 DB_PATH = os.path.join(CONST.ROOT_DIR, "data", "testdb", "store.sqlite")
 
-MIN_ORDER_CLIP = 40.00
+MIN_ORDER_CLIP = 25.00
 
 class BitrecsPredictEval(BaseEval):
    
@@ -119,14 +119,14 @@ class BitrecsPredictEval(BaseEval):
             sql = """SELECT 
                 sku,
                 CASE 
-                    WHEN INSTR(name, '-') > 0 
-                    THEN SUBSTR(name, 1, INSTR(name, '-') - 1)
+                    WHEN INSTR(name, '|') > 0 
+                    THEN SUBSTR(name, 1, INSTR(name, '|') - 1)
                     ELSE name
                 END AS name,
                 price
             FROM music_products;"""
             if not truncate_names:
-                sql = """SELECT sku, name, price FROM music_products"""
+                sql = "SELECT sku, name, price FROM music_products"
                 print(" \033[1;31m  Warning Loading full product names, check token limits! \033[0m")
             else:
                 print(" \033[1;33m  Product Names Truncated \033[0m")
@@ -144,20 +144,24 @@ class BitrecsPredictEval(BaseEval):
         finally:
             if conn:
                 conn.close()    
-        return ProductFactory.dedupe(products)
+        product_count = len(products)
+        logger.info(f"Loaded {product_count} products from the database (before dedupe).")
+        products = ProductFactory.dedupe(products)
+        logger.info(f"Dedupe complete. {len(products)} unique products available.")
+        return products
     
     
     def get_sample_user_profile(self, min_orders: int = 5) -> UserProfile:
-        # sql = f"""
-        #     select group_id, count(1) as count from music_orders
-        #     where status == 'complete' and total_paid > {MIN_ORDER_CLIP}
-        #     group by group_id
-        #     having count(1) > {min_orders}"""
         sql = f"""
             select group_id, count(1) as count from music_orders
-            where total_paid > {MIN_ORDER_CLIP}
+            where status == 'complete' and total_paid > {MIN_ORDER_CLIP}
             group by group_id
             having count(1) > {min_orders}"""
+        # sql = f"""
+        #     select group_id, count(1) as count from music_orders
+        #     where total_paid > {MIN_ORDER_CLIP}
+        #     group by group_id
+        #     having count(1) > {min_orders}"""
     
         profiles = []
         profile_orders = {}
@@ -171,8 +175,9 @@ class BitrecsPredictEval(BaseEval):
             profiles = [{"group_id": row[0], "count": row[1]} for row in rows]
             samples = len(profiles)
             logger.info(f"Found {samples} user profiles with more than {min_orders} orders > ${MIN_ORDER_CLIP}")
-            if min_orders== 5:
-                assert 263 == len(profiles), f"Expected 263 distinct user profiles with 5 orders."
+            if min_orders == 5:
+                if samples != 245:
+                    raise ValueError(f"Expected 245 distinct user profiles with more than {min_orders} orders, but found {samples}.")
 
             r = secrets.choice(profiles)        
             sql = f"""select o.*, i.qty, i.sku, i.name, i.price from music_orders o 

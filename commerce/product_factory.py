@@ -180,7 +180,7 @@ class ProductFactory:
 
 
     @staticmethod
-    def dedupe(products: list[Product]) -> Set[Product]:
+    def dedupe(products: list[Product], sort: bool = True) -> Set[Product]:
         """Dedupe and sort"""
         seen = set()
         deduped = []
@@ -188,7 +188,9 @@ class ProductFactory:
             if product.sku not in seen:
                 seen.add(product.sku)
                 deduped.append(product)
-        deduped = sorted(deduped, key=lambda x: (x.name.lower(), x.price))
+        
+        if sort:
+            deduped = sorted(deduped, key=lambda x: (x.name.lower(), x.sku.lower(), x.price))
         return deduped
     
                
