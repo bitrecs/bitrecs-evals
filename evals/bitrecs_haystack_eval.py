@@ -32,7 +32,7 @@ class BitrecsHaystackEval(BaseEval):
     def pass_threshold(self) -> float:
         return 0.6
 
-    def __init__(self, run_id: str, miner_artifact: Artifact = None):      
+    def __init__(self, run_id: str, miner_artifact: Artifact = None):
         super().__init__(run_id, miner_artifact)
 
         woo_products = ProductFactory.load_default_catalog(CatalogProvider.WOOCOMMERCE)
