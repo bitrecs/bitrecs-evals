@@ -304,7 +304,8 @@ class BitrecsPredictEval(BaseEval):
         tc = PromptFactory.get_token_count(user_prompt)
         logger.info(f"Token count: {tc}")
         
-        model = "google/gemini-3-flash-preview"
+        #model = "google/gemini-3-flash-preview"
+        model = self.miner_artifact.model
         server = LLM.OPEN_ROUTER
         
         logger.info(f"Using model:  \033[1;32m {model} \033[0m")

@@ -1,34 +1,38 @@
 CREATE TABLE "music_products" (
-"sku" TEXT,
-  "price" REAL,
-  "name" TEXT
+    "sku" TEXT,
+    "price" REAL,
+    "name" TEXT
 );
+
 CREATE TABLE "music_order_items" (
-"order_id" INTEGER,
-  "sku" TEXT,
-  "price" REAL,
-  "item_id" INTEGER,
-  "name" TEXT,
-  "qty" INTEGER,
-  "row_total" REAL
+    "order_id" INTEGER,
+    "sku" TEXT,
+    "price" REAL,
+    "item_id" INTEGER,
+    "name" TEXT,
+    "qty" INTEGER,
+    "row_total" REAL
 );
+
 CREATE TABLE "music_orders" (
-"order_id" TEXT,
-  "grand_total" REAL,
-  "status" TEXT,
-  "subtotal" REAL,
-  "subtotal_incl_tax" REAL,
-  "subtotal_invoiced" REAL,
-  "total_item_count" REAL,
-  "total_paid" REAL,
-  "total_qty_ordered" TEXT,
-  "updated_at" TEXT,
-  "group_id" TEXT
+    "order_id" TEXT,
+    "grand_total" REAL,
+    "status" TEXT,
+    "subtotal" REAL,
+    "subtotal_incl_tax" REAL,
+    "subtotal_invoiced" REAL,
+    "total_item_count" REAL,
+    "total_paid" REAL,
+    "total_qty_ordered" TEXT,
+    "updated_at" TEXT,
+    "group_id" TEXT
 );
+
 CREATE INDEX idx_orders_item_id ON music_order_items(order_id);
 CREATE INDEX idx_sku_name ON music_products(sku, name);
 CREATE INDEX idx_sku_name_items ON music_order_items(sku, name);
 CREATE INDEX idx_orders_id ON music_orders(order_id);
+
 CREATE VIEW v_orders_overview AS
 SELECT 
     o.order_id,
@@ -47,6 +51,7 @@ SELECT
         ELSE 'Not paid'
     END AS payment_status
 FROM music_orders o;
+
 CREATE VIEW v_orders_by_status AS
 SELECT 
     status,
@@ -83,11 +88,10 @@ SELECT
     
     p.name          AS product_name_from_catalog,
     p.price         AS catalog_price
-    
+
 FROM music_orders o
 LEFT JOIN music_order_items i ON i.order_id = o.order_id
 LEFT JOIN music_products   p ON p.sku     = i.sku;
-
 
 
 UPDATE music_orders
