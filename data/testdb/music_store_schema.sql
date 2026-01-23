@@ -112,3 +112,8 @@ SET updated_at = CASE
         -- Full format already good; leave as-is
         updated_at
 END;
+
+
+
+SELECT sql FROM sqlite_master WHERE sql IS NOT NULL;
+
