@@ -26,7 +26,7 @@ class PromptFactory:
      
         self.miner_artifact = miner_artifact
         self.sku = sku
-        self.context = TypeAdapter(List[Product]).dump_json(products).decode('utf-8')
+        self.context = TypeAdapter(List[Product]).dump_json(products, exclude_none=True).decode('utf-8')
         self.num_recs = num_recs
         self.debug = debug
         self.catalog = []

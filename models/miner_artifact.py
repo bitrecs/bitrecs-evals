@@ -1,7 +1,10 @@
 from datetime import datetime, timezone
+import os
 from typing import List, Optional, Dict, Any
 from pydantic import UUID4, BaseModel, Field
 import uuid
+
+import yaml
 
 class SamplingParams(BaseModel):
     temperature: float = Field(ge=0, le=2)
@@ -33,3 +36,17 @@ class Artifact(BaseModel):
     fewshot_examples: Optional[List[MessageExample]] = Field(None, max_length=64)
     eval_scores: Dict[str, float] = Field(description="Evaluation scores claimed by the miner", default_factory=dict)
     status: Optional[str] = Field(None, description="Status of the artifact in the evaluation pipeline")
+
+
+    @staticmethod
+    def from_yaml(input_path=None) -> Optional["Artifact"]:
+        """Load miner input YAML and convert to Artifact object."""    
+        if not input_path or not os.path.exists(input_path):
+            raise FileNotFoundError(f"Error: {input_path} not found.")
+        with open(input_path, 'r') as f:
+            data = yaml.safe_load(f)
+        try:
+            artifact = Artifact(**data)
+            return artifact
+        except Exception as e:
+            raise ValueError(f"Failed to parse miner input into Artifact: {e}")
