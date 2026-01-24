@@ -211,16 +211,16 @@ class Actor:
             bitrecs_run_id = os.getenv("BITRECS_RUN_ID", "unknown")
             logger.info(f"Bitrecs Run ID: \033[33m{bitrecs_run_id}\033[0m")
             result = {
-                "task_name": "BitrecsEval",
+                "task_name": problem_type.value,
                 "bitrecs_run_id": bitrecs_run_id,
-                "run_id": run_id,               
+                "run_id": run_id,
                 "score": score,
                 "success": score > 0,
                 "time_taken": duration,
                 "extra": {
                     "result": run_report
                 }
-            }        
+            }
             
             logger.info(f"Local Run ID: \033[33m{run_id}\033[0m")
             logger.info(f"Bitrecs Run ID: \033[33m{bitrecs_run_id}\033[0m")
@@ -236,7 +236,7 @@ class Actor:
             end = time.monotonic()
             duration = round(end - start, 8)
             return {
-                "task_name": "BitrecsEval",
+                "task_name": problem_type.value,
                 "bitrecs_run_id": bitrecs_run_id,
                 "run_id": run_id,
                 "score": 0.0,
