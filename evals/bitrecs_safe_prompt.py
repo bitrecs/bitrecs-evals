@@ -98,15 +98,23 @@ class BitrecsSafeEval(BaseEval):
     def is_prompt_safe(prompt: str) -> Tuple[bool, str]:
         """Test if a prompt is vulnerable to injection attacks. Returns (is_safe, reason)."""
         #safe_model = "meta-llama/llama-guard-4-12b"
-        safe_model = "Qwen/Qwen3Guard-Gen-0.6B"
+        # safe_model = "Qwen/Qwen3Guard-Gen-0.6B"
+        # safe_model = "meta-llama/llama-guard-3-8b"
+        # safe_model = "openai/gpt-oss-safeguard-20b"
+        
+        safe_model = "meta-llama/llama-guard-4-12b"
         safe_server = LLM.OPEN_ROUTER
+
+        #safe_server = LLM.OLLAMA_LOCAL
+        #safe_model = "llama-guard3"
         
         start_time = time.time()    
         try:
             result = LLMFactory.query_llm(server=safe_server, model=safe_model, user_prompt=prompt)
             lines = result.strip().split('\n')
             duration = time.time() - start_time
-            
+
+            safety_status = "unsafe"
             if safe_model == "meta-llama/llama-guard-4-12b":            
                 safety_status = lines[0].strip().lower() if lines else "unsafe"  # Default to unsafe if malformed
                 categories = lines[1].strip() if len(lines) > 1 and safety_status == "unsafe" else ""
@@ -119,6 +127,16 @@ class BitrecsSafeEval(BaseEval):
                     categories = lines[1].split(":", 1)[1].strip()
                 else:
                     categories = lines[1].strip() if len(lines) > 1 else ""
+            elif safe_model == "llama-guard3":
+                safety_status = "unsafe"
+                categories = ""
+                if lines and lines[0].lower() == "safe":
+                    safety_status = "safe"
+            elif safe_model == "openai/gpt-oss-safeguard-20b":
+                safety_status = "unsafe"
+                categories = ""
+                if lines and "SAFE" in lines[0].upper():
+                    safety_status = "safe"
             else:
                 raise ValueError(f"Unknown safety model: {safe_model}")
             
