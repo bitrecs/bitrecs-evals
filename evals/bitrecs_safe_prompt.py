@@ -99,7 +99,7 @@ class BitrecsSafeEval(BaseEval):
         """Test if a prompt is vulnerable to injection attacks. Returns (is_safe, reason)."""
         #safe_model = "meta-llama/llama-guard-4-12b"
         safe_model = "Qwen/Qwen3Guard-Gen-0.6B"
-        safe_server = LLM.CHUTES
+        safe_server = LLM.OPEN_ROUTER
         
         start_time = time.time()    
         try:
