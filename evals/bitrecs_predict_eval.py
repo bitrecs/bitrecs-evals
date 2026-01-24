@@ -150,7 +150,7 @@ class BitrecsPredictEval(BaseEval):
         return products
     
     
-    def get_sample_user_profile(self, min_orders: int = 5, min_unique_skus: int = 3) -> UserProfile:
+    def get_sample_user_profile(self, min_orders: int = 6, min_unique_skus: int = 4) -> UserProfile:
         # sql = f"""
         #     select group_id, count(1) as count from music_orders
         #     where status == 'complete' and total_paid > {MIN_ORDER_CLIP}
@@ -290,7 +290,7 @@ class BitrecsPredictEval(BaseEval):
         result = False
         num_recs = 8
         st = time.perf_counter()
-        profile = self.get_sample_user_profile()    
+        profile = self.get_sample_user_profile(min_orders=6, min_unique_skus=4)
         products = self.load_catalog()
         
         profile.orders.sort(key=lambda o: o['created_at'])
