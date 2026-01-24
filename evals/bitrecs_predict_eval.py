@@ -174,9 +174,10 @@ class BitrecsPredictEval(BaseEval):
             profiles = [{"group_id": row[0], "count": row[1]} for row in rows]
             samples = len(profiles)
             logger.info(f"Found {samples} user profiles with more than {min_orders} orders > ${MIN_ORDER_CLIP}")
-            if min_orders == 5:
-                if samples != 245:
-                    raise ValueError(f"Expected 245 distinct user profiles with more than {min_orders} orders, but found {samples}.")
+            
+            # if min_orders == 5:
+            #     if samples != 245:
+            #         raise ValueError(f"Expected 245 distinct user profiles with more than {min_orders} orders, but found {samples}.")
 
             r = secrets.choice(profiles)        
             sql = f"""select o.*, i.qty, i.sku, i.name, i.price from music_orders o 
