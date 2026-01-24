@@ -33,10 +33,10 @@ MINER_INPUT_PATH = "input/miner_input.yaml"
 
 #EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY, BitrecsEvaluationType.BITRECS_REASON_DAILY, BitrecsEvaluationType.BITRECS_PROMPT_DAILY]
 
-EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY, BitrecsEvaluationType.BITRECS_SAFE_DAILY,
-               BitrecsEvaluationType.BITRECS_PROMPT_DAILY, ]
+# EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY, BitrecsEvaluationType.BITRECS_SAFE_DAILY,
+#                BitrecsEvaluationType.BITRECS_PROMPT_DAILY, ]
 
-#EVAL_SUITE = [BitrecsEvaluationType.BITRECS_SAFE_DAILY,]
+EVAL_SUITE = [BitrecsEvaluationType.BITRECS_PREDICT_DAILY,]
 
 
 def load_miner_input_yaml(input_path=None) -> Artifact:
