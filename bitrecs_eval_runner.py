@@ -23,6 +23,7 @@ logging.getLogger('httpx').setLevel(logging.WARNING)
 logging.getLogger('peewee').setLevel(logging.WARNING)
 logging.getLogger('fsspec').setLevel(logging.WARNING)
 
+MINER_INPUT_PATH = "input/miner_input.yaml"
 
 #$EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY, BitrecsEvaluationType.BITRECS_REASON_DAILY]
 # EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY, 
@@ -181,8 +182,8 @@ def main():
     print("=" * 60) 
    
     logger.info("Loading miner input...")
-    miner_input_path = "input/miner_input.yaml"
-    miner_artifact = load_miner_input_yaml(input_path=miner_input_path)
+    #miner_input_path = "input/miner_input.yaml"
+    miner_artifact = load_miner_input_yaml(input_path=MINER_INPUT_PATH)
     
     logger.info(f"Artifact ID: {miner_artifact.artifact_id}")
     logger.info(f"Model: {miner_artifact.model}")
