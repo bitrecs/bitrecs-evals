@@ -71,7 +71,7 @@ class BitrecsReasonEval(BaseEval):
             logger.info(f"Reason Baseline {idx+1}: {reason}")
             
             random_product = secrets.choice(self.rules_scorer.product_catalog)
-            num_recs = 5
+            num_recs = 7
             query = random_product.sku
             
             prompt_factory = PromptFactory(
