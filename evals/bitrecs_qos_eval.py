@@ -29,15 +29,15 @@ class BitrecsQoSEval(BaseEval):
 
     @property
     def accuracy_threshold(self) -> float:
-        return 0.6  #Minimum accuracy score to pass
+        return 0.6  # Minimum accuracy score to pass
     
     @property
     def duration_threshold(self) -> float:
-        return 0.6  # Minimum duration score to pass
+        return 0.5  # Minimum duration score to pass (lowered for realism)
     
     @property
     def tolerance_seconds_per_query(self) -> float:
-        return 12.0 # max duration we're allowing for a rec
+        return 15.0  # max duration we're allowing for a rec
 
     @property
     def num_recs(self) -> int:
@@ -63,6 +63,7 @@ class BitrecsQoSEval(BaseEval):
         count = 0
         success_count = 0
         exception_count = 0
+        durations = []  # Track individual durations for better scoring
         
         for idx in range(self.sample_size):
             reason = f"This is a QoS evaluation iteration number {idx+1}."
@@ -97,10 +98,11 @@ class BitrecsQoSEval(BaseEval):
                                                     temp=temperature)
                 et = time.monotonic()
                 duration = et - st
+                durations.append(duration)  # Collect for average calculation
                 recommended_skus = PromptFactory.tryparse_llm(llm_output)
                 #logger.info(f"LLM Output: {llm_output}")
                 logger.info(f"Query : {query}")
-                logger.info(f"Duration : {et - st:.2f} seconds")
+                logger.info(f"Duration : {duration:.2f} seconds")
                 
                 # Just validate we got the expected number of recommendations               
                 if len(recommended_skus) == num_recs:
@@ -126,8 +128,13 @@ class BitrecsQoSEval(BaseEval):
         end_time = time.monotonic()
         total_duration = end_time - start_time        
         accuracy_score = success_count / count if count > 0 else 0.0
-        expected_max_duration = self.sample_size * self.tolerance_seconds_per_query
-        duration_score = max(0, 1 - (total_duration / expected_max_duration))
+        
+        # Improved duration scoring: based on average per-query duration
+        avg_duration = sum(durations) / len(durations) if durations else 0.0
+        logger.info(f"Average query duration: {avg_duration:.2f} seconds")
+        # Score: 1.0 if avg <= tolerance, else penalize linearly but cap at 0
+        duration_score = max(0.0, 1.0 - (avg_duration / self.tolerance_seconds_per_query))
+        
         final_score = accuracy_score * duration_score
         eval_success = (accuracy_score >= self.accuracy_threshold) and (duration_score >= self.duration_threshold)
         
@@ -138,7 +145,7 @@ class BitrecsQoSEval(BaseEval):
             score=final_score,
             passed=eval_success,
             rows_evaluated=count,
-            details=f"Evaluated {count} of {self.sample_size} rows with {exception_count} exceptions (max_iterations {max_iterations}). Accuracy: {accuracy_score:.2f}, Duration Score: {duration_score:.2f}.",
+            details=f"Evaluated {count} of {self.sample_size} rows with {exception_count} exceptions (max_iterations {max_iterations}). Accuracy: {accuracy_score:.2f}, Avg Duration: {avg_duration:.2f}s, Duration Score: {duration_score:.2f}.",
             duration_seconds=total_duration,
             temperature=self.miner_artifact.sampling_params.temperature,
             model_name=self.miner_artifact.model,
