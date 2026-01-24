@@ -23,6 +23,20 @@ class Chutes:
         self.system_prompt = system_prompt
         self.temp = temp      
         self.provider = LLM.CHUTES.name
+
+        self.pricing = {
+            
+            "Qwen/Qwen3-235B-A22B-Instruct-2507-TEE": {"input": 0.08, "output": 0.55},
+            "Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8-TEE": {"input": 0.22, "output": 0.95},
+            "Qwen/Qwen3-Next-80B-A3B-Instruct": {"input": 0.10, "output": 0.80},
+
+            "moonshotai/Kimi-K2-Instruct-0905": {"input": 0.39, "output": 1.90},
+            "moonshotai/Kimi-K2-Instruct-0905": {"input": 0.39, "output": 1.90},
+
+            "zai-org/GLM-4.7-FP8": {"input": 0.30, "output": 1.20},
+            "zai-org/GLM-4.7-Flash": {"input": 0.06, "output": 0.35},         
+            
+        }
                 
 
 
@@ -65,6 +79,21 @@ class Chutes:
                         duration = end_time - start_time
                         logger.debug(f"CHUTES request completed in {duration:.2f}s")
                     #print(data)
+
+                     # Extract and log additional info
+                    usage = data.get('usage', {})
+                    prompt_tokens = usage.get('prompt_tokens', 0)
+                    completion_tokens = usage.get('completion_tokens', 0)
+                    total_tokens = usage.get('total_tokens', 0)
+                    finish_reason = data.get('choices', [{}])[0].get('finish_reason', 'unknown')
+                    actual_model = data.get('model', self.model)
+                    
+                    # Calculate cost
+                    model_pricing = self.pricing.get(actual_model, {"input": 0, "output": 0})
+                    cost = (prompt_tokens / 1000 * model_pricing["input"]) + (completion_tokens / 1000 * model_pricing["output"])
+                    
+                    logger.info(f"Request ID: {data.get('id')}, Model: {actual_model}, Tokens: {total_tokens} (Prompt: {prompt_tokens}, Completion: {completion_tokens}), Cost: ${cost:.6f}, Finish Reason: {finish_reason}")
+                    
                     return data['choices'][0]['message']['content']
             except httpx.HTTPStatusError as e:
                 if e.response.status_code == 429 and attempt < max_retries:

@@ -64,8 +64,8 @@ class BitrecsBasicEval(BaseEval):
             hotkey_valid = BitrecsBasicEval.is_hotkey_valid(self.miner_artifact.miner_hotkey)
             if not hotkey_valid:
                 reason = "miner_hotkey is not a valid S58 address"
-                result = False          
-
+                result = False
+            count = 1
         except Exception as e:
             logger.error(f"Exception during evaluation: {e}")
             traceback.print_exc()

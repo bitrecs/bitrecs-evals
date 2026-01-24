@@ -76,6 +76,41 @@ class PromptFactory:
         
         return system_prompt, user_prompt 
     
+
+    def generate_prompt_compressed(self) -> Tuple[str, str]:
+        """
+        Generate full prompt using Jinja2 templates from miner artifact.
+        Add compression for the context
+        
+        """
+        # Prepare template variables
+        template_vars = {            
+            "current_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+            "sku": self.sku,
+            "product_catalog": self.context,
+            "num_recs": self.num_recs,
+            "sku_info": self.sku_info,
+            "cart_json": self.cart_json,
+            "order_json": self.order_json,
+            "persona": self.persona
+        }
+
+        # Render system prompt
+        system_template = Template(self.miner_artifact.system_prompt_template)
+        system_prompt = system_template.render(**template_vars)
+
+        # Render user prompt
+        user_template = Template(self.miner_artifact.user_prompt_template)
+        user_prompt = user_template.render(**template_vars)
+
+        # Combine prompts
+        full_prompt = f"{system_prompt}\n\n{user_prompt}"
+        
+        if self.debug:
+            logger.debug(f"Generated prompt:\n{full_prompt}")
+        
+        return system_prompt, user_prompt 
+    
     
     @staticmethod
     def get_token_count(prompt: str, encoding_name: str="o200k_base") -> int:

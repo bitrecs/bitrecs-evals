@@ -5,7 +5,7 @@ miner_hotkey: "5CXoYTVrdgRnKjaQqdHFnWch8HMcZPxTfsBui5993Ddw5f5J"
 miner_uid: 42
 ip_address: ""
 provider: "CHUTES"
-model: "Qwen/Qwen3-Next-80B-A3B-Instruct"
+model: "Qwen/Qwen3-235B-A22B-Instruct-2507-TEE"
 
 system_prompt_template: |
   You are an ecommerce helpful assistant, today's date is {{current_date}}.

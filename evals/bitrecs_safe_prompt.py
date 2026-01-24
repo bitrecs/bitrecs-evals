@@ -52,7 +52,7 @@ class BitrecsSafeEval(BaseEval):
             result = prompt_safe
             reason = safe_reason
             template_status = "SAFE" if prompt_safe else "UNSAFE"
-
+            count = 1
         except Exception as e:
             logger.error(f"Exception during evaluation: {e}")            
             traceback.print_exc()

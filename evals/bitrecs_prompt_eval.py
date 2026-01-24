@@ -26,7 +26,10 @@ data: latest holdout set with context, query, ground_truth_sku, winning_response
 """
 
 class BitrecsPromptEval(BaseEval):
-   
+
+    @property
+    def sample_size(self) -> int:
+        return 5
 
     def __init__(self, run_id: str, miner_artifact: Artifact = None):      
         super().__init__(run_id, miner_artifact)
@@ -51,6 +54,9 @@ class BitrecsPromptEval(BaseEval):
         
         #shuffle the holdout set for randomness
         self.holdout_df = self.holdout_df.sample(frac=1).reset_index(drop=True)
+
+        # take n samples from the holdout set
+        self.holdout_df = self.holdout_df.head(self.sample_size)
 
         for idx, row in self.holdout_df.iterrows():
             if idx >= max_iterations:

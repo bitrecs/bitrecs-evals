@@ -63,7 +63,7 @@ class BitrecsQoSEval(BaseEval):
         count = 0
         success_count = 0
         exception_count = 0
-        durations = []  # Track individual durations for better scoring
+        durations = []
         
         for idx in range(self.sample_size):
             reason = f"This is a QoS evaluation iteration number {idx+1}."
@@ -98,13 +98,13 @@ class BitrecsQoSEval(BaseEval):
                                                     temp=temperature)
                 et = time.monotonic()
                 duration = et - st
-                durations.append(duration)  # Collect for average calculation
+                durations.append(duration)
                 recommended_skus = PromptFactory.tryparse_llm(llm_output)
                 #logger.info(f"LLM Output: {llm_output}")
                 logger.info(f"Query : {query}")
                 logger.info(f"Duration : {duration:.2f} seconds")
                 
-                # Just validate we got the expected number of recommendations               
+                # Simple accuracy check            
                 if len(recommended_skus) == num_recs:
                     success_count += 1
                     logger.info(f"QoS Eval Passed: Received {num_recs} valid recommendations.")
@@ -122,7 +122,7 @@ class BitrecsQoSEval(BaseEval):
             except Exception as e:
                 exception_count += 1
                 logger.error(f"Exception in QoS Eval {idx+1}: {e}")
-                count += 1  # Still count the attempt
+                count += 1
 
         
         end_time = time.monotonic()
