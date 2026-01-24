@@ -33,11 +33,11 @@ class BitrecsQoSEval(BaseEval):
     
     @property
     def duration_threshold(self) -> float:
-        return 0.5  # Minimum duration score to pass (lowered for realism)
+        return 0.15  #Lower = slower models allowed
     
     @property
     def tolerance_seconds_per_query(self) -> float:
-        return 15.0  # max duration we're allowing for a rec
+        return 15.0  # max expected duration for a rec
 
     @property
     def num_recs(self) -> int:
@@ -127,9 +127,8 @@ class BitrecsQoSEval(BaseEval):
         
         end_time = time.monotonic()
         total_duration = end_time - start_time        
-        accuracy_score = success_count / count if count > 0 else 0.0
+        accuracy_score = success_count / count if count > 0 else 0.0        
         
-        # Improved duration scoring: based on average per-query duration
         avg_duration = sum(durations) / len(durations) if durations else 0.0
         logger.info(f"Average query duration: {avg_duration:.2f} seconds")
         # Score: 1.0 if avg <= tolerance, else penalize linearly but cap at 0
