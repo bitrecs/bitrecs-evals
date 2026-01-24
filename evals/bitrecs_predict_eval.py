@@ -150,17 +150,22 @@ class BitrecsPredictEval(BaseEval):
         return products
     
     
-    def get_sample_user_profile(self, min_orders: int = 5) -> UserProfile:
-        sql = f"""
-            select group_id, count(1) as count from music_orders
-            where status == 'complete' and total_paid > {MIN_ORDER_CLIP}
-            group by group_id
-            having count(1) > {min_orders}"""
+    def get_sample_user_profile(self, min_orders: int = 5, min_unique_skus: int = 3) -> UserProfile:
         # sql = f"""
         #     select group_id, count(1) as count from music_orders
-        #     where total_paid > {MIN_ORDER_CLIP}
+        #     where status == 'complete' and total_paid > {MIN_ORDER_CLIP}
         #     group by group_id
-        #     having count(1) > {min_orders}"""
+        #     having count(1) > {min_orders}"""        
+       
+
+        sql = f"""
+            SELECT o.group_id, COUNT(DISTINCT o.order_id) as order_count, COUNT(DISTINCT i.sku) as unique_skus
+            FROM music_orders o
+            LEFT JOIN music_order_items i ON o.order_id = i.order_id
+            WHERE o.status == 'complete' AND o.total_paid > {MIN_ORDER_CLIP}
+            GROUP BY o.group_id
+            HAVING order_count > {min_orders} AND unique_skus > {min_unique_skus}
+        """
     
         profiles = []
         profile_orders = {}
