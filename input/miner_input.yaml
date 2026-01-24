@@ -5,7 +5,7 @@ miner_hotkey: "5HWJ4i1K88EwWn6wSsmEqHh37Gd9miTJCDqdGeko8QCbX3EV"
 miner_uid: 42
 ip_address: ""
 provider: "OPEN_ROUTER"
-model: "google/gemini-3-flash-preview"
+model: "google/gemini-2.5-flash-lite-preview-09-2025"
 
 system_prompt_template: |
   You are an ecommerce helpful assistant, today's date is {{current_date}}.

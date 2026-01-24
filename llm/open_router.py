@@ -24,10 +24,30 @@ class OpenRouter:
         self.temp = temp        
         self.provider = LLM.OPEN_ROUTER.name
         
+        # Add pricing map (example rates in USD per 1K tokens; update with real OpenRouter pricing)
+        self.pricing = {
+            "google/gemini-2.5-flash-lite-preview-09-2025": {"input": 0.10, "output": 0.40},
+            "google/gemini-3-flash-preview": {"input": 0.50, "output": 3.00},
+            "google/gemini-2.5-flash-lite": {"input": 0.10, "output": 0.30},
+            "google/gemini-2.5-flash-lite": {"input": 0.10, "output": 0.30},
 
-    def call_open_router(self, prompt) -> str:
+            "x-ai/grok-4.1-fast": {"input": 0.20, "output": 0.50},
+            "x-ai/x-ai/grok-4-fast": {"input": 0.20, "output": 0.50},
+
+            "openai/gpt-5-mini": {"input": 0.25, "output": 2.00},
+            "openai/gpt-5-nano": {"input": 0.05, "output": 0.40},
+            "openai/gpt-4.1-nano": {"input": 0.10, "output": 0.40},
+
+            "qwen/qwen/qwen3-embedding-8b": {"input": 0.01, "output": 0.00},
+            "qwen/qwen3-next-80b-a3b-instruct": {"input": 0.09, "output": 1.10},
+
+            "amazon/nova-2-lite-v1": {"input": 0.30, "output": 2.50},           
+            
+        }
+
+    def call_open_router(self, prompt) -> dict:  # Return full response dict instead of just content
         if not prompt or len(prompt) < 10:
-            raise ValueError()
+            raise ValueError("Prompt too short")
 
         url = "https://openrouter.ai/api/v1/chat/completions"
         headers = {
@@ -48,7 +68,7 @@ class OpenRouter:
                 "effort": "minimal"
             }
 
-        data = {
+        data_payload = {
             "model": self.model,
             "messages": [
                 #{"role": "system", "content": "/no_think"},
@@ -68,13 +88,13 @@ class OpenRouter:
                 with httpx.Client(timeout=timeout) as client:
                     if CONST.LOG_LEVEL <= logging.DEBUG:
                         start_time = time.perf_counter()
-                        content = data["messages"][0]["content"]
+                        content = data_payload["messages"][0]["content"]
                         token_count = PromptFactory.get_token_count(content)
                         logger.debug(f"OPEN_ROUTER request token count: {token_count} tokens")
                     response = client.post(
                         url,
                         headers=headers,
-                        json=data
+                        json=data_payload
                     )
                     response.raise_for_status()
                     data = response.json()
@@ -82,7 +102,24 @@ class OpenRouter:
                         end_time = time.perf_counter()
                         duration = end_time - start_time
                         logger.debug(f"OPEN_ROUTER request completed in {duration:.2f}s")
-                    #print(data)
+                    
+                    # Extract and log additional info
+                    usage = data.get('usage', {})
+                    prompt_tokens = usage.get('prompt_tokens', 0)
+                    completion_tokens = usage.get('completion_tokens', 0)
+                    total_tokens = usage.get('total_tokens', 0)
+                    finish_reason = data.get('choices', [{}])[0].get('finish_reason', 'unknown')
+                    actual_model = data.get('model', self.model)
+                    
+                    # Calculate cost
+                    model_pricing = self.pricing.get(actual_model, {"input": 0, "output": 0})
+                    cost = (prompt_tokens / 1000 * model_pricing["input"]) + (completion_tokens / 1000 * model_pricing["output"])
+                    
+                    logger.info(f"Request ID: {data.get('id')}, Model: {actual_model}, Tokens: {total_tokens} (Prompt: {prompt_tokens}, Completion: {completion_tokens}), Cost: ${cost:.6f}, Finish Reason: {finish_reason}")
+                    
+                    # Return full data for caller to use
+                    #return data
+                    
                     return data['choices'][0]['message']['content']
             except httpx.HTTPStatusError as e:
                 if e.response.status_code == 429 and attempt < max_retries:
