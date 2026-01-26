@@ -3,6 +3,7 @@ import logging
 import time
 import traceback
 import tiktoken
+import langdetect
 from datetime import datetime, timezone
 from typing import Tuple
 from common import constants as CONST
@@ -65,6 +66,12 @@ class BitrecsBasicEval(BaseEval):
             if not hotkey_valid:
                 reason = "miner_hotkey is not a valid S58 address"
                 result = False
+            system_language = BitrecsBasicEval.get_language_code(self.miner_artifact.system_prompt_template)
+            user_language = BitrecsBasicEval.get_language_code(self.miner_artifact.user_prompt_template)
+            if system_language != "en" or user_language != "en":
+                reason = f"One or both prompts are not in English (system: {system_language}, user: {user_language})"
+                result = False
+            
             count = 1
         except Exception as e:
             logger.error(f"Exception during evaluation: {e}")
@@ -213,6 +220,14 @@ class BitrecsBasicEval(BaseEval):
         
         logger.info(f"\033[32mTemplate validation successful. Used variables: {', '.join(sorted(matched_vars))} \033[0m")
         return True, f"Valid template. Used variables: {', '.join(sorted(matched_vars))}"
+    
+    @staticmethod
+    def get_language_code(text: str) -> str:
+        try:
+            lang = langdetect.detect(text)
+            return lang
+        except langdetect.lang_detect_exception.LangDetectException:
+            return "unknown"
     
 
    
