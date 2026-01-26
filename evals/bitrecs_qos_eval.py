@@ -29,7 +29,7 @@ class BitrecsQoSEval(BaseEval):
 
     @property
     def accuracy_threshold(self) -> float:
-        return 0.6  # Minimum accuracy score to pass
+        return 0.6  #Minimum accuracy score to pass
     
     @property
     def duration_threshold(self) -> float:
@@ -37,7 +37,7 @@ class BitrecsQoSEval(BaseEval):
     
     @property
     def tolerance_seconds_per_query(self) -> float:
-        return 15.0  # max expected duration for a rec
+        return 15.0  #max expected duration per rec
 
     @property
     def num_recs(self) -> int:
@@ -81,7 +81,7 @@ class BitrecsQoSEval(BaseEval):
                     num_recs=num_recs,
                     debug=False
                 )
-                system_prompt, user_prompt = prompt_factory.generate_prompt()  # Generate once
+                system_prompt, user_prompt = prompt_factory.generate_prompt()
                 tokens = PromptFactory.get_token_count(system_prompt + user_prompt)
                 logger.info(f"Prompt Tokens: {tokens}")
 
