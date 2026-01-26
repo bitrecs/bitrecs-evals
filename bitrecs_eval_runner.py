@@ -23,7 +23,7 @@ logging.getLogger('httpx').setLevel(logging.WARNING)
 logging.getLogger('peewee').setLevel(logging.WARNING)
 logging.getLogger('fsspec').setLevel(logging.WARNING)
 
-MINER_INPUT_PATH = "input/miner_input_fr.yaml"
+MINER_INPUT_PATH = "input/miner_input.yaml"
 
 #$EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY, BitrecsEvaluationType.BITRECS_REASON_DAILY]
 # EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY, 
