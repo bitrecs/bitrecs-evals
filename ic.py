@@ -195,7 +195,7 @@ if __name__ == "__main__":
 
 
     # ── Evaluation ─────────────────────────────────────────────────────────────
-    SAMPLE_SIZE_LLM = 5         # Small for LLM due to cost
+    SAMPLE_SIZE_LLM = 10        # Small for LLM due to cost
     SAMPLE_SIZE_POP = 100        # Larger for Popularity (fast, no cost)
 
     print(f"\nEvaluating LLM on {SAMPLE_SIZE_LLM} users, Popularity on {SAMPLE_SIZE_POP} users ...")
