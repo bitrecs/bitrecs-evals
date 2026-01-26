@@ -214,9 +214,4 @@ __marimo__/
 output/
 
 # Uploaded files
-instacart/aisles.csv
-instacart/departments.csv
-instacart/order_products__prior.csv
-instacart/order_products__train.csv
-instacart/orders.csv
-instacart/products.csv
+data/instacart/
