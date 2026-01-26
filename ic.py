@@ -1,17 +1,81 @@
-from dotenv import load_dotenv
-load_dotenv()
+import os
+import asyncio
 import random
 import pandas as pd
 import numpy as np
+from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv()
 from llm.prompt_factory import PromptFactory
 from sklearn.metrics import ndcg_score
 from collections import defaultdict
 from llm.factory import LLMFactory
 from llm.llm_provider import LLM
+from common.r2 import download_text_file_from_r2
 
 # ────────────────────────────────────────────────
 #   Instacart Recommendation Evaluation
 # ────────────────────────────────────────────────
+
+
+def test_init():
+    """
+    Checks if all 6 required CSV files are present in data/instacart/.
+    If any are missing, downloads them from the R2 bucket using the helper.
+    """
+    required_files = [
+        'aisles.csv',
+        'departments.csv',
+        'order_products__prior.csv',
+        'order_products__train.csv',
+        'orders.csv',
+        'products.csv'
+    ]
+    
+    data_dir = Path('data/instacart')
+    data_dir.mkdir(parents=True, exist_ok=True)  # Ensure directory exists
+    
+    # Get R2 credentials from env
+    bucket = os.getenv('R2_BUCKET_NAME')
+    access_key_id = os.getenv('R2_ACCESS_KEY_ID')
+    secret_access_key = os.getenv('R2_SECRET_ACCESS_KEY')
+    endpoint_url = os.getenv('R2_ENDPOINT_URL')
+    
+    if not all([bucket, access_key_id, secret_access_key, endpoint_url]):
+        raise ValueError("R2 environment variables not set. Check .env file.")
+    
+    all_present = True
+    for filename in required_files:
+        file_path = data_dir / filename
+        if not file_path.exists():
+            print(f"Missing {filename}, downloading from R2...")
+            path = f'instacart/{filename}'
+            try:
+                content = asyncio.run(download_text_file_from_r2(
+                    bucket=bucket,
+                    access_key_id=access_key_id,
+                    secret_access_key=secret_access_key,
+                    endpoint_url=endpoint_url,
+                    path=path
+                ))
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    f.write(content)
+                print(f"Downloaded {filename}")
+            except Exception as e:
+                print(f"Failed to download {filename}: {e}")
+                all_present = False
+        else:
+            print(f"{filename} already exists")
+    
+    if all_present:
+        print("All required files are present.")
+    else:
+        print("Some files could not be downloaded. Check R2 config or network.")
+    
+    return all_present
+
+test_init()
+
 
 products = pd.read_csv('data/instacart/products.csv')[['product_id', 'product_name']]
 product_map = dict(zip(products['product_id'], products['product_name']))
