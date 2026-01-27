@@ -266,8 +266,7 @@ class BitrecsInstacartEval(BaseEval):
     def ndcg_at_k(self, recommended, relevant, k):        
         rec_k = recommended[:k]
         if not rec_k:
-            return 0.0
-        
+            return 0.0        
         # Binary relevance: 1 if in relevant, 0 otherwise
         relevance_scores = [1.0 if item in relevant else 0.0 for item in rec_k]        
         # Compute DCG
@@ -293,7 +292,7 @@ class BitrecsInstacartEval(BaseEval):
         sorted_names = sorted(top_names)
         
         # Convert ids → names for better prompting
-        history_names = [self.product_map.get(pid, str(pid)) for pid in user_history[:30]]
+        history_names = [self.product_map.get(pid, str(pid)) for pid in user_history[:10]]
 
         prompt = f"""User previously bought: {', '.join(history_names)}.
         \n   
