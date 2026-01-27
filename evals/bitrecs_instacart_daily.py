@@ -300,9 +300,9 @@ class BitrecsInstacartEval(BaseEval):
 
         prompt = f"""User previously bought: {', '.join(history_names)}.
         \n   
-        Here is a subset of popular products: {', '.join(sorted_names)}.
+        Here is a subset of popular products:<subset> {', '.join(sorted_names)} </subset>.
         \n
-        Suggest exactly {self.num_recs} next products from this subset list. Return ONLY a comma-separated list of product names, nothing else.
+        Suggest exactly {self.num_recs} next products from the subset. Return ONLY a comma-separated list of product names, nothing else.
         """
 
         size = PromptFactory.get_token_count(prompt)
