@@ -91,8 +91,10 @@ from evals.amazon_toys_and_games_500 import AmazonToysAndGames500
 from evals.amazon_video_games_100 import AmazonVideoGames100
 from evals.amazon_video_games_1000 import AmazonVideoGames1000
 from evals.amazon_video_games_500 import AmazonVideoGames500
+from evals.base_eval import BaseEval
 from evals.bitrecs_basic_eval import BitrecsBasicEval
 from evals.bitrecs_haystack_eval import BitrecsHaystackEval
+from evals.bitrecs_instacart_daily import BitrecsInstacartEval
 from evals.bitrecs_predict_eval import BitrecsPredictEval
 from evals.bitrecs_prompt_eval import BitrecsPromptEval
 from evals.bitrecs_qos_eval import BitrecsQoSEval
@@ -121,6 +123,7 @@ class EvalFactory:
         BitrecsEvaluationType.BITRECS_REASON_DAILY: BitrecsReasonEval,
         BitrecsEvaluationType.BITRECS_SKU_DAILY: BitrecsSkuEval,        
         BitrecsEvaluationType.BITRECS_PREDICT_DAILY: BitrecsPredictEval,
+        BitrecsEvaluationType.BITRECS_INSTACART_DAILY: BitrecsInstacartEval,
         
         BitrecsEvaluationType.AMAZON_ALL_BEAUTY_100: AmazonAllBeauty100,
         BitrecsEvaluationType.AMAZON_ALL_BEAUTY_500: AmazonAllBeauty500,  
@@ -250,7 +253,11 @@ class EvalFactory:
         if eval_type not in cls._registry:
             raise ValueError(f"Unknown eval type: {eval_type}")
         
-        eval_instance = cls._registry[eval_type](run_id, miner_artifact)
+        eval_instance : BaseEval = cls._registry[eval_type](run_id, miner_artifact)
+        if eval_type.name != eval_instance.eval_type().name:
+            raise ValueError(f"Eval type mismatch: registry has {eval_type}, but instance reports {eval_instance.eval_type()}")
+            
+        
         return eval_instance.run(max_iterations)
     
     @classmethod

@@ -7,7 +7,6 @@ from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv()
 from llm.prompt_factory import PromptFactory
-from sklearn.metrics import ndcg_score
 from collections import defaultdict
 from llm.factory import LLMFactory
 from llm.llm_provider import LLM
@@ -94,26 +93,44 @@ def recall_at_k(recommended, relevant, k):
 
 
 def ndcg_at_k(recommended, relevant, k):
-    """Safe NDCG@K using binary relevance"""
+    """NDCG@K using binary relevance (pure Python, no sklearn)"""
     rec_k = recommended[:k]
     if not rec_k:
         return 0.0
     
-    # Relevance scores for recommended items
-    y_true = np.array([1 if item in relevant else 0 for item in rec_k])
-    y_score = y_true  # since we don't have ranked scores, use binary
+    # Binary relevance: 1 if in relevant, 0 otherwise
+    relevance_scores = [1.0 if item in relevant else 0.0 for item in rec_k]
     
-    # sklearn ndcg expects 2D arrays
-    y_true = y_true.reshape(1, -1)
-    y_score = y_score.reshape(1, -1)
+    # Compute DCG
+    dcg = sum(rel / np.log2(i + 2) for i, rel in enumerate(relevance_scores))
     
-    try:
-        return ndcg_score(y_true, y_score, k=k)
-    except:
-        # Fallback pure-python version if sklearn complains
-        dcg = sum((2 ** rel - 1) / np.log2(i + 2) for i, rel in enumerate(y_true[0]))
-        idcg = sum((2 ** rel - 1) / np.log2(i + 2) for i, rel in enumerate(sorted(y_true[0], reverse=True)))
-        return dcg / idcg if idcg > 0 else 0.0
+    # Compute IDCG (ideal DCG: sorted descending)
+    ideal_relevance = sorted(relevance_scores, reverse=True)
+    idcg = sum(rel / np.log2(i + 2) for i, rel in enumerate(ideal_relevance))
+    
+    return dcg / idcg if idcg > 0 else 0.0
+
+# def ndcg_at_k(recommended, relevant, k):
+#     """Safe NDCG@K using binary relevance"""
+#     rec_k = recommended[:k]
+#     if not rec_k:
+#         return 0.0
+    
+#     # Relevance scores for recommended items
+#     y_true = np.array([1 if item in relevant else 0 for item in rec_k])
+#     y_score = y_true  # since we don't have ranked scores, use binary
+    
+#     # sklearn ndcg expects 2D arrays
+#     y_true = y_true.reshape(1, -1)
+#     y_score = y_score.reshape(1, -1)
+    
+#     try:
+#         return ndcg_score(y_true, y_score, k=k)
+#     except:
+#         # Fallback pure-python version if sklearn complains
+#         dcg = sum((2 ** rel - 1) / np.log2(i + 2) for i, rel in enumerate(y_true[0]))
+#         idcg = sum((2 ** rel - 1) / np.log2(i + 2) for i, rel in enumerate(sorted(y_true[0], reverse=True)))
+#         return dcg / idcg if idcg > 0 else 0.0
 
 
 def hit_rate_at_k(recommended, relevant, k):

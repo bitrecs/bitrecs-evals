@@ -3,7 +3,7 @@ import os
 import logging
 from typing import List
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timezone
 from abc import ABC, abstractmethod
 from db.models.eval import db, Miner, MinerResponse
 from evals.eval_result import EvalResult
@@ -141,4 +141,24 @@ class BaseEval(ABC):
         finally:
             db.close()
 
+
+    def null_eval(self) -> EvalResult:
+        """
+        Return a null EvalResult indicating the evaluation could not be performed.
+        """
+        result = EvalResult(           
+            eval_name=self.get_eval_name(),  # Use base method
+            created_at=datetime.now(timezone.utc).isoformat(),
+            hot_key=self.miner_artifact.miner_hotkey,
+            score=0.0,
+            passed=False,
+            rows_evaluated=0,
+            details="FAILED: Evaluation could not be performed due to data initialization failure.",
+            duration_seconds=0.0,
+            temperature=self.miner_artifact.sampling_params.temperature,
+            model_name=self.miner_artifact.model,
+            provider_name=self.miner_artifact.provider,
+            run_id=self.run_id
+        )        
+        return result
     
