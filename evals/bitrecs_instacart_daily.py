@@ -39,7 +39,7 @@ class BitrecsInstacartEval(BaseEval):
     
     @property
     def num_recs(self) -> int:
-        return 10
+        return 20
     
     @property
     def pass_threshold(self) -> float:
@@ -299,21 +299,23 @@ class BitrecsInstacartEval(BaseEval):
         \n   
         Here is a subset of popular products: {', '.join(sorted_names)}.
         \n
-        Suggest exactly {self.num_recs} next products from this list. Return ONLY a comma-separated list of product names, nothing else.
+        Suggest exactly {self.num_recs} next products from this subset list. Return ONLY a comma-separated list of product names, nothing else.
         """
 
         size = PromptFactory.get_token_count(prompt)
         logger.info(f"Prompt size (tokens): {size}")
 
-        server = LLM.OPEN_ROUTER
-        model = "google/gemini-2.5-flash-lite"
+        #server = LLM.OPEN_ROUTER
+        server = LLM.CHUTES
+        #model = "google/gemini-2.5-flash-lite"
+        model = "moonshotai/Kimi-K2-Instruct-0905"
 
         #model = self.miner_artifact.model
         #server = LLM.try_parse(self.miner_artifact.provider)
 
         llm_output = LLMFactory.query_llm(server=server,
                                             model=model,
-                                            system_prompt="You're a helpful grocery shopping assistant.",
+                                            system_prompt="You're a helpful shopping assistant.",
                                             user_prompt=prompt,
                                             temp=0.0)
         
@@ -332,12 +334,8 @@ class BitrecsInstacartEval(BaseEval):
     def popularity_recommender(self, top_items, num_recs=10):
         """Global most frequent items (precomputed)"""
         return top_items[:num_recs]
-
-
-    # ────────────────────────────────────────────────
-    #   EVALUATION
-    # ────────────────────────────────────────────────
-
+    
+   
     def evaluate_recommender(self, test_data, recommender_func, train_data=None, k=10, sample_size=100, top_products=None):
         user_test = defaultdict(set)
         for _, row in test_data.iterrows():
