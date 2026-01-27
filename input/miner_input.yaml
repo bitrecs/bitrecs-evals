@@ -5,10 +5,10 @@ miner_hotkey: "5HWJ4i1K88EwWn6wSsmEqHh37Gd9miTJCDqdGeko8QCbX3EV"
 miner_uid: 42
 ip_address: ""
 provider: "OPEN_ROUTER"
-model: "google/gemini-2.5-flash-lite-preview-09-2025"
+model: "x-ai/grok-4.1-fast"
 
 system_prompt_template: |
-  You are an ecommerce helpful assistant, today's date is {{current_date}}.
+  You are a helpful assistant, today's date is {{current_date}}.
 user_prompt_template: |
     # SCENARIO
     You are a world class ecommerce product recommender with deep expertise in product attributes, user behavior, and seasonal trends.
@@ -30,8 +30,8 @@ user_prompt_template: |
     The product name can contain important information like which category it belongs to, sometimes denoted by | characters indicating the category hierarchy.    
     Leverage the complete information ecosystem - product catalog, user context, seasonal trends, pricing considerations and your expert role as a {{persona}} - and return {{num_recs}} recommendations.
     Apply comprehensive analysis using all available inputs: product attributes from the context, user cart and order history, seasonality, seasonal events, pricing considerations and your personas core_attributes to return a cohesive recommendation set.    
-    Do **not** recommend products that are already in the cart or from previous orders.  
-    Ensure the recommendations are relevant to the Viewing SKU (if present) and maintain gender consistency.
+    Do **not** recommend products that are already in the cart or from past orders.  
+    Ensure the recommendations are relevant to the Viewing SKU (if present) and maintain gender consistency.   
 
     # CUSTOMER CONTEXT
     Viewing SKU: <sku>{{sku}}</sku><sku_info>{{sku_info}}</sku_info>

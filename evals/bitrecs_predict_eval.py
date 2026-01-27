@@ -23,9 +23,10 @@ logging.basicConfig(level=CONST.LOG_LEVEL)
 logger = logging.getLogger(__name__)
 
 """
-Evaluates prompt and model ability to predict potential future sku orders
+Evaluates prompt and model ability to predict potential future orders
 
-check: if recommended skus are in order history 
+check: if recommended skus co-occurred with the viewing sku in past orders
+check: if recommended skus were ordered sequentially after viewing sku in past orders
 data: sample test db
 
 """
@@ -46,7 +47,7 @@ class BitrecsPredictEval(BaseEval):
     
     @property
     def num_recs(self) -> int:
-        return 20
+        return 10
 
     def __init__(self, run_id: str, miner_artifact: Artifact = None):      
         super().__init__(run_id, miner_artifact)
@@ -155,13 +156,7 @@ class BitrecsPredictEval(BaseEval):
     
     
     def get_sample_user_profile(self, min_orders: int = 6, min_unique_skus: int = 4) -> UserProfile:
-        # sql = f"""
-        #     select group_id, count(1) as count from music_orders
-        #     where status == 'complete' and total_paid > {MIN_ORDER_CLIP}
-        #     group by group_id
-        #     having count(1) > {min_orders}"""        
-       
-
+        
         sql = f"""
             SELECT o.group_id, COUNT(DISTINCT o.order_id) as order_count, COUNT(DISTINCT i.sku) as unique_skus
             FROM music_orders o
