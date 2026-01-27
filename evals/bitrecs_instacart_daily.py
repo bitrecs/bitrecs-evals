@@ -18,6 +18,7 @@ from llm.prompt_factory import PromptFactory
 from models.eval_type import BitrecsEvaluationType
 from models.miner_artifact import Artifact
 from evals.base_eval import BaseEval
+from models.product import Product
 
 
 logging.basicConfig(level=CONST.LOG_LEVEL)
@@ -43,7 +44,7 @@ class BitrecsInstacartEval(BaseEval):
     
     @property
     def pass_threshold(self) -> float:
-        return 0.08 #Recall@10 
+        return 0.08 #Recall@20
 
 
     def __init__(self, run_id: str, miner_artifact: Artifact = None):      
@@ -70,6 +71,9 @@ class BitrecsInstacartEval(BaseEval):
         self.orders = pd.read_csv(ORDERS_PATH)
         if self.orders.empty:
             raise ValueError("Orders dataframe is empty after loading orders.csv")
+        
+        bproducts = self.convert_products()
+        print(f"Loaded {len(bproducts):,} products from Instacart dataset.")
         
         # Train: all prior purchases
         order_products_prior = pd.read_csv(ORDER_PRODUCTS_PRIOR_PATH)
@@ -305,12 +309,12 @@ class BitrecsInstacartEval(BaseEval):
         logger.info(f"Prompt size (tokens): {size}")
 
         #server = LLM.OPEN_ROUTER
-        server = LLM.CHUTES
+        #server = LLM.CHUTES
         #model = "google/gemini-2.5-flash-lite"
-        model = "moonshotai/Kimi-K2-Instruct-0905"
+        #model = "moonshotai/Kimi-K2-Instruct-0905"
 
-        #model = self.miner_artifact.model
-        #server = LLM.try_parse(self.miner_artifact.provider)
+        model = self.miner_artifact.model
+        server = LLM.try_parse(self.miner_artifact.provider)
 
         llm_output = LLMFactory.query_llm(server=server,
                                             model=model,
@@ -390,3 +394,16 @@ class BitrecsInstacartEval(BaseEval):
         }
         #logger.info(f"Recommender evaluation: {result}")
         return result
+
+    def convert_products(self) -> List[Product]:
+        result = []
+        for p in self.products.itertuples():
+            product = Product(
+                sku=str(p.product_id),  
+                name=p.product_name,
+                price="0"  # Price not available in dataset
+            )
+            result.append(product)
+        sorted_result = sorted(result, key=lambda x: (x.name.lower(), x.sku.lower()))
+        return sorted_result
+        

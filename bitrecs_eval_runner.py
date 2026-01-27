@@ -67,13 +67,13 @@ def run_eval_suites(miner_artifact: Artifact, shuffle=False) -> Tuple[str, List[
         #print(f"{result}")
         log_eval_result_to_db(run_id, result, miner_artifact.miner_hotkey, miner_artifact.model, miner_artifact.provider)
         if result.passed:
-            logger.info(f"\033[32m{result.eval_name} Passed! Score: {result.score:.2f}\033[0m")
+            logger.info(f"\033[32m{result.eval_name} Passed! Score: {result.score:.4f}\033[0m")
         else:
-            logger.error(f"\033[31m{result.eval_name} Failed! Score: {result.score:.2f}\033[0m")    
+            logger.error(f"\033[31m{result.eval_name} Failed! Score: {result.score:.4f}\033[0m")    
     
     total_score = sum(r.score for r in results) / len(results) if results else 0.0
     
-    logger.info(f"Aggregated Score: {total_score:.2f} from {len(results)} evals.")    
+    logger.info(f"Aggregated Score: {total_score:.4f} from {len(results)} evals.")    
     logger.info(f"RUN COMPLETE for run ID: \033[34m{run_id}\033[0m")    
     return run_id, results
 
@@ -199,7 +199,7 @@ def main():
     write_log_to_output_file(run_log, output_path=f"output/eval_report_{run_id}.txt")
 
     final_score = EvalResult.calculate_overall_score(results)
-    logger.info(f"\033[34mFinal Overall Score: \033[92;1m{final_score:.2f}\033[0m")
+    logger.info(f"\033[34mFinal Overall Score: \033[92;1m{final_score:.4f}\033[0m")
 
     
 

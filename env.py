@@ -89,9 +89,9 @@ class Actor:
             print(f"{result}")
             self.log_eval_result_to_db(run_id, result, miner_artifact.miner_hotkey, miner_artifact.model, miner_artifact.provider)
             if result.passed:
-                logger.info(f"\033[32m{result.eval_name} Passed! Score: {result.score:.2f}\033[0m")
+                logger.info(f"\033[32m{result.eval_name} Passed! Score: {result.score:.4f}\033[0m")
             else:
-                logger.error(f"\033[31m{result.eval_name} Failed! Score: {result.score:.2f}\033[0m")
+                logger.error(f"\033[31m{result.eval_name} Failed! Score: {result.score:.4f}\033[0m")
     
         logger.info(f"RUN COMPLETE for run ID: \033[34m{run_id}\033[0m")
         return run_id, results
