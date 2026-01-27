@@ -42,7 +42,7 @@ class BitrecsHaystackEval(BaseEval):
        
 
     def eval_type(self) -> BitrecsEvaluationType:
-        return BitrecsEvaluationType.BITRECS_QOS_DAILY
+        return BitrecsEvaluationType.BITRECS_HAYSTACK_DAILY
 
     def run(self, max_iterations=10) -> EvalResult:
         """
