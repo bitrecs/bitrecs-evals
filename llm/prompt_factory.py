@@ -3,6 +3,7 @@ import json
 import tiktoken
 import logging
 from jinja2 import Template
+from commerce.user_profile import UserProfile
 from common import constants as CONST
 from functools import lru_cache
 from typing import List, Tuple
@@ -22,7 +23,8 @@ class PromptFactory:
                  products: List["Product"], 
                  num_recs: int = 5,
                  persona: str = "Expert Ecommerce Product Recommender",
-                 debug: bool = False) -> None:
+                 debug: bool = False,
+                 profile: UserProfile = None) -> None:
      
         self.miner_artifact = miner_artifact
         self.sku = sku
@@ -32,8 +34,8 @@ class PromptFactory:
         self.catalog = []
         self.cart = []
         self.cart_json = "[]"
-        self.orders = []
-        self.order_json = "[]"
+        self.orders = profile.orders if profile and profile.orders else []
+        self.order_json = TypeAdapter(List[dict]).dump_json(self.orders, exclude_none=True).decode('utf-8') if profile and profile.orders else "[]"
         self.persona = persona
         self.sku_info = "N/A"
 
@@ -156,45 +158,45 @@ class PromptFactory:
             return []
 
 
-    @staticmethod
-    def extract_skus_from_response(response_json: dict) -> List[str]:
-        """
-        Extracts a list of SKUs from an OpenAI-compatible chat completion response.
-        Handles JSON arrays wrapped in ```json ... ```, plain text, or malformed responses.
+    # @staticmethod
+    # def extract_skus_from_response(response_json: dict) -> List[str]:
+    #     """
+    #     Extracts a list of SKUs from an OpenAI-compatible chat completion response.
+    #     Handles JSON arrays wrapped in ```json ... ```, plain text, or malformed responses.
         
-        Args:
-            response_json (dict): The full OpenAI response dict.
+    #     Args:
+    #         response_json (dict): The full OpenAI response dict.
         
-        Returns:
-            List[str]: A list of SKUs extracted from the response. 
-        """
-        try:            
-            if not response_json.get('choices') or len(response_json['choices']) == 0:
-                return []
+    #     Returns:
+    #         List[str]: A list of SKUs extracted from the response. 
+    #     """
+    #     try:            
+    #         if not response_json.get('choices') or len(response_json['choices']) == 0:
+    #             return []
             
-            content = response_json['choices'][0].get('message', {}).get('content', '')
-            if not content:
-                return []
+    #         content = response_json['choices'][0].get('message', {}).get('content', '')
+    #         if not content:
+    #             return []
             
-            items = PromptFactory.tryparse_llm(content)
-            if not isinstance(items, list):
-                return []
+    #         items = PromptFactory.tryparse_llm(content)
+    #         if not isinstance(items, list):
+    #             return []
                         
-            skus = []
-            for item in items:
-                if isinstance(item, dict):
-                    sku = item.get('sku')
-                    if sku and isinstance(sku, str) and sku.strip():
-                        skus.append(sku.strip())
-                    else:
-                        logging.warning(f"Invalid or missing 'sku' in item: {item}")
-                        print(f"Invalid or missing 'sku' in item: {item}")
-                        pass
-                else:
-                    logging.warning(f"Item is not a dict: {item}")
-                    print(f"Item is not a dict: {item}")
+    #         skus = []
+    #         for item in items:
+    #             if isinstance(item, dict):
+    #                 sku = item.get('sku')
+    #                 if sku and isinstance(sku, str) and sku.strip():
+    #                     skus.append(sku.strip())
+    #                 else:
+    #                     logging.warning(f"Invalid or missing 'sku' in item: {item}")
+    #                     print(f"Invalid or missing 'sku' in item: {item}")
+    #                     pass
+    #             else:
+    #                 logging.warning(f"Item is not a dict: {item}")
+    #                 print(f"Item is not a dict: {item}")
             
-            return skus
-        except Exception as e:
-            logging.error(f"Error extracting SKUs from response: {str(e)}")
-            return []
+    #         return skus
+    #     except Exception as e:
+    #         logging.error(f"Error extracting SKUs from response: {str(e)}")
+    #         return []

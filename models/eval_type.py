@@ -9,6 +9,7 @@ class BitrecsEvaluationType(str, Enum):
     BITRECS_REASON_DAILY = "bitrecs_reason_daily"
     BITRECS_SKU_DAILY = "bitrecs_sku_daily"    
     BITRECS_PREDICT_DAILY = "bitrecs_predict_daily"
+    BITRECS_INSTACART_DAILY = "bitrecs_instacart_daily"
 
     AMAZON_ALL_BEAUTY_100 = "amazon_all_beauty_100"    
     AMAZON_ALL_BEAUTY_500 = "amazon_all_beauty_500"

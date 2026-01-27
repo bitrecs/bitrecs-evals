@@ -213,4 +213,5 @@ __marimo__/
 *.sqlite3-journal
 output/
 
+# Uploaded files
 data/instacart/

@@ -23,9 +23,10 @@ logging.basicConfig(level=CONST.LOG_LEVEL)
 logger = logging.getLogger(__name__)
 
 """
-Evaluates prompt and model ability to predict potential future sku orders
+Evaluates prompt and model ability to predict potential future orders
 
-check: if recommended skus are in order history 
+check: if recommended skus co-occurred with the viewing sku in past orders
+check: if recommended skus were ordered sequentially after viewing sku in past orders
 data: sample test db
 
 """
@@ -43,6 +44,10 @@ class BitrecsPredictEval(BaseEval):
     @property
     def pass_threshold(self) -> float:
         return 0.5
+    
+    @property
+    def num_recs(self) -> int:
+        return 10
 
     def __init__(self, run_id: str, miner_artifact: Artifact = None):      
         super().__init__(run_id, miner_artifact)
@@ -151,13 +156,7 @@ class BitrecsPredictEval(BaseEval):
     
     
     def get_sample_user_profile(self, min_orders: int = 6, min_unique_skus: int = 4) -> UserProfile:
-        # sql = f"""
-        #     select group_id, count(1) as count from music_orders
-        #     where status == 'complete' and total_paid > {MIN_ORDER_CLIP}
-        #     group by group_id
-        #     having count(1) > {min_orders}"""        
-       
-
+        
         sql = f"""
             SELECT o.group_id, COUNT(DISTINCT o.order_id) as order_count, COUNT(DISTINCT i.sku) as unique_skus
             FROM music_orders o
@@ -287,8 +286,7 @@ class BitrecsPredictEval(BaseEval):
         based on global historical patterns (co-occurrence and sequential purchases).
         """
         duration = 0.0
-        result = False
-        num_recs = 8
+        result = False        
         st = time.perf_counter()
         profile = self.get_sample_user_profile(min_orders=6, min_unique_skus=4)
         products = self.load_catalog()
@@ -304,12 +302,14 @@ class BitrecsPredictEval(BaseEval):
         query = viewing_product.sku
         logger.info(f"Viewing product: {viewing_product.name} \033[1;32m (SKU: {viewing_product.sku}) \033[0m")
         stats = self.get_simple_sku_stats(viewing_product.sku)
-        logger.info(f"SKU Stats: {stats}")
-        
+        logger.info(f"SKU Stats: {stats}")        
+      
         prompt_factory = PromptFactory(miner_artifact=self.miner_artifact,                                       
                                         sku=query,
                                         products=products,
-                                        num_recs=num_recs)
+                                        num_recs=self.num_recs,
+                                        debug=False,
+                                        profile=profile)
         system_prompt, user_prompt = prompt_factory.generate_prompt()
         tc = PromptFactory.get_token_count(user_prompt)
         logger.info(f"Token count: {tc}")
@@ -334,12 +334,12 @@ class BitrecsPredictEval(BaseEval):
         self.log_miner_response(
             run_id=self.run_id,
             query=query,
-            num_recs=num_recs,
+            num_recs=self.num_recs,
             recommended_skus=recommended_skus,
             duration=duration
         )
-        if len(recommended_skus) != num_recs:
-            logger.error(f"\033[31m Expected {num_recs} recommendations but got {len(recommended_skus)}. \033[0m")
+        if len(recommended_skus) != self.num_recs:
+            logger.error(f"\033[31m Expected {self.num_recs} recommendations but got {len(recommended_skus)}. \033[0m")
             return False
         
         rec_sku_list = [rec['sku'] for rec in recommended_skus]

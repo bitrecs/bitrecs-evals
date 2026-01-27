@@ -40,12 +40,13 @@ class OpenRouter:
 
             "qwen/qwen/qwen3-embedding-8b": {"input": 0.01, "output": 0.00},
             "qwen/qwen3-next-80b-a3b-instruct": {"input": 0.09, "output": 1.10},
+            "qwen/qwen3-235b-a22b-2507": {"input": 0.071, "output": 0.463},
 
             "amazon/nova-2-lite-v1": {"input": 0.30, "output": 2.50},           
             
         }
 
-    def call_open_router(self, prompt) -> dict:  # Return full response dict instead of just content
+    def call_open_router(self, prompt) -> str:
         if not prompt or len(prompt) < 10:
             raise ValueError("Prompt too short")
 
@@ -114,7 +115,7 @@ class OpenRouter:
                     
                     # Calculate cost
                     model_pricing = self.pricing.get(actual_model, {"input": 0, "output": 0})
-                    cost = (prompt_tokens / 1000 * model_pricing["input"]) + (completion_tokens / 1000 * model_pricing["output"])
+                    cost = (prompt_tokens / 1000000 * model_pricing["input"]) + (completion_tokens / 1000000 * model_pricing["output"])
                     
                     logger.info(f"Request ID: {data.get('id')}, Model: {actual_model}, Tokens: {total_tokens} (Prompt: {prompt_tokens}, Completion: {completion_tokens}), Cost: ${cost:.6f}, Finish Reason: {finish_reason}")
                     

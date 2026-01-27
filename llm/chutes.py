@@ -90,7 +90,8 @@ class Chutes:
                     
                     # Calculate cost
                     model_pricing = self.pricing.get(actual_model, {"input": 0, "output": 0})
-                    cost = (prompt_tokens / 1000 * model_pricing["input"]) + (completion_tokens / 1000 * model_pricing["output"])
+                    #cost = (prompt_tokens / 1000 * model_pricing["input"]) + (completion_tokens / 1000 * model_pricing["output"])
+                    cost = (prompt_tokens / 1000000 * model_pricing["input"]) + (completion_tokens / 1000000 * model_pricing["output"])
                     
                     logger.info(f"Request ID: {data.get('id')}, Model: {actual_model}, Tokens: {total_tokens} (Prompt: {prompt_tokens}, Completion: {completion_tokens}), Cost: ${cost:.6f}, Finish Reason: {finish_reason}")
                     
