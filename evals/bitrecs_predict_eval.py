@@ -43,6 +43,10 @@ class BitrecsPredictEval(BaseEval):
     @property
     def pass_threshold(self) -> float:
         return 0.5
+    
+    @property
+    def num_recs(self) -> int:
+        return 20
 
     def __init__(self, run_id: str, miner_artifact: Artifact = None):      
         super().__init__(run_id, miner_artifact)
@@ -287,8 +291,7 @@ class BitrecsPredictEval(BaseEval):
         based on global historical patterns (co-occurrence and sequential purchases).
         """
         duration = 0.0
-        result = False
-        num_recs = 8
+        result = False        
         st = time.perf_counter()
         profile = self.get_sample_user_profile(min_orders=6, min_unique_skus=4)
         products = self.load_catalog()
@@ -304,12 +307,14 @@ class BitrecsPredictEval(BaseEval):
         query = viewing_product.sku
         logger.info(f"Viewing product: {viewing_product.name} \033[1;32m (SKU: {viewing_product.sku}) \033[0m")
         stats = self.get_simple_sku_stats(viewing_product.sku)
-        logger.info(f"SKU Stats: {stats}")
-        
+        logger.info(f"SKU Stats: {stats}")        
+      
         prompt_factory = PromptFactory(miner_artifact=self.miner_artifact,                                       
                                         sku=query,
                                         products=products,
-                                        num_recs=num_recs)
+                                        num_recs=self.num_recs,
+                                        debug=False,
+                                        profile=profile)
         system_prompt, user_prompt = prompt_factory.generate_prompt()
         tc = PromptFactory.get_token_count(user_prompt)
         logger.info(f"Token count: {tc}")
@@ -334,12 +339,12 @@ class BitrecsPredictEval(BaseEval):
         self.log_miner_response(
             run_id=self.run_id,
             query=query,
-            num_recs=num_recs,
+            num_recs=self.num_recs,
             recommended_skus=recommended_skus,
             duration=duration
         )
-        if len(recommended_skus) != num_recs:
-            logger.error(f"\033[31m Expected {num_recs} recommendations but got {len(recommended_skus)}. \033[0m")
+        if len(recommended_skus) != self.num_recs:
+            logger.error(f"\033[31m Expected {self.num_recs} recommendations but got {len(recommended_skus)}. \033[0m")
             return False
         
         rec_sku_list = [rec['sku'] for rec in recommended_skus]

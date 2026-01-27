@@ -3,6 +3,7 @@ import json
 import tiktoken
 import logging
 from jinja2 import Template
+from commerce.user_profile import UserProfile
 from common import constants as CONST
 from functools import lru_cache
 from typing import List, Tuple
@@ -22,7 +23,8 @@ class PromptFactory:
                  products: List["Product"], 
                  num_recs: int = 5,
                  persona: str = "Expert Ecommerce Product Recommender",
-                 debug: bool = False) -> None:
+                 debug: bool = False,
+                 profile: UserProfile = None) -> None:
      
         self.miner_artifact = miner_artifact
         self.sku = sku
@@ -32,8 +34,8 @@ class PromptFactory:
         self.catalog = []
         self.cart = []
         self.cart_json = "[]"
-        self.orders = []
-        self.order_json = "[]"
+        self.orders = profile.orders if profile and profile.orders else []
+        self.order_json = TypeAdapter(List[dict]).dump_json(self.orders, exclude_none=True).decode('utf-8') if profile and profile.orders else "[]"
         self.persona = persona
         self.sku_info = "N/A"
 
