@@ -62,7 +62,7 @@ class BitrecsBasicEval(BaseEval):
         reason = "NA"
         try:
             result, reason = self.validate_template()
-            hotkey_valid = BitrecsBasicEval.is_hotkey_valid(self.miner_artifact.miner_hotkey)
+            hotkey_valid = BitrecsBasicEval.is_hotkey_valid_format(self.miner_artifact.miner_hotkey)
             if not hotkey_valid:
                 reason = "miner_hotkey is not a valid S58 address"
                 result = False
@@ -130,7 +130,7 @@ class BitrecsBasicEval(BaseEval):
         return validated, reason  
     
     @staticmethod
-    def is_hotkey_valid(hotkey: str) -> bool:
+    def is_hotkey_valid_format(hotkey: str) -> bool:
         if not isinstance(hotkey, str) or len(hotkey) != 48:
             return False
         # regex s58 address
