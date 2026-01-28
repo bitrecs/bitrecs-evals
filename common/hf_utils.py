@@ -2,6 +2,7 @@ import logging
 import pandas as pd
 from typing import List
 from datasets import load_dataset
+import time  # Add this import at the top if not already present
 
 
 logger = logging.getLogger(__name__)
@@ -75,25 +76,31 @@ def sample_dataset(folder_name: str = "All_Beauty", size: int = 100, sample_size
     # Construct the file name based on folder and size
     file_name = f"dense_core_amazon_{folder_name.lower().replace('_', '_')}_universe_{size}.csv"
     dataset_file = f"https://huggingface.co/datasets/reallybigmouse4/dense_core_amazon2023/resolve/main/{folder_name}/{file_name}"
-    try:
-        ds = load_dataset(
-            "csv",
-            data_files={"train": dataset_file},
-            split="train",
-            streaming=True,  
-            column_names=['created_at', 'query', 'ground_truth_sku', 'batch_id', 'model', 'provider', 'winning_response', 'context'],
-            skiprows=1  # Skip the header row in the CSV file
-        )
-        print(f"columns = {ds.column_names}")
-        small_sample = ds.take(sample_size)
-        small_list = list(small_sample)
-        df = pd.DataFrame(small_list)
-        # Ensure columns align with expected names
-        expected_columns = ['created_at', 'query', 'ground_truth_sku', 'batch_id', 'model', 'provider', 'winning_response', 'context']
-        if list(df.columns) != expected_columns:          
-            raise ValueError(f"Column mismatch: expected {expected_columns}, got {list(df.columns)}.")
-        return df
-    except Exception as e:
-        logger.error(f"Failed to load dataset from '{dataset_file}': {e}")
-        return pd.DataFrame()
+    
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            ds = load_dataset(
+                "csv",
+                data_files={"train": dataset_file},
+                split="train",
+                streaming=True,  
+                column_names=['created_at', 'query', 'ground_truth_sku', 'batch_id', 'model', 'provider', 'winning_response', 'context'],
+                skiprows=1  # Skip the header row in the CSV file
+            )
+            print(f"columns = {ds.column_names}")
+            small_sample = ds.take(sample_size)
+            small_list = list(small_sample)
+            df = pd.DataFrame(small_list)
+            # Ensure columns align with expected names
+            expected_columns = ['created_at', 'query', 'ground_truth_sku', 'batch_id', 'model', 'provider', 'winning_response', 'context']
+            if list(df.columns) != expected_columns:          
+                raise ValueError(f"Column mismatch: expected {expected_columns}, got {list(df.columns)}.")
+            return df
+        except Exception as e:
+            logger.error(f"Attempt {attempt + 1} failed to load dataset from '{dataset_file}': {e}")
+            if attempt < max_retries - 1:
+                time.sleep(5)  # Wait 5 seconds before retrying
+            else:
+                return pd.DataFrame()
 
