@@ -39,10 +39,10 @@ user_prompt_template: |
     Cart items: <cart>{{cart_json}}</cart>
     Past Orders: <orders>{{order_json}}</orders>
 
-    Available products:
+    # PRODUCT CATALOG CONTEXT
     <context>
     {{product_catalog}}
-    </context>   
+    </context>
 
     # OUTPUT REQUIREMENTS
     - Return ONLY a JSON array.

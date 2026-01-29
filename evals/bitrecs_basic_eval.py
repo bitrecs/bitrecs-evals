@@ -161,8 +161,10 @@ class BitrecsBasicEval(BaseEval):
         
         if len(agent.miner_hotkey) == 0:
             return False, "miner_hotkey must not be empty"
-        # if len(agent.name) == 0:
-        #     return False, "name must not be empty"
+        if len(agent.name) == 0:
+            return False, "name must not be empty"
+        if len(agent.name) > CONST.MAX_ARTIFACT_NAME_LENGTH:
+            return False, F"name must not exceed {CONST.MAX_ARTIFACT_NAME_LENGTH} characters"
         # if agent.version_num <= 0:
         #     return False, "version_num must be greater than 0"
         if agent.miner_uid <= 0:

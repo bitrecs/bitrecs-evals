@@ -19,13 +19,14 @@ class MessageExample(BaseModel):
 
 
 # Main input into the evolution system
-class Artifact(BaseModel):
+class Artifact(BaseModel):    
     artifact_id: UUID4 = Field(default_factory=uuid.uuid4, description="Unique artifact ID")
     parent_id: Optional[UUID4] = None
     created_at: str = Field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat(),
         description="ISO8601 timestamp of submission creation"
     )
+    name: str = Field(description="Name of the artifact")
     miner_hotkey: str = Field(description="Hotkey of the submitting miner")
     miner_uid: int = Field(gt=0, description="Active UID on Subnet")
     provider: str = Field(description="LLM provider name")
