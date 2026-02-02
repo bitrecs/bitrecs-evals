@@ -202,7 +202,7 @@ class Actor:
             
             score = EvalResult.calculate_overall_score(results)
             end = time.monotonic()
-            duration = round(end - start, 8)
+            duration = round(end - start, 8)            
 
             run_report = self.generate_report_by_run_id(run_id)
             logger.info(f"Eval Report for Run ID: \033[35m{run_id}\033[0m")
@@ -215,8 +215,8 @@ class Actor:
                 "bitrecs_run_id": bitrecs_run_id,
                 "run_id": run_id,
                 "score": score,
-                "success": score > 0,
-                "time_taken": duration,
+                "success": results[0].passed if results else False,
+                "duration": duration,
                 "extra": {
                     "result": run_report
                 }
@@ -241,7 +241,7 @@ class Actor:
                 "run_id": run_id,
                 "score": 0.0,
                 "success": False,
-                "time_taken": duration,
+                "duration": duration,
                 "error": error,
                 "error_type": "evaluation_failure",
                 "extra": {}
