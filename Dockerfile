@@ -10,6 +10,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+EXPOSE 8000
 
 #CMD ["python", "bitrecs_eval_runner.py"]
 #CMD ["tail", "-f", "/dev/null"]
