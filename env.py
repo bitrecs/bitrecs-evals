@@ -57,6 +57,10 @@ class Actor:
     
     def __init__(self):
         self.bitrecs_run_id = os.getenv("BITRECS_RUN_ID", "unknown")
+        log_path = "logs"
+        if not os.path.exists(log_path):
+            os.makedirs(log_path, exist_ok=True)
+        logger.info(f"Actor initialized with Bitrecs Run ID: \033[33m{self.bitrecs_run_id}\033[0m")
 
 
     def load_miner_input_yaml(self, input_path=None) -> Artifact:
