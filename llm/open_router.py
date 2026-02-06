@@ -83,8 +83,8 @@ class OpenRouter:
             "max_tokens": 2048
         }
         
-        timeout = (3, 30)  # Reduced connect/read timeouts
-        max_retries = 1  # Reduced to 1 retry (2 total attempts)
+        timeout = (3, 60)
+        max_retries = 2
         for attempt in range(max_retries + 1):
             try:
                 with httpx.Client(timeout=timeout) as client:
