@@ -59,9 +59,9 @@ class Actor:
         self.bitrecs_run_id = os.getenv("BITRECS_RUN_ID", "")
         if not self.bitrecs_run_id:
             raise ValueError("BITRECS_RUN_ID environment variable not set.")
-        log_path = "logs"
-        if not os.path.exists(log_path):
-            os.makedirs(log_path, exist_ok=True)
+        # log_path = "logs"
+        # if not os.path.exists(log_path):
+        #     os.makedirs(log_path, exist_ok=True)
         logger.info(f"Actor initialized with Bitrecs Run ID: \033[33m{self.bitrecs_run_id}\033[0m")
 
 
@@ -312,7 +312,8 @@ async def get_run_log(run_id: str):
 
 @app.get("/eval_log/{run_id}")
 async def get_eval_log(run_id: str):
-    log_path = f"logs/eval_{run_id}.log"
+    #log_path = f"logs/eval_{run_id}.log"
+    log_path = f"{run_id}.log"
     if os.path.exists(log_path):
         with open(log_path, 'r') as f:
             report = f.read()    
