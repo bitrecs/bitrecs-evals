@@ -58,10 +58,7 @@ class Actor:
     def __init__(self):
         self.bitrecs_run_id = os.getenv("BITRECS_RUN_ID", "")
         if not self.bitrecs_run_id:
-            raise ValueError("BITRECS_RUN_ID environment variable not set.")
-        # log_path = "logs"
-        # if not os.path.exists(log_path):
-        #     os.makedirs(log_path, exist_ok=True)
+            raise ValueError("BITRECS_RUN_ID environment variable not set.")      
         logger.info(f"Actor initialized with Bitrecs Run ID: \033[33m{self.bitrecs_run_id}\033[0m")
 
 
@@ -198,10 +195,7 @@ class Actor:
             logger.info(f"Artifact ID: {miner_artifact.artifact_id}")
             logger.info(f"Artifact Model: {miner_artifact.model}")
             logger.info(f"Artifact Provider: {miner_artifact.provider}")
-            logger.info(f"Artifact Hotkey: {miner_artifact.miner_hotkey}")
-            #logger.info("Starting evaluation suites...")
-            #logger.info(f"Eval Suites to run: {EVAL_SUITE}, Top Records: {CONST.TOP_RECORDS}")
-            #run_id, results = self.run_eval_suites(miner_artifact)      
+            logger.info(f"Artifact Hotkey: {miner_artifact.miner_hotkey}")        
 
             logger.info(f"Starting evaluation... of problem: {problem_type.value}") 
             run_id, results = self.run_eval(miner_artifact, problem_type)
@@ -232,9 +226,7 @@ class Actor:
             logger.info(f"Local Run ID: \033[33m{run_id}\033[0m")
             logger.info(f"Bitrecs Run ID: \033[33m{bitrecs_run_id}\033[0m")
             logger.info(f" FINAL SCORE \033[92;1m{score:.2f}\033[0m")
-
             return result
-
         
         except Exception as e:
             import traceback
@@ -305,18 +297,6 @@ async def evaluate_endpoint(req: EvaluateRequest):
 async def get_run_log(run_id: str):
     actor = Actor()
     report = actor.generate_report_by_run_id(run_id)
-    if not report:
-        return {"error": f"No report found for run ID: {run_id}"}
-    return {"run_id": run_id, "report": report, "crated_at": datetime.now(timezone.utc).isoformat()}
-
-
-@app.get("/eval_log/{run_id}")
-async def get_eval_log(run_id: str):
-    #log_path = f"logs/eval_{run_id}.log"
-    log_path = f"{run_id}.log"
-    if os.path.exists(log_path):
-        with open(log_path, 'r') as f:
-            report = f.read()    
     if not report:
         return {"error": f"No report found for run ID: {run_id}"}
     return {"run_id": run_id, "report": report, "crated_at": datetime.now(timezone.utc).isoformat()}
