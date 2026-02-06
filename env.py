@@ -56,7 +56,9 @@ class Actor:
     """Bitrecs Eval Actor"""
     
     def __init__(self):
-        self.bitrecs_run_id = os.getenv("BITRECS_RUN_ID", "unknown")
+        self.bitrecs_run_id = os.getenv("BITRECS_RUN_ID", "")
+        if not self.bitrecs_run_id:
+            raise ValueError("BITRECS_RUN_ID environment variable not set.")
         log_path = "logs"
         if not os.path.exists(log_path):
             os.makedirs(log_path, exist_ok=True)
@@ -82,7 +84,8 @@ class Actor:
     def run_eval(self, miner_artifact: Artifact, eval_type: BitrecsEvaluationType) -> Tuple[str, List[EvalResult]]:
         """Run evaluation suites."""
         logger.info("Running eval suites...")    
-        run_id = secrets.token_hex(16)
+        #run_id = secrets.token_hex(16)
+        run_id = self.bitrecs_run_id
         logger.info(f"Eval Run ID: \033[35m{run_id}\033[0m")
         logger.info(f"TOP RECORDS: \033[36m{CONST.TOP_RECORDS}\033[0m")
 
@@ -212,7 +215,7 @@ class Actor:
             logger.info(f"Eval Report for Run ID: \033[35m{run_id}\033[0m")
             logger.info("\n" + run_report)
 
-            bitrecs_run_id = os.getenv("BITRECS_RUN_ID", "unknown")
+            bitrecs_run_id = self.bitrecs_run_id
             logger.info(f"Bitrecs Run ID: \033[33m{bitrecs_run_id}\033[0m")
             result = {
                 "task_name": problem_type.value,
