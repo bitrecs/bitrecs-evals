@@ -300,7 +300,18 @@ async def get_run_log(run_id: str):
     report = actor.generate_report_by_run_id(run_id)
     if not report:
         return {"error": f"No report found for run ID: {run_id}"}
-    return {"run_id": run_id, "report": report}
+    return {"run_id": run_id, "report": report, "crated_at": datetime.now(timezone.utc).isoformat()}
+
+
+@app.get("/eval_log/{run_id}")
+async def get_eval_log(run_id: str):
+    log_path = f"logs/eval_{run_id}.log"
+    if os.path.exists(log_path):
+        with open(log_path, 'r') as f:
+            report = f.read()    
+    if not report:
+        return {"error": f"No report found for run ID: {run_id}"}
+    return {"run_id": run_id, "report": report, "crated_at": datetime.now(timezone.utc).isoformat()}
 
 
 @app.get("/db")
