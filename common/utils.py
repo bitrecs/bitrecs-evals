@@ -24,30 +24,30 @@ def normalize_model_name(model_name: str) -> str:
 
 
 def time_ago(dt: datetime) -> str:
-        """
-        Convert a datetime object to a human-friendly 'time ago' string.
-        If dt has no timezone, assume UTC.
-        """
-        if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
-        now = datetime.now(timezone.utc)
-        diff = now - dt
+    """
+    Convert a datetime object to a human-friendly 'time ago' string.
+    If dt has no timezone, assume UTC.
+    """
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    now = datetime.now(timezone.utc)
+    diff = now - dt
 
-        seconds = diff.total_seconds()
-        minutes = int(seconds // 60)
-        hours = int(seconds // 3600)
-        days = int(seconds // 86400)
-        weeks = int(seconds // 604800)
+    seconds = diff.total_seconds()
+    minutes = int(seconds // 60)
+    hours = int(seconds // 3600)
+    days = int(seconds // 86400)
+    weeks = int(seconds // 604800)
 
-        if seconds < 60:
-            return "just now"
-        elif minutes < 60:
-            return f"{minutes} minute{'s' if minutes != 1 else ''} ago"
-        elif hours < 24:
-            return f"{hours} hour{'s' if hours != 1 else ''} ago"
-        elif days < 7:
-            return f"{days} day{'s' if days != 1 else ''} ago"
-        elif weeks < 5:
-            return f"{weeks} week{'s' if weeks != 1 else ''} ago"
-        else:
-            return dt.strftime("%Y-%m-%d")
+    if seconds < 60:
+        return "just now"
+    elif minutes < 60:
+        return f"{minutes} minute{'s' if minutes != 1 else ''} ago"
+    elif hours < 24:
+        return f"{hours} hour{'s' if hours != 1 else ''} ago"
+    elif days < 7:
+        return f"{days} day{'s' if days != 1 else ''} ago"
+    elif weeks < 5:
+        return f"{weeks} week{'s' if weeks != 1 else ''} ago"
+    else:
+        return dt.strftime("%Y-%m-%d")

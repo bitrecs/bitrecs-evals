@@ -1,9 +1,8 @@
+import time 
 import logging
 import pandas as pd
 from typing import List
 from datasets import load_dataset
-import time  # Add this import at the top if not already present
-
 
 logger = logging.getLogger(__name__)
 
@@ -44,13 +43,12 @@ Video_Games
 
 """
 
-def get_hf_folder_list(repo_id: str = "reallybigmouse4/dense_core_amazon2023") -> list:
+def get_hf_folder_list(repo_id: str = "reallybigmouse4/dense_core_amazon2023") -> List[str]:
     """
     Retrieve and print the list of top-level folders (categories) in the Hugging Face dataset.
     """
     from huggingface_hub import HfApi
-    api = HfApi()
-    #repo_id = "reallybigmouse4/dense_core_amazon2023"
+    api = HfApi()    
     all_files = api.list_repo_files(repo_id, repo_type="dataset")
     top_dirs = sorted({
         f.split("/")[0]
@@ -61,8 +59,8 @@ def get_hf_folder_list(repo_id: str = "reallybigmouse4/dense_core_amazon2023") -
     top_dirs = [d for d in top_dirs if d not in {"README.md", ".gitattributes", ".gitignore"}]
     #print("Top-level category folders:", top_dirs)
     #print(f"Total: {len(top_dirs)}")
-    top_dirs = sorted(top_dirs)  # Ensure sorted
-    return top_dirs  # Return as list to preserve order
+    top_dirs = sorted(top_dirs)
+    return top_dirs 
 
 
 def sample_dataset(folder_name: str = "All_Beauty", size: int = 100, sample_size=5) -> pd.DataFrame:
@@ -100,7 +98,7 @@ def sample_dataset(folder_name: str = "All_Beauty", size: int = 100, sample_size
         except Exception as e:
             logger.error(f"Attempt {attempt + 1} failed to load dataset from '{dataset_file}': {e}")
             if attempt < max_retries - 1:
-                time.sleep(5)  # Wait 5 seconds before retrying
+                time.sleep(5)
             else:
                 return pd.DataFrame()
 

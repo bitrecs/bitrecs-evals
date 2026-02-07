@@ -66,32 +66,6 @@ SELECT
 FROM music_orders
 GROUP BY status
 ORDER BY order_count DESC;
-CREATE VIEW v_music_orders_to_remove AS
-select * From v_order_details
-where item_name is null;
-CREATE VIEW v_order_details AS
-SELECT 
-    o.order_id,
-    o.status,
-    o.grand_total,
-    o.subtotal,
-    o.total_paid,
-    o.updated_at,
-    o.total_item_count,
-    
-    i.item_id,
-    i.sku,
-    i.name          AS item_name,
-    i.qty,
-    i.price         AS item_price,
-    i.row_total,
-    
-    p.name          AS product_name_from_catalog,
-    p.price         AS catalog_price
-
-FROM music_orders o
-LEFT JOIN music_order_items i ON i.order_id = o.order_id
-LEFT JOIN music_products   p ON p.sku     = i.sku;
 
 
 UPDATE music_orders
