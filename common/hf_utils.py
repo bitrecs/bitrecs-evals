@@ -102,3 +102,44 @@ def sample_dataset(folder_name: str = "All_Beauty", size: int = 100, sample_size
             else:
                 return pd.DataFrame()
 
+
+def sample_from_url(dataset_url: str, sample_size: int = 5) -> pd.DataFrame:
+    """
+    Sample data from a specific URL.
+    :param dataset_url: Direct URL to the CSV file (should be a 'resolve' or raw URL).
+    :param sample_size: Number of samples to take.
+    :return: DataFrame of sampled data.
+    """
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            ds = load_dataset(
+                "csv",
+                data_files={"train": dataset_url},
+                split="train",
+                streaming=True,
+                column_names=['created_at', 'query', 'ground_truth_sku', 'batch_id', 'model', 'provider', 'winning_response', 'context'],
+                skiprows=1 
+            )
+            # print(f"columns = {ds.column_names}")
+            small_sample = ds.take(sample_size)
+            small_list = list(small_sample)
+            df = pd.DataFrame(small_list)
+            
+            expected_columns = ['created_at', 'query', 'ground_truth_sku', 'batch_id', 'model', 'provider', 'winning_response', 'context']
+            if list(df.columns) != expected_columns:
+                # check if columns match but maybe in different order or extra columns?
+                # For now, strict check as per original function
+                # But let's be a bit more flexible if possible, or stick to strict for safety.
+                # Sticking to strict to match existing behavior.
+                raise ValueError(f"Column mismatch: expected {expected_columns}, got {list(df.columns)}.")
+            
+            return df
+        except Exception as e:
+            logger.error(f"Attempt {attempt + 1} failed to load dataset from '{dataset_url}': {e}")
+            if attempt < max_retries - 1:
+                time.sleep(5)
+            else:
+                return pd.DataFrame()
+
+

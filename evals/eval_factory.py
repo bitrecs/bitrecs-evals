@@ -101,6 +101,13 @@ from evals.bitrecs_qos_eval import BitrecsQoSEval
 from evals.bitrecs_reason_eval import BitrecsReasonEval
 from evals.bitrecs_safe_prompt import BitrecsSafeEval
 from evals.bitrecs_sku_eval import BitrecsSkuEval
+from evals.curated_evals import (
+    NdcgAt10CuratedAllBeauty100, NdcgAt10CuratedAllBeauty500, NdcgAt10CuratedAllBeauty1000,
+    NdcgAt10CuratedAmazonFashion100, NdcgAt10CuratedAmazonFashion500, NdcgAt10CuratedAmazonFashion1000,
+    NdcgAt10CuratedAppliances100, NdcgAt10CuratedAppliances500, NdcgAt10CuratedAppliances1000,
+    NdcgAt10CuratedElectronics100, NdcgAt10CuratedElectronics500, NdcgAt10CuratedElectronics1000,
+    NdcgAt10CuratedMusicalInstruments100, NdcgAt10CuratedMusicalInstruments500, NdcgAt10CuratedMusicalInstruments1000
+)
 from evals.eval_result import EvalResult
 from models.eval_type import BitrecsEvaluationType
 from models.miner_artifact import Artifact
@@ -124,6 +131,26 @@ class EvalFactory:
         BitrecsEvaluationType.BITRECS_SKU_DAILY: BitrecsSkuEval,        
         BitrecsEvaluationType.BITRECS_PREDICT_DAILY: BitrecsPredictEval,
         BitrecsEvaluationType.BITRECS_INSTACART_DAILY: BitrecsInstacartEval,
+        
+        BitrecsEvaluationType.NDCG_AT10_CURATED_ALL_BEAUTY_100: NdcgAt10CuratedAllBeauty100,
+        BitrecsEvaluationType.NDCG_AT10_CURATED_ALL_BEAUTY_500: NdcgAt10CuratedAllBeauty500,
+        BitrecsEvaluationType.NDCG_AT10_CURATED_ALL_BEAUTY_1000: NdcgAt10CuratedAllBeauty1000,
+
+        BitrecsEvaluationType.NDCG_AT10_CURATED_AMAZON_FASHION_100: NdcgAt10CuratedAmazonFashion100,
+        BitrecsEvaluationType.NDCG_AT10_CURATED_AMAZON_FASHION_500: NdcgAt10CuratedAmazonFashion500,
+        BitrecsEvaluationType.NDCG_AT10_CURATED_AMAZON_FASHION_1000: NdcgAt10CuratedAmazonFashion1000,
+
+        BitrecsEvaluationType.NDCG_AT10_CURATED_APPLIANCES_100: NdcgAt10CuratedAppliances100,
+        BitrecsEvaluationType.NDCG_AT10_CURATED_APPLIANCES_500: NdcgAt10CuratedAppliances500,
+        BitrecsEvaluationType.NDCG_AT10_CURATED_APPLIANCES_1000: NdcgAt10CuratedAppliances1000,
+
+        BitrecsEvaluationType.NDCG_AT10_CURATED_ELECTRONICS_100: NdcgAt10CuratedElectronics100,
+        BitrecsEvaluationType.NDCG_AT10_CURATED_ELECTRONICS_500: NdcgAt10CuratedElectronics500,
+        BitrecsEvaluationType.NDCG_AT10_CURATED_ELECTRONICS_1000: NdcgAt10CuratedElectronics1000,
+
+        BitrecsEvaluationType.NDCG_AT10_CURATED_MUSICAL_INSTRUMENTS_100: NdcgAt10CuratedMusicalInstruments100,
+        BitrecsEvaluationType.NDCG_AT10_CURATED_MUSICAL_INSTRUMENTS_500: NdcgAt10CuratedMusicalInstruments500,
+        BitrecsEvaluationType.NDCG_AT10_CURATED_MUSICAL_INSTRUMENTS_1000: NdcgAt10CuratedMusicalInstruments1000,
         
         BitrecsEvaluationType.AMAZON_ALL_BEAUTY_100: AmazonAllBeauty100,
         BitrecsEvaluationType.AMAZON_ALL_BEAUTY_500: AmazonAllBeauty500,  

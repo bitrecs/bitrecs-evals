@@ -11,6 +11,26 @@ class BitrecsEvaluationType(str, Enum):
     BITRECS_PREDICT_DAILY = "bitrecs_predict_daily"
     BITRECS_INSTACART_DAILY = "bitrecs_instacart_daily"
 
+    NDCG_AT10_CURATED_ALL_BEAUTY_100 = "ndcg_at10_curated_all_beauty_100"
+    NDCG_AT10_CURATED_ALL_BEAUTY_500 = "ndcg_at10_curated_all_beauty_500"
+    NDCG_AT10_CURATED_ALL_BEAUTY_1000 = "ndcg_at10_curated_all_beauty_1000"
+
+    NDCG_AT10_CURATED_AMAZON_FASHION_100 = "ndcg_at10_curated_amazon_fashion_100"
+    NDCG_AT10_CURATED_AMAZON_FASHION_500 = "ndcg_at10_curated_amazon_fashion_500"
+    NDCG_AT10_CURATED_AMAZON_FASHION_1000 = "ndcg_at10_curated_amazon_fashion_1000"
+
+    NDCG_AT10_CURATED_APPLIANCES_100 = "ndcg_at10_curated_appliances_100"
+    NDCG_AT10_CURATED_APPLIANCES_500 = "ndcg_at10_curated_appliances_500"
+    NDCG_AT10_CURATED_APPLIANCES_1000 = "ndcg_at10_curated_appliances_1000"
+
+    NDCG_AT10_CURATED_ELECTRONICS_100 = "ndcg_at10_curated_electronics_100"
+    NDCG_AT10_CURATED_ELECTRONICS_500 = "ndcg_at10_curated_electronics_500"
+    NDCG_AT10_CURATED_ELECTRONICS_1000 = "ndcg_at10_curated_electronics_1000"
+
+    NDCG_AT10_CURATED_MUSICAL_INSTRUMENTS_100 = "ndcg_at10_curated_musical_instruments_100"
+    NDCG_AT10_CURATED_MUSICAL_INSTRUMENTS_500 = "ndcg_at10_curated_musical_instruments_500"
+    NDCG_AT10_CURATED_MUSICAL_INSTRUMENTS_1000 = "ndcg_at10_curated_musical_instruments_1000"
+
     AMAZON_ALL_BEAUTY_100 = "amazon_all_beauty_100"    
     AMAZON_ALL_BEAUTY_500 = "amazon_all_beauty_500"
     AMAZON_ALL_BEAUTY_1000 = "amazon_all_beauty_1000"

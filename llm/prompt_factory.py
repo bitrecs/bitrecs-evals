@@ -150,7 +150,16 @@ class PromptFactory:
                 try:
                     llm_result = array.strip()
                     return json.loads(llm_result)
-                except json.JSONDecodeError:                    
+                except json.JSONDecodeError:
+                    # Try fallback to ast.literal_eval for Python-style lists (single quotes)
+                    try:
+                        import ast
+                        val = ast.literal_eval(llm_result)
+                        if isinstance(val, list):
+                            return val
+                    except (ValueError, SyntaxError, ImportError):
+                        pass
+                        
                     logging.error(f"Invalid JSON in prompt factory: {array}")
             return []
         except Exception as e:

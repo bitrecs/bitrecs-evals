@@ -69,14 +69,14 @@ class OpenRouter:
                 "effort": "minimal"
             }
 
+        messages = []
+        if self.system_prompt:
+            messages.append({"role": "system", "content": self.system_prompt})
+        messages.append({"role": "user", "content": prompt})
+
         data_payload = {
             "model": self.model,
-            "messages": [
-                #{"role": "system", "content": "/no_think"},
-                {
-                    "role": "user", 
-                    "content": prompt
-                }],
+            "messages": messages,
             "reasoning": reasoning,
             "stream": False,
             "temperature": self.temp,
