@@ -6,7 +6,6 @@ import logging
 from datetime import datetime, timezone
 from common import constants as CONST
 from common.hf_utils import sample_from_url
-from common.utils import rec_list_to_set
 from evals.eval_result import EvalResult
 from llm.factory import LLMFactory
 from llm.llm_provider import LLM
@@ -14,7 +13,6 @@ from llm.prompt_factory import PromptFactory
 from models.eval_type import BitrecsEvaluationType
 from models.miner_artifact import Artifact
 from evals.base_eval import BaseEval
-from models.product import Product
 
 logging.basicConfig(level=CONST.LOG_LEVEL)
 logger = logging.getLogger(__name__)
@@ -46,7 +44,7 @@ class CuratedNDCGBase(BaseEval):
             return 0.0
         return 1.0 / math.log2(rank_index + 2)
 
-    def run(self, max_iterations=25) -> EvalResult:
+    def run(self, max_iterations=5) -> EvalResult:
         start_time = time.monotonic()        
         total_ndcg = 0.0
         count = 0
@@ -95,7 +93,7 @@ class CuratedNDCGBase(BaseEval):
             score=final_score,
             passed=eval_success,
             rows_evaluated=count,
-            details=f"Evaluated {count} of {len(self.holdout_df)} rows with {exception_count} exceptions (max_iterations {max_iterations}). NDCG Score.",
+            details=f"Evaluated {count} of {len(self.holdout_df)} rows with {exception_count} exceptions (max_iterations {max_iterations}). NDCG Score {final_score:.4f} ",
             duration_seconds=total_duration,
             temperature=self.miner_artifact.sampling_params.temperature,
             model_name=self.miner_artifact.model,
@@ -204,7 +202,6 @@ class CuratedNDCGBase(BaseEval):
 
         return rank_index
 
-# --- Subclasses ---
 
 class NdcgAt10CuratedAllBeauty100(CuratedNDCGBase):
     def __init__(self, run_id: str, miner_artifact: Artifact = None):
@@ -282,29 +279,29 @@ class NdcgAt10CuratedMusicalInstruments1000(CuratedNDCGBase):
         super().__init__(run_id, miner_artifact, dataset_url=url, eval_type_enum=BitrecsEvaluationType.NDCG_AT10_CURATED_MUSICAL_INSTRUMENTS_1000)
 
 
-if __name__ == "__main__":
-    # Mock Artifact for testing
-    from models.miner_artifact import Artifact, SamplingParams
-    from dotenv import load_dotenv
-    import os
+# if __name__ == "__main__":
+#     # Mock Artifact for testing
+#     from models.miner_artifact import Artifact, SamplingParams
+#     from dotenv import load_dotenv
+#     import os
     
-    load_dotenv()
+#     load_dotenv()
     
-    mock_artifact = Artifact(
-        name="test_artifact",
-        miner_hotkey="test_hotkey",
-        miner_uid=1,
-        provider="open_router", 
-        model="x-ai/grok-4.1-fast",
-        system_prompt_template="You are an expert product recommender. Your goal is to select the best products from the provided Context to recommend for the user's query.\n\nContext:\n{{ product_catalog }}",
-        user_prompt_template="Recommend {{ num_recs }} products for the query: {{ sku }}.\n\nConstraints:\n1. Select products ONLY from the provided Context.\n2. Do NOT recommend the query product itself.\n3. Return ONLY a JSON array of SKUs.\n4. Prioritize products that are semantically similar to the query product (matching category, type, or usage).\n5. If you cannot find {{ num_recs }} relevant products, fill with the most popular items from the Context.",
-        sampling_params=SamplingParams(temperature=0.1)
-    )
+#     mock_artifact = Artifact(
+#         name="test_artifact",
+#         miner_hotkey="test_hotkey",
+#         miner_uid=1,
+#         provider="open_router", 
+#         model="x-ai/grok-4.1-fast",
+#         system_prompt_template="You are an expert product recommender. Your goal is to select the best products from the provided Context to recommend for the user's query.\n\nContext:\n{{ product_catalog }}",
+#         user_prompt_template="Recommend {{ num_recs }} products for the query: {{ sku }}.\n\nConstraints:\n1. Select products ONLY from the provided Context.\n2. Do NOT recommend the query product itself.\n3. Return ONLY a JSON array of SKUs.\n4. Prioritize products that are semantically similar to the query product (matching category, type, or usage).\n5. If you cannot find {{ num_recs }} relevant products, fill with the most popular items from the Context.",
+#         sampling_params=SamplingParams(temperature=0.1)
+#     )
     
-    try:
-        # Test one instance
-        eval_instance = NdcgAt10CuratedAllBeauty100(run_id="test_run", miner_artifact=mock_artifact)
-        result = eval_instance.run(max_iterations=1)
-        print(result)
-    except Exception as e:
-        print(f"Test failed: {e}")
+#     try:
+#         # Test one instance
+#         eval_instance = NdcgAt10CuratedAllBeauty100(run_id="test_run", miner_artifact=mock_artifact)
+#         result = eval_instance.run(max_iterations=1)
+#         print(result)
+#     except Exception as e:
+#         print(f"Test failed: {e}")
