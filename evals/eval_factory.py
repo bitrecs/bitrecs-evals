@@ -254,12 +254,12 @@ class EvalFactory:
         BitrecsEvaluationType.AMAZON_SPORTS_AND_OUTDOORS_100: AmazonSportsAndOutdoors100,        
         BitrecsEvaluationType.AMAZON_SPORTS_AND_OUTDOORS_500: AmazonSportsAndOutdoors500,
         BitrecsEvaluationType.AMAZON_SPORTS_AND_OUTDOORS_1000: AmazonSportsAndOutdoors1000,
-
-        BitrecsEvaluationType.AMAZON_TOOLS_AND_HOME_IMPROVEMENT_100: AmazonToolsAndHomeImprovement100,        
+        
         BitrecsEvaluationType.AMAZON_TOYS_AND_GAMES_100: AmazonToysAndGames100,        
         BitrecsEvaluationType.AMAZON_TOYS_AND_GAMES_500: AmazonToysAndGames500,
         BitrecsEvaluationType.AMAZON_TOYS_AND_GAMES_1000: AmazonToysAndGames1000,
         
+        BitrecsEvaluationType.AMAZON_TOOLS_AND_HOME_IMPROVEMENT_100: AmazonToolsAndHomeImprovement100,        
         BitrecsEvaluationType.AMAZON_TOOLS_AND_HOME_IMPROVEMENT_500: AmazonToolsAndHomeImprovement500,
         BitrecsEvaluationType.AMAZON_TOOLS_AND_HOME_IMPROVEMENT_1000: AmazonToolsAndHomeImprovement1000,
         
@@ -297,6 +297,10 @@ class EvalFactory:
         results = []        
         for eval_type in eval_types:
             try:
+                eval_instance : BaseEval = cls._registry[eval_type](run_id, miner_artifact)
+                if eval_type.name != eval_instance.eval_type().name:
+                    raise ValueError(f"Eval type mismatch: registry has {eval_type}, but instance reports {eval_instance.eval_type()}")
+
                 logger.debug(f"\033[34mRunning eval type: {eval_type}\033[0m")
                 result = cls.run_eval(eval_type, miner_artifact, run_id, max_iterations)
                 results.append(result)                

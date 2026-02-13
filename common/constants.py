@@ -3,7 +3,7 @@ import re
 import logging
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-LOG_LEVEL = logging.INFO
+LOG_LEVEL = logging.DEBUG
 
 MIN_QUERY_LENGTH = 3
 MAX_QUERY_LENGTH = 40
