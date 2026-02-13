@@ -307,12 +307,7 @@ class BitrecsInstacartEval(BaseEval):
 
         size = PromptFactory.get_token_count(prompt)
         logger.info(f"Prompt size (tokens): {size}")
-
-        #server = LLM.OPEN_ROUTER
-        #server = LLM.CHUTES
-        #model = "google/gemini-2.5-flash-lite"
-        #model = "moonshotai/Kimi-K2-Instruct-0905"
-
+      
         model = self.miner_artifact.model
         server = LLM.try_parse(self.miner_artifact.provider)
 

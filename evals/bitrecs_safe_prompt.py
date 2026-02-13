@@ -138,24 +138,8 @@ class BitrecsSafeEval(BaseEval):
                 if lines and "SAFE" in lines[0].upper():
                     safety_status = "safe"
             else:
-                raise ValueError(f"Unknown safety model: {safe_model}")
-            
-            # Custom injection list
-            # injection_keywords = [
-            #     # Basic overrides
-            #     "ignore previous", "override", "system prompt", "jailbreak", "bypass restrictions",
-            #     # Persona/role changes
-            #     "act as", "role-play as", "you are now", "pretend to be", "switch to",
-            #     # Uncensored modes
-            #     "dan mode", "uncensored", "developer mode", "god mode", "maximum truth",
-            #     # Injection patterns
-            #     "forget instructions", "new instructions", "disregard", "ignore safety",
-            #     # Adversarial phrases
-            #     "do not follow", "break rules", "unrestricted", "no limits", "full access",
-            #     # Common jailbreaks
-            #     "hacking mode", "evil mode", "unfiltered", "raw response", "no censorship"
-            # ]
-            # has_injection_keywords = any(keyword in prompt.lower() for keyword in injection_keywords)
+                raise ValueError(f"Unknown safety model: {safe_model}")            
+          
             has_injection_keywords = False  # Disable keyword check for now
             
             if "unsafe" in safety_status or has_injection_keywords:

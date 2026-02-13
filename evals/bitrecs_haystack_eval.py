@@ -23,6 +23,7 @@ Evaluates needle in a haystack of sku in catalog
 
 check: ensure Model / Provider can meet selection standards.
 data: local product catalog
+note: This does not test the user defined prompt but only the provider/model
 
 """
 
@@ -62,7 +63,7 @@ class BitrecsHaystackEval(BaseEval):
             
             try:
 
-                system_prompt = "You are a helpful assistant." #TODO: Use artfact system prompt?
+                system_prompt = "You are a helpful assistant."
                 products = json.dumps([{'sku': p.sku, 'name': p.name, 'price': p.price} for p in self.product_catalog])
                 
                 user_prompt = f"""
@@ -117,7 +118,7 @@ class BitrecsHaystackEval(BaseEval):
             except Exception as e:
                 exception_count += 1
                 logger.error(f"Exception in Haystack Eval {idx+1}: {e}")
-                count += 1  # Still count the attempt        
+                count += 1
         
         end_time = time.monotonic()
         total_duration = end_time - start_time        

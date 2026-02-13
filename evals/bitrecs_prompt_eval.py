@@ -51,17 +51,12 @@ class BitrecsPromptEval(BaseEval):
         count = 0
         success_count = 0
         exception_count = 0
-        
-        #shuffle the holdout set for randomness
         self.holdout_df = self.holdout_df.sample(frac=1).reset_index(drop=True)
-
-        # take n samples from the holdout set
         self.holdout_df = self.holdout_df.head(self.sample_size)
-
         for idx, row in self.holdout_df.iterrows():
             if idx >= max_iterations:
                 break
-            try:               
+            try:
                 logger.info(f"\033[34mATTEMPT {idx+1}/{len(self.holdout_df)}...\033[0m")
                 st = time.monotonic()
                 ctx = row.get('context', '')
@@ -96,7 +91,7 @@ class BitrecsPromptEval(BaseEval):
             eval_success = True
     
         result = EvalResult(           
-            eval_name=self.get_eval_name(),  # Use base method
+            eval_name=self.get_eval_name(),
             created_at=datetime.now(timezone.utc).isoformat(),
             hot_key=self.miner_artifact.miner_hotkey,
             score=final_score,
@@ -119,15 +114,14 @@ class BitrecsPromptEval(BaseEval):
         
         created_at = row.get('created_at', '')
         query = row.get('query', '')
-        ground_truth_sku = row.get('ground_truth_sku', '')
-        #provider = row.get('provider', '')
+        ground_truth_sku = row.get('ground_truth_sku', '')        
         provider = self.miner_artifact.provider
         winning_response = row.get('winning_response', '')
         context = row.get('context', '')
 
         query = str(query)
         ground_truth_sku = str(ground_truth_sku)
-        provider = str(provider)        
+        provider = str(provider)
 
         # Decode double-encoded JSON string
         products = self.decode_context(context)
