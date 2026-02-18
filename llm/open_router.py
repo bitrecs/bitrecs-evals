@@ -69,14 +69,14 @@ class OpenRouter:
                 "effort": "minimal"
             }
 
+        messages = []
+        if self.system_prompt:
+            messages.append({"role": "system", "content": self.system_prompt})
+        messages.append({"role": "user", "content": prompt})
+
         data_payload = {
             "model": self.model,
-            "messages": [
-                #{"role": "system", "content": "/no_think"},
-                {
-                    "role": "user", 
-                    "content": prompt
-                }],
+            "messages": messages,
             "reasoning": reasoning,
             "stream": False,
             "temperature": self.temp,
@@ -119,8 +119,15 @@ class OpenRouter:
                     
                     logger.info(f"Request ID: {data.get('id')}, Model: {actual_model}, Tokens: {total_tokens} (Prompt: {prompt_tokens}, Completion: {completion_tokens}), Cost: ${cost:.6f}, Finish Reason: {finish_reason}")
                     
-                    # Return full data for caller to use
-                    #return data
+                    # create a dictionary with all relevant info to return to caller
+                    data['usage'] = usage
+                    data['prompt_tokens'] = prompt_tokens                    
+                    data['completion_tokens'] = completion_tokens
+                    data['total_tokens'] = total_tokens
+                    data['cost'] = cost
+                    data['finish_reason'] = finish_reason
+                    data['model'] = actual_model
+                    self.data = data                    
                     
                     return data['choices'][0]['message']['content']
             except httpx.HTTPStatusError as e:

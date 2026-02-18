@@ -23,7 +23,6 @@ Bitrecs Basic Template Validation
 check: ensures templates are valid Jinja2 templates and only use allowed variables.
 check: ensures prompt lengths are within specified token limits.
 check: ensures miner_hotkey is a valid S58 address.
-check: ensures prompts are safe from injection attacks using a safety LLM.
 data: N/A
 
 """
@@ -82,8 +81,7 @@ class BitrecsBasicEval(BaseEval):
 
         eval_success = result
         if eval_success:
-            template_status = "OK"
-            # Add variance based on variable usage count
+            template_status = "OK"            
             all_vars = set()
             all_vars.update(self.get_template_variables(self.miner_artifact.system_prompt_template))
             all_vars.update(self.get_template_variables(self.miner_artifact.user_prompt_template))
@@ -93,7 +91,7 @@ class BitrecsBasicEval(BaseEval):
             variable_score = variable_count / max_vars if max_vars > 0 else 0.0
             final_score = 0.5 + (variable_score * 0.5)  # Base 0.5 for passing validation, plus up to 0.5 for variables
         else:
-            final_score = 0.0  # Fail validation = 0.0            
+            final_score = 0.0
 
         result = EvalResult(           
             eval_name=self.get_eval_name(),

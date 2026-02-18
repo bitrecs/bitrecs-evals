@@ -36,9 +36,7 @@ class BitrecsReasonEval(BaseEval):
         db_path = db.database  
      
         self.rules_scorer = RulesScorer(db_full_path=db_path, max_workers=4, debug=True, run_id=run_id)        
-        self.debug_prompts = False
-
-        #print(df.head())
+        self.debug_prompts = False        
         if 1==1:
             self.init_baseline_reasons()
 

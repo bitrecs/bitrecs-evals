@@ -94,6 +94,15 @@ class Chutes:
                     cost = (prompt_tokens / 1000000 * model_pricing["input"]) + (completion_tokens / 1000000 * model_pricing["output"])
                     
                     logger.info(f"Request ID: {data.get('id')}, Model: {actual_model}, Tokens: {total_tokens} (Prompt: {prompt_tokens}, Completion: {completion_tokens}), Cost: ${cost:.6f}, Finish Reason: {finish_reason}")
+
+                    data['usage'] = usage
+                    data['prompt_tokens'] = prompt_tokens                    
+                    data['completion_tokens'] = completion_tokens
+                    data['total_tokens'] = total_tokens
+                    data['cost'] = cost
+                    data['finish_reason'] = finish_reason
+                    data['model'] = actual_model
+                    self.data = data
                     
                     return data['choices'][0]['message']['content']
             except httpx.HTTPStatusError as e:

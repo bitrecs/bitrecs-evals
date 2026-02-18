@@ -101,6 +101,21 @@ from evals.bitrecs_qos_eval import BitrecsQoSEval
 from evals.bitrecs_reason_eval import BitrecsReasonEval
 from evals.bitrecs_safe_prompt import BitrecsSafeEval
 from evals.bitrecs_sku_eval import BitrecsSkuEval
+from evals.ndcg_at10_curated_all_beauty_100 import NdcgAt10CuratedAllBeauty100
+from evals.ndcg_at10_curated_all_beauty_500 import NdcgAt10CuratedAllBeauty500
+from evals.ndcg_at10_curated_all_beauty_1000 import NdcgAt10CuratedAllBeauty1000
+from evals.ndcg_at10_curated_amazon_fashion_100 import NdcgAt10CuratedAmazonFashion100
+from evals.ndcg_at10_curated_amazon_fashion_500 import NdcgAt10CuratedAmazonFashion500
+from evals.ndcg_at10_curated_amazon_fashion_1000 import NdcgAt10CuratedAmazonFashion1000
+from evals.ndcg_at10_curated_appliances_100 import NdcgAt10CuratedAppliances100
+from evals.ndcg_at10_curated_appliances_500 import NdcgAt10CuratedAppliances500
+from evals.ndcg_at10_curated_appliances_1000 import NdcgAt10CuratedAppliances1000
+from evals.ndcg_at10_curated_electronics_100 import NdcgAt10CuratedElectronics100
+from evals.ndcg_at10_curated_electronics_500 import NdcgAt10CuratedElectronics500
+from evals.ndcg_at10_curated_electronics_1000 import NdcgAt10CuratedElectronics1000
+from evals.ndcg_at10_curated_musical_instruments_100 import NdcgAt10CuratedMusicalInstruments100
+from evals.ndcg_at10_curated_musical_instruments_500 import NdcgAt10CuratedMusicalInstruments500
+from evals.ndcg_at10_curated_musical_instruments_1000 import NdcgAt10CuratedMusicalInstruments1000
 from evals.eval_result import EvalResult
 from models.eval_type import BitrecsEvaluationType
 from models.miner_artifact import Artifact
@@ -124,6 +139,26 @@ class EvalFactory:
         BitrecsEvaluationType.BITRECS_SKU_DAILY: BitrecsSkuEval,        
         BitrecsEvaluationType.BITRECS_PREDICT_DAILY: BitrecsPredictEval,
         BitrecsEvaluationType.BITRECS_INSTACART_DAILY: BitrecsInstacartEval,
+        
+        BitrecsEvaluationType.NDCG_AT10_CURATED_ALL_BEAUTY_100: NdcgAt10CuratedAllBeauty100,
+        BitrecsEvaluationType.NDCG_AT10_CURATED_ALL_BEAUTY_500: NdcgAt10CuratedAllBeauty500,
+        BitrecsEvaluationType.NDCG_AT10_CURATED_ALL_BEAUTY_1000: NdcgAt10CuratedAllBeauty1000,
+
+        BitrecsEvaluationType.NDCG_AT10_CURATED_AMAZON_FASHION_100: NdcgAt10CuratedAmazonFashion100,
+        BitrecsEvaluationType.NDCG_AT10_CURATED_AMAZON_FASHION_500: NdcgAt10CuratedAmazonFashion500,
+        BitrecsEvaluationType.NDCG_AT10_CURATED_AMAZON_FASHION_1000: NdcgAt10CuratedAmazonFashion1000,
+
+        BitrecsEvaluationType.NDCG_AT10_CURATED_APPLIANCES_100: NdcgAt10CuratedAppliances100,
+        BitrecsEvaluationType.NDCG_AT10_CURATED_APPLIANCES_500: NdcgAt10CuratedAppliances500,
+        BitrecsEvaluationType.NDCG_AT10_CURATED_APPLIANCES_1000: NdcgAt10CuratedAppliances1000,
+
+        BitrecsEvaluationType.NDCG_AT10_CURATED_ELECTRONICS_100: NdcgAt10CuratedElectronics100,
+        BitrecsEvaluationType.NDCG_AT10_CURATED_ELECTRONICS_500: NdcgAt10CuratedElectronics500,
+        BitrecsEvaluationType.NDCG_AT10_CURATED_ELECTRONICS_1000: NdcgAt10CuratedElectronics1000,
+
+        BitrecsEvaluationType.NDCG_AT10_CURATED_MUSICAL_INSTRUMENTS_100: NdcgAt10CuratedMusicalInstruments100,
+        BitrecsEvaluationType.NDCG_AT10_CURATED_MUSICAL_INSTRUMENTS_500: NdcgAt10CuratedMusicalInstruments500,
+        BitrecsEvaluationType.NDCG_AT10_CURATED_MUSICAL_INSTRUMENTS_1000: NdcgAt10CuratedMusicalInstruments1000,
         
         BitrecsEvaluationType.AMAZON_ALL_BEAUTY_100: AmazonAllBeauty100,
         BitrecsEvaluationType.AMAZON_ALL_BEAUTY_500: AmazonAllBeauty500,  
@@ -227,12 +262,12 @@ class EvalFactory:
         BitrecsEvaluationType.AMAZON_SPORTS_AND_OUTDOORS_100: AmazonSportsAndOutdoors100,        
         BitrecsEvaluationType.AMAZON_SPORTS_AND_OUTDOORS_500: AmazonSportsAndOutdoors500,
         BitrecsEvaluationType.AMAZON_SPORTS_AND_OUTDOORS_1000: AmazonSportsAndOutdoors1000,
-
-        BitrecsEvaluationType.AMAZON_TOOLS_AND_HOME_IMPROVEMENT_100: AmazonToolsAndHomeImprovement100,        
+        
         BitrecsEvaluationType.AMAZON_TOYS_AND_GAMES_100: AmazonToysAndGames100,        
         BitrecsEvaluationType.AMAZON_TOYS_AND_GAMES_500: AmazonToysAndGames500,
         BitrecsEvaluationType.AMAZON_TOYS_AND_GAMES_1000: AmazonToysAndGames1000,
         
+        BitrecsEvaluationType.AMAZON_TOOLS_AND_HOME_IMPROVEMENT_100: AmazonToolsAndHomeImprovement100,        
         BitrecsEvaluationType.AMAZON_TOOLS_AND_HOME_IMPROVEMENT_500: AmazonToolsAndHomeImprovement500,
         BitrecsEvaluationType.AMAZON_TOOLS_AND_HOME_IMPROVEMENT_1000: AmazonToolsAndHomeImprovement1000,
         
@@ -270,6 +305,10 @@ class EvalFactory:
         results = []        
         for eval_type in eval_types:
             try:
+                eval_instance : BaseEval = cls._registry[eval_type](run_id, miner_artifact)
+                if eval_type.name != eval_instance.eval_type().name:
+                    raise ValueError(f"Eval type mismatch: registry has {eval_type}, but instance reports {eval_instance.eval_type()}")
+
                 logger.debug(f"\033[34mRunning eval type: {eval_type}\033[0m")
                 result = cls.run_eval(eval_type, miner_artifact, run_id, max_iterations)
                 results.append(result)                
