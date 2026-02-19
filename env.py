@@ -220,7 +220,8 @@ class Actor:
                 "duration": duration,
                 "extra": {
                     "result": run_report
-                }
+                },
+                "samples": results[0].rows_evaluated if results else 0
             }
             
             logger.info(f"Local Run ID: \033[33m{run_id}\033[0m")
@@ -243,7 +244,8 @@ class Actor:
                 "duration": duration,
                 "error": error,
                 "error_type": "evaluation_failure",
-                "extra": {}
+                "extra": {},
+                "samples": 0
             }
 
 @app.get("/")
