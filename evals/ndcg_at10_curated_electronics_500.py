@@ -74,8 +74,7 @@ class NdcgAt10CuratedElectronics500(BaseEval):
                 
             except Exception as e:
                 error_message = traceback.format_exc()                
-                logger.error(f"Error evaluating row {idx}: {e} 
-{error_message}")
+                logger.error(f"Error evaluating row {idx}: {e}\n{error_message}")
                 exception_count += 1
                 continue
             finally:
