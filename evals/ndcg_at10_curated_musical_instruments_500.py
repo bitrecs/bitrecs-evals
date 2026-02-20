@@ -55,7 +55,7 @@ class NdcgAt10CuratedMusicalInstruments500(BaseEval):
             if idx >= max_iterations:
                 break
             try:               
-                logger.info(f"[34mATTEMPT {idx+1}/{len(self.holdout_df)}...[0m")
+                logger.info(f"ATTEMPT {idx+1}/{len(self.holdout_df)}...")
                 
                 st = time.monotonic()
                 rank_index = self.evaluate_row(row)
@@ -65,7 +65,7 @@ class NdcgAt10CuratedMusicalInstruments500(BaseEval):
                 ndcg_score = self.calculate_ndcg_score(rank_index)
                 total_ndcg += ndcg_score
                 
-                logger.info(f"[32m Row {idx} evaluation took {duration:.2f}s, NDCG Score: {ndcg_score:.4f} [0m")
+                logger.info(f" Row {idx} evaluation took {duration:.2f}s, NDCG Score: {ndcg_score:.4f} ")
                 
                 if ndcg_score > 0:
                     success_count += 1
@@ -74,8 +74,7 @@ class NdcgAt10CuratedMusicalInstruments500(BaseEval):
                 
             except Exception as e:
                 error_message = traceback.format_exc()                
-                logger.error(f"Error evaluating row {idx}: {e} 
-{error_message}")
+                logger.error(f"Error evaluating row {idx}: {e}\n{error_message}")
                 exception_count += 1
                 continue
             finally:
@@ -86,6 +85,10 @@ class NdcgAt10CuratedMusicalInstruments500(BaseEval):
         final_score = total_ndcg / count if count > 0 else 0.0                
         
         eval_success = final_score >= self.pass_threshold
+        if eval_success:
+            print(f"\033[32mEval Passed! Final Score: {final_score:.4f} >= Threshold: {self.pass_threshold}\033[0m")
+        else:
+            print(f"\033[31mEval Failed. Final Score: {final_score:.4f} < Threshold: {self.pass_threshold}\033[0m")
 
         result = EvalResult(           
             eval_name=self.get_eval_name(),
@@ -189,9 +192,9 @@ class NdcgAt10CuratedMusicalInstruments500(BaseEval):
                 break
         
         if rank_index is not None:
-            logger.info(f"[32mGround truth SKU {ground_truth_sku} found at rank {rank_index}[0m")
+            logger.info(f"Ground truth SKU {ground_truth_sku} found at rank {rank_index}")
         else:
-            logger.info(f"[31mGround truth SKU {ground_truth_sku} NOT found in recommendations.[0m")
+            logger.info(f"Ground truth SKU {ground_truth_sku} NOT found in recommendations.")
 
         self.log_miner_response(
             run_id=self.run_id,
