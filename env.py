@@ -35,8 +35,6 @@ if 1==1:
     logging.getLogger('peewee').setLevel(logging.WARNING)
     logging.getLogger('fsspec').setLevel(logging.WARNING)
 
-# Bitrecs Production Eval Suite
-
 
 #EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY, BitrecsEvaluationType.BITRECS_REASON_DAILY]
 # EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY, 
@@ -133,7 +131,6 @@ class Actor:
                 db.close()
 
 
-
     def generate_report_by_run_id(self, run_id: str) -> str:
         """Generate a detailed report for a specific run ID."""
         try:
@@ -167,11 +164,12 @@ class Actor:
         finally:
             db.close()
 
+
     async def evaluate(self, yaml_file_path: str, problem_type: BitrecsEvaluationType) -> dict:    
         """
         Affine Entrypoint
         """
-        bitrecs_run_id = None
+        bitrecs_run_id = self.bitrecs_run_id
         run_id = None
         try:
             print("=" * 60)
@@ -188,8 +186,7 @@ class Actor:
             # for key, value in os.environ.items():
             #     logger.debug(f"ENV {key}={value}")
             
-            logger.info("Loading miner input...")
-            #miner_input_path = "input/miner_input.yaml"
+            logger.info("Loading miner input...")            
             miner_artifact = self.load_miner_input_yaml(input_path=yaml_file_path)
             
             logger.info(f"Artifact ID: {miner_artifact.artifact_id}")
@@ -224,8 +221,8 @@ class Actor:
                 "samples": results[0].rows_evaluated if results else 0
             }
             
-            logger.info(f"Local Run ID: \033[33m{run_id}\033[0m")
-            logger.info(f"Bitrecs Run ID: \033[33m{bitrecs_run_id}\033[0m")
+            #logger.info(f"Local Run ID: \033[33m{run_id}\033[0m")
+            logger.info(f"Run ID: \033[33m{bitrecs_run_id}\033[0m")
             logger.info(f" FINAL SCORE \033[92;1m{score:.2f}\033[0m")
             return result
         
@@ -248,13 +245,16 @@ class Actor:
                 "samples": 0
             }
 
+
 @app.get("/")
 async def root():
     return {"message": "Bitrecs Eval Actor is running."}
 
+
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
 
 class EvaluateRequest(BaseModel):
     yaml_content: str
@@ -313,6 +313,7 @@ async def get_db():
         media_type='application/octet-stream',
         filename='eval_runs.db'
     )
+
 
 @app.get("/evals")
 async def get_evals():
