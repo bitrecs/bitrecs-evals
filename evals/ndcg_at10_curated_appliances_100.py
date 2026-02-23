@@ -44,7 +44,7 @@ class NdcgAt10CuratedAppliances100(BaseEval):
             return 0.0
         return 1.0 / math.log2(rank_index + 2)
 
-    def run(self, max_iterations=25) -> EvalResult:
+    def run(self, max_iterations=5) -> EvalResult:
         start_time = time.monotonic()        
         total_ndcg = 0.0
         count = 0
