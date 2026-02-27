@@ -93,6 +93,7 @@ from evals.amazon_video_games_1000 import AmazonVideoGames1000
 from evals.amazon_video_games_500 import AmazonVideoGames500
 from evals.base_eval import BaseEval
 from evals.bitrecs_basic_eval import BitrecsBasicEval
+from evals.bitrecs_get_artifact_pricing import BitrecsGetArtifactPricing
 from evals.bitrecs_haystack_eval import BitrecsHaystackEval
 from evals.bitrecs_instacart_daily import BitrecsInstacartEval
 from evals.bitrecs_predict_eval import BitrecsPredictEval
@@ -139,6 +140,7 @@ class EvalFactory:
         BitrecsEvaluationType.BITRECS_SKU_DAILY: BitrecsSkuEval,        
         BitrecsEvaluationType.BITRECS_PREDICT_DAILY: BitrecsPredictEval,
         BitrecsEvaluationType.BITRECS_INSTACART_DAILY: BitrecsInstacartEval,
+        BitrecsEvaluationType.BITRECS_GET_ARTIFACT_PRICING: BitrecsGetArtifactPricing,
         
         BitrecsEvaluationType.NDCG_AT10_CURATED_ALL_BEAUTY_100: NdcgAt10CuratedAllBeauty100,
         BitrecsEvaluationType.NDCG_AT10_CURATED_ALL_BEAUTY_500: NdcgAt10CuratedAllBeauty500,
