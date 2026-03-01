@@ -12,13 +12,13 @@ from evals.bitrecs_basic_eval import BitrecsBasicEval
 logger = logging.getLogger(__name__)
 
 
-class BitrecsGetArtifactPricing(BaseEval):
+class BitrecsArtifactPricing(BaseEval):
 
     def __init__(self, run_id: str, miner_artifact: Artifact):
         super().__init__(run_id, miner_artifact)
 
     def eval_type(self) -> BitrecsEvaluationType:
-        return BitrecsEvaluationType.BITRECS_GET_ARTIFACT_PRICING
+        return BitrecsEvaluationType.BITRECS_ARTIFACT_PRICING
 
     @property
     def cost_threshold(self) -> float:
