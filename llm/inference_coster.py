@@ -97,7 +97,7 @@ class InferenceCoster:
             return None
             
         
-    def calculate_cost(self, input_tokens: int, output_tokens: int) -> Optional[float]:
+    def calculate_cost(self, input_tokens: float, output_tokens: float) -> Optional[float]:
         pricing = self.fetch_cost()
         if pricing is None:
             logger.warning("Pricing information not available, cannot calculate cost.")

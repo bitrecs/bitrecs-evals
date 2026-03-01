@@ -1,4 +1,5 @@
 import time
+from typing import Tuple
 import httpx
 import logging
 from llm.prompt_factory import PromptFactory
@@ -40,7 +41,7 @@ class Chutes:
                 
 
 
-    def call_chutes(self, prompt) -> str:
+    def call_chutes(self, prompt) -> Tuple[str, dict]:
         if not prompt or len(prompt) < 10:
             raise ValueError()
         url = "https://llm.chutes.ai/v1/chat/completions"
@@ -89,22 +90,24 @@ class Chutes:
                     actual_model = data.get('model', self.model)
                     
                     # Calculate cost
-                    model_pricing = self.pricing.get(actual_model, {"input": 0, "output": 0})
+                    #model_pricing = self.pricing.get(actual_model, {"input": 0, "output": 0})
                     #cost = (prompt_tokens / 1000 * model_pricing["input"]) + (completion_tokens / 1000 * model_pricing["output"])
-                    cost = (prompt_tokens / 1000000 * model_pricing["input"]) + (completion_tokens / 1000000 * model_pricing["output"])
+                    #cost = (prompt_tokens / 1000000 * model_pricing["input"]) + (completion_tokens / 1000000 * model_pricing["output"])
                     
-                    logger.info(f"Request ID: {data.get('id')}, Model: {actual_model}, Tokens: {total_tokens} (Prompt: {prompt_tokens}, Completion: {completion_tokens}), Cost: ${cost:.6f}, Finish Reason: {finish_reason}")
+                    logger.info(f"Request ID: {data.get('id')}, Model: {actual_model}, Tokens: {total_tokens} (Prompt: {prompt_tokens}, Completion: {completion_tokens}), Finish Reason: {finish_reason}")
 
-                    data['usage'] = usage
-                    data['prompt_tokens'] = prompt_tokens                    
-                    data['completion_tokens'] = completion_tokens
-                    data['total_tokens'] = total_tokens
-                    data['cost'] = cost
-                    data['finish_reason'] = finish_reason
-                    data['model'] = actual_model
-                    self.data = data
-                    
-                    return data['choices'][0]['message']['content']
+                    usage_data = {
+                        "provider": self.provider,
+                        "request_id": data.get('id'),
+                        "model": actual_model,
+                        "prompt_tokens": prompt_tokens,
+                        "completion_tokens": completion_tokens,
+                        "total_tokens": total_tokens,
+                        #"cost": cost,
+                        "finish_reason": finish_reason
+                    }
+                    response = data['choices'][0]['message']['content']                    
+                    return response, usage_data
             except httpx.HTTPStatusError as e:
                 if e.response.status_code == 429 and attempt < max_retries:
                     wait_time = 1 * (attempt + 1)  # Linear backoff: 1s, 2s
