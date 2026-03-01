@@ -23,7 +23,7 @@ class BitrecsGetArtifactPricing(BaseEval):
         """
         Define the maximum allowed cost per million tokens for the prompt.
         """
-        return 2.0  # $2.00 per million tokens as the threshold
+        return 1.10  # $1.1 per million tokens as the threshold
 
     def get_pricing(self, provider: str, model_name: str) -> dict:
         """
@@ -115,7 +115,7 @@ class BitrecsGetArtifactPricing(BaseEval):
                 
                 prompt_cost_per_million = prompt_cost_per_token * 1_000_000
                 
-                if prompt_cost_per_million > self.cost_threshold:
+                if prompt_cost_per_million >= self.cost_threshold:
                     final_score = 0.0
                     result = False
                     reason = f"FAIL: Input cost ${prompt_cost_per_million:.2f}/1M tokens exceeds maximum allowed ${self.cost_threshold:.2f} threshold. (Provider: {provider}, Model: {model_name})"
