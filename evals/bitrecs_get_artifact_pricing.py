@@ -1,7 +1,6 @@
 import time
 import traceback
 import logging
-import httpx
 from datetime import datetime, timezone
 from evals.eval_result import EvalResult
 from llm.inference_coster import InferenceCoster
@@ -12,7 +11,9 @@ from evals.bitrecs_basic_eval import BitrecsBasicEval
 
 logger = logging.getLogger(__name__)
 
+
 class BitrecsGetArtifactPricing(BaseEval):
+
     def __init__(self, run_id: str, miner_artifact: Artifact):
         super().__init__(run_id, miner_artifact)
 
@@ -55,9 +56,6 @@ class BitrecsGetArtifactPricing(BaseEval):
                 completion_tokens = 1000
                 if getattr(self.miner_artifact, 'sampling_params', None) and getattr(self.miner_artifact.sampling_params, 'max_tokens', None):
                     completion_tokens = self.miner_artifact.sampling_params.max_tokens
-                
-                #total_cost = (prompt_tokens * prompt_cost_per_token) + (completion_tokens * completion_cost_per_token)                
-                #prompt_cost_per_million = prompt_cost_per_token * 1_000_000
 
                 total_cost = coster.calculate_cost(prompt_tokens, completion_tokens)
                 prompt_cost_per_million = pricing.input
