@@ -1,10 +1,8 @@
-import logging
 import time
 import traceback
+import logging
 import httpx
 from datetime import datetime, timezone
-
-from common import constants as CONST
 from evals.eval_result import EvalResult
 from models.eval_type import BitrecsEvaluationType
 from models.miner_artifact import Artifact
@@ -19,6 +17,13 @@ class BitrecsGetArtifactPricing(BaseEval):
 
     def eval_type(self) -> BitrecsEvaluationType:
         return BitrecsEvaluationType.BITRECS_GET_ARTIFACT_PRICING
+
+    @property
+    def cost_threshold(self) -> float:
+        """
+        Define the maximum allowed cost per million tokens for the prompt.
+        """
+        return 2.0  # $2.00 per million tokens as the threshold
 
     def get_pricing(self, provider: str, model_name: str) -> dict:
         """
@@ -110,10 +115,10 @@ class BitrecsGetArtifactPricing(BaseEval):
                 
                 prompt_cost_per_million = prompt_cost_per_token * 1_000_000
                 
-                if prompt_cost_per_million > 2.0:
+                if prompt_cost_per_million > self.cost_threshold:
                     final_score = 0.0
                     result = False
-                    reason = f"FAIL: Input cost ${prompt_cost_per_million:.2f}/1M tokens exceeds maximum allowed $2.00 threshold. (Provider: {provider}, Model: {model_name})"
+                    reason = f"FAIL: Input cost ${prompt_cost_per_million:.2f}/1M tokens exceeds maximum allowed ${self.cost_threshold:.2f} threshold. (Provider: {provider}, Model: {model_name})"
                 else:
                     final_score = 1.0
                     result = True
