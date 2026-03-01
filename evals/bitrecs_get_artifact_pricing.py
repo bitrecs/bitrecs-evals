@@ -4,6 +4,7 @@ import logging
 import httpx
 from datetime import datetime, timezone
 from evals.eval_result import EvalResult
+from llm.inference_coster import InferenceCoster
 from models.eval_type import BitrecsEvaluationType
 from models.miner_artifact import Artifact
 from evals.base_eval import BaseEval
@@ -23,64 +24,7 @@ class BitrecsGetArtifactPricing(BaseEval):
         """
         Define the maximum allowed cost per million tokens for the prompt.
         """
-        return 1.10  # $1.1 per million tokens as the threshold
-
-    def get_pricing(self, provider: str, model_name: str) -> dict:
-        """
-        Fetch pricing for a given model based on the provider.
-        """
-        if provider.upper() == "CHUTES":
-            try:
-                with httpx.Client(timeout=10.0) as client:
-                    response = client.get("https://api.chutes.ai/chutes/")
-                    response.raise_for_status()
-                    data = response.json()
-                    
-                    target_id = model_name.lower()
-                    target_base = target_id.split("/")[-1]
-                    
-                    for item in data.get("items", []):
-                        item_name_lower = item.get("name", "").lower()
-                        if item_name_lower == target_id or item_name_lower.endswith("/" + target_base):
-                            price_info = item.get("current_estimated_price", {}).get("per_million_tokens", {})
-                            input_price = price_info.get("input", {}).get("usd", 0.0)
-                            output_price = price_info.get("output", {}).get("usd", 0.0)
-                            return {
-                                "prompt": input_price / 1_000_000,
-                                "completion": output_price / 1_000_000
-                            }
-            except Exception as e:
-                logger.error(f"Error fetching pricing from Chutes: {e}")
-            return {}
-            
-        # Default to OpenRouter
-        try:
-            with httpx.Client(timeout=10.0) as client:
-                response = client.get("https://openrouter.ai/api/v1/models")
-                response.raise_for_status()
-                models = response.json().get("data", [])
-                
-                target_id = model_name.lower()
-                target_base = target_id.split("/")[-1]
-                
-                # First pass: lowercased match
-                for model in models:
-                    model_id_lower = model["id"].lower()
-                    if model_id_lower == target_id or model_id_lower.endswith("/" + target_base):
-                        return model.get("pricing", {})
-                        
-                # Second pass: remove '-instruct'
-                fallback_target = target_id.replace("-instruct", "")
-                fallback_base = fallback_target.split("/")[-1]
-                for model in models:
-                    model_id_lower = model["id"].lower().replace("-instruct", "")
-                    if model_id_lower == fallback_target or model_id_lower.endswith("/" + fallback_base):
-                        return model.get("pricing", {})
-                        
-        except Exception as e:
-            logger.error(f"Error fetching pricing from OpenRouter: {e}")
-            
-        return {}
+        return 1.10  # $1.1 per million tokens as the threshold        
 
     def run(self, sample_size = 10) -> EvalResult:
         """
@@ -90,16 +34,17 @@ class BitrecsGetArtifactPricing(BaseEval):
         exception_count = 0
         result = False
         final_score = 0.0
-        reason = "NA"
-        
+        reason = "NA"        
         provider = self.miner_artifact.provider
         model_name = self.miner_artifact.model
         
         try:
-            pricing = self.get_pricing(provider, model_name)
+            coster = InferenceCoster(provider, model_name)
+            pricing = coster.fetch_cost()
             if pricing:
-                prompt_cost_per_token = float(pricing.get("prompt", 0.0))
-                completion_cost_per_token = float(pricing.get("completion", 0.0))
+
+                prompt_cost_per_token = pricing.input
+                completion_cost_per_token = pricing.output
                 
                 # Compute token counts from the prompt templates
                 system_tokens = BitrecsBasicEval.get_token_count(self.miner_artifact.system_prompt_template) if getattr(self.miner_artifact, 'system_prompt_template', None) else 0
@@ -111,9 +56,11 @@ class BitrecsGetArtifactPricing(BaseEval):
                 if getattr(self.miner_artifact, 'sampling_params', None) and getattr(self.miner_artifact.sampling_params, 'max_tokens', None):
                     completion_tokens = self.miner_artifact.sampling_params.max_tokens
                 
-                total_cost = (prompt_tokens * prompt_cost_per_token) + (completion_tokens * completion_cost_per_token)
-                
-                prompt_cost_per_million = prompt_cost_per_token * 1_000_000
+                #total_cost = (prompt_tokens * prompt_cost_per_token) + (completion_tokens * completion_cost_per_token)                
+                #prompt_cost_per_million = prompt_cost_per_token * 1_000_000
+
+                total_cost = coster.calculate_cost(prompt_tokens, completion_tokens)
+                prompt_cost_per_million = pricing.input
                 
                 if prompt_cost_per_million >= self.cost_threshold:
                     final_score = 0.0
