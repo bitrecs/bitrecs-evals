@@ -1,7 +1,7 @@
 import time
-from typing import Tuple
 import httpx
 import logging
+from typing import Tuple
 from llm.prompt_factory import PromptFactory
 from .llm_provider import LLM
 from common import constants as CONST
@@ -22,23 +22,8 @@ class Chutes:
             raise ValueError("CHUTES_API_KEY is not set")
         self.model = model
         self.system_prompt = system_prompt
-        self.temp = temp      
+        self.temp = temp
         self.provider = LLM.CHUTES.name
-
-        self.pricing = {
-            
-            "Qwen/Qwen3-235B-A22B-Instruct-2507-TEE": {"input": 0.08, "output": 0.55},
-            "Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8-TEE": {"input": 0.22, "output": 0.95},
-            "Qwen/Qwen3-Next-80B-A3B-Instruct": {"input": 0.10, "output": 0.80},
-
-            "moonshotai/Kimi-K2-Instruct-0905": {"input": 0.39, "output": 1.90},
-            "moonshotai/Kimi-K2-Instruct-0905": {"input": 0.39, "output": 1.90},
-
-            "zai-org/GLM-4.7-FP8": {"input": 0.30, "output": 1.20},
-            "zai-org/GLM-4.7-Flash": {"input": 0.06, "output": 0.35},         
-            
-        }
-                
 
 
     def call_chutes(self, prompt) -> Tuple[str, dict]:
@@ -52,6 +37,7 @@ class Chutes:
         data = {
             "model": self.model,
             "messages": [
+                {"role": "system", "content": self.system_prompt},
                 {"role": "user", "content": prompt}
             ],
             "stream": False,

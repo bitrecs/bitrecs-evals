@@ -20,32 +20,11 @@ class OpenRouter:
         self.OPENROUTER_API_KEY = key
         if not self.OPENROUTER_API_KEY:
             raise ValueError("OPENROUTER_API_KEY is not set")
-        self.model = model       
+        self.model = model
         self.system_prompt = system_prompt
-        self.temp = temp        
-        self.provider = LLM.OPEN_ROUTER.name
-        
-        # Add pricing map (example rates in USD per 1K tokens; update with real OpenRouter pricing)
-        self.pricing = {
-            "google/gemini-2.5-flash-lite-preview-09-2025": {"input": 0.10, "output": 0.40},
-            "google/gemini-3-flash-preview": {"input": 0.50, "output": 3.00},
-            "google/gemini-2.5-flash-lite": {"input": 0.10, "output": 0.30},
-            "google/gemini-2.5-flash-lite": {"input": 0.10, "output": 0.30},
-
-            "x-ai/grok-4.1-fast": {"input": 0.20, "output": 0.50},
-            "x-ai/x-ai/grok-4-fast": {"input": 0.20, "output": 0.50},
-
-            "openai/gpt-5-mini": {"input": 0.25, "output": 2.00},
-            "openai/gpt-5-nano": {"input": 0.05, "output": 0.40},
-            "openai/gpt-4.1-nano": {"input": 0.10, "output": 0.40},
-
-            "qwen/qwen/qwen3-embedding-8b": {"input": 0.01, "output": 0.00},
-            "qwen/qwen3-next-80b-a3b-instruct": {"input": 0.09, "output": 1.10},
-            "qwen/qwen3-235b-a22b-2507": {"input": 0.071, "output": 0.463},
-
-            "amazon/nova-2-lite-v1": {"input": 0.30, "output": 2.50},           
-            
-        }
+        self.temp = temp
+        self.provider = LLM.OPEN_ROUTER.name 
+       
 
     def call_open_router(self, prompt) -> Tuple[str, dict]:
         if not prompt or len(prompt) < 10:
