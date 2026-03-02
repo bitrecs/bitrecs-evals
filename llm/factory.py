@@ -130,7 +130,8 @@ class ChutesInterface:
     def query(self, user_prompt) -> str:
         chutes = Chutes(key=self.CHUTES_API_KEY, model=self.model, 
                         system_prompt=self.system_prompt, temp=self.temp)
-        return chutes.call_chutes(user_prompt)
+        response, usage_data = chutes.call_chutes(user_prompt)
+        return response
     
     
     def query_with_data(self, user_prompt) -> QueryWithData:
