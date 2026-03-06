@@ -78,7 +78,7 @@ class Actor:
     
     def run_eval(self, miner_artifact: Artifact, eval_type: BitrecsEvaluationType) -> Tuple[str, List[EvalResult]]:
         """Run evaluation suites."""
-        logger.info("Running eval suites...")    
+        #logger.info("Running eval suites...")    
         #run_id = secrets.token_hex(16)
         run_id = self.bitrecs_run_id
         logger.info(f"Eval Run ID: \033[35m{run_id}\033[0m")
@@ -95,7 +95,7 @@ class Actor:
             else:
                 logger.error(f"\033[31m{result.eval_name} Failed! Score: {result.score:.4f}\033[0m")
     
-        logger.info(f"RUN COMPLETE for run ID: \033[34m{run_id}\033[0m")
+        #logger.info(f"RUN COMPLETE for run ID: \033[34m{run_id}\033[0m")
         return run_id, results
 
     
@@ -194,7 +194,7 @@ class Actor:
             logger.info(f"Artifact Provider: {miner_artifact.provider}")
             logger.info(f"Artifact Hotkey: {miner_artifact.miner_hotkey}")        
 
-            logger.info(f"Starting evaluation... of problem: {problem_type.value}") 
+            logger.info(f"Starting evaluation: {problem_type.value}")
             run_id, results = self.run_eval(miner_artifact, problem_type)
             logger.info("\033[35mEvaluation completed successfully. \033[0m")
             
@@ -207,7 +207,7 @@ class Actor:
             logger.info("\n" + run_report)
 
             bitrecs_run_id = self.bitrecs_run_id
-            logger.info(f"Bitrecs Run ID: \033[33m{bitrecs_run_id}\033[0m")
+            #logger.info(f"Bitrecs Run ID: \033[33m{bitrecs_run_id}\033[0m")
             result = {
                 "task_name": problem_type.value,
                 "bitrecs_run_id": bitrecs_run_id,
@@ -222,8 +222,9 @@ class Actor:
             }
             
             #logger.info(f"Local Run ID: \033[33m{run_id}\033[0m")
+            logger.info(f"Artifact ID: \033[32m{miner_artifact.artifact_id}\033[0m")
             logger.info(f"Run ID: \033[33m{bitrecs_run_id}\033[0m")
-            logger.info(f" FINAL SCORE \033[92;1m{score:.2f}\033[0m")
+            logger.info(f"FINAL SCORE \033[92;1m{score:.2f}\033[0m")
             return result
         
         except Exception as e:
@@ -279,6 +280,7 @@ async def evaluate_endpoint(req: EvaluateRequest):
         data = yaml.safe_load(yaml_content)
         artifact = Artifact(**data)
         logger.info(f"Miner Hotkey: \033[32m{artifact.miner_hotkey}\033[0m")
+        logger.info(f"Artifact ID: \033[32m{artifact.artifact_id}\033[0m")
     except Exception as e:
         logger.error(f"Failed to parse yaml into Artifact: {e}")
         return {"error": "Invalid yaml content"}    

@@ -60,7 +60,7 @@ def load_miner_input_yaml(input_path=None) -> Artifact:
 
 def run_eval_suites(miner_artifact: Artifact, shuffle=False) -> Tuple[str, List[EvalResult]]:
     """Run evaluation suites."""
-    logger.info("Running eval suites...")    
+    #logger.info("Running eval suites...")    
     run_id = f"test_{secrets.token_hex(16)}"
     logger.info(f"Eval Run ID: \033[35m{run_id}\033[0m")
     results = EvalFactory.run_all_evals(run_id, miner_artifact, EVAL_SUITE, 10)
