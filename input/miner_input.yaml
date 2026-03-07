@@ -4,8 +4,8 @@ status: "screening_1"
 miner_hotkey: "5F95Nub62Fhwy3UFBMWg5eDou1B45yrzXaa7FjgXMALcER6r"
 miner_uid: ""
 ip_address: ""
-provider: "OPEN_ROUTER"
-model: "google/gemini-2.5-flash-lite-preview-09-2025"
+provider: "CHUTES"
+model: "Qwen/Qwen3-Next-80B-A3B-Instruct"
 
 system_prompt_template: |
   You are a shopping assistant, today's date is {{current_date}}.

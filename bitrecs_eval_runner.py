@@ -37,7 +37,7 @@ MINER_INPUT_PATH = "input/miner_input.yaml"
 #                BitrecsEvaluationType.BITRECS_PROMPT_DAILY, ]
 
 EVAL_SUITE = [
-    BitrecsEvaluationType.NDCG_AT10_CURATED_ALL_BEAUTY_100,
+    BitrecsEvaluationType.BITRECS_ARTIFACT_PRICING,
 ]
 
 

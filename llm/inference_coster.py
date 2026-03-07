@@ -30,24 +30,34 @@ class InferenceCoster:
         """
         if self.provider.upper() == "CHUTES":
             try:
+                all_items = []
+                page = 0
+                limit = 25  # Assuming default limit; adjust if needed
                 with httpx.Client(timeout=10.0) as client:
-                    response = client.get("https://api.chutes.ai/chutes/")
-                    response.raise_for_status()
-                    data = response.json()
-                    
-                    target_id = self.model_name.lower()
-                    target_base = target_id.split("/")[-1]
-                    
-                    for item in data.get("items", []):
-                        item_name_lower = item.get("name", "").lower()
-                        if item_name_lower == target_id or item_name_lower.endswith("/" + target_base):
-                            price_info = item.get("current_estimated_price", {}).get("per_million_tokens", {})
-                            input_price = price_info.get("input", {}).get("usd", 0.0)
-                            output_price = price_info.get("output", {}).get("usd", 0.0)
-                            return CostResult(
-                                input=input_price, #chutes already factored by 1M
-                                output=output_price,
-                            )
+                    while True:
+                        response = client.get(f"https://api.chutes.ai/chutes/?page={page}&limit={limit}")
+                        response.raise_for_status()
+                        data = response.json()
+                        items = data.get("items", [])
+                        all_items.extend(items)
+                        total = data.get("total", 0)
+                        if len(all_items) >= total:
+                            break
+                        page += 1
+        
+                target_id = self.model_name.lower()
+                target_base = target_id.split("/")[-1]
+                
+                for item in all_items:
+                    item_name_lower = item.get("name", "").lower()
+                    if item_name_lower == target_id or item_name_lower.endswith("/" + target_base):
+                        price_info = item.get("current_estimated_price", {}).get("per_million_tokens", {})
+                        input_price = price_info.get("input", {}).get("usd", 0.0)
+                        output_price = price_info.get("output", {}).get("usd", 0.0)
+                        return CostResult(
+                            input=input_price,  # chutes already factored by 1M
+                            output=output_price,
+                        )
             except Exception as e:
                 logger.error(f"Error fetching pricing from Chutes: {e}")
                 return None
