@@ -1,5 +1,6 @@
 import httpx
 import logging
+import time  # Add this import at the top if not present
 from typing import Optional
 from dataclasses import dataclass
 from llm.llm_provider import LLM
@@ -30,34 +31,54 @@ class InferenceCoster:
         """
         if self.provider.upper() == "CHUTES":
             try:
-                all_items = []
                 page = 0
-                limit = 25  # Assuming default limit; adjust if needed
-                with httpx.Client(timeout=10.0) as client:
-                    while True:
-                        response = client.get(f"https://api.chutes.ai/chutes/?page={page}&limit={limit}")
-                        response.raise_for_status()
-                        data = response.json()
-                        items = data.get("items", [])
-                        all_items.extend(items)
-                        total = data.get("total", 0)
-                        if len(all_items) >= total:
-                            break
-                        page += 1
-        
+                limit = 500  # Assuming default limit; adjust if needed
                 target_id = self.model_name.lower()
                 target_base = target_id.split("/")[-1]
+                logger.info(f"Searching for model: {self.model_name} (target_id: {target_id}, target_base: {target_base})")
                 
-                for item in all_items:
-                    item_name_lower = item.get("name", "").lower()
-                    if item_name_lower == target_id or item_name_lower.endswith("/" + target_base):
-                        price_info = item.get("current_estimated_price", {}).get("per_million_tokens", {})
-                        input_price = price_info.get("input", {}).get("usd", 0.0)
-                        output_price = price_info.get("output", {}).get("usd", 0.0)
-                        return CostResult(
-                            input=input_price,  # chutes already factored by 1M
-                            output=output_price,
-                        )
+                with httpx.Client(timeout=10.0) as client:
+                    while True:
+                        max_retries = 3
+                        for attempt in range(max_retries):
+                            try:
+                                response = client.get(f"https://api.chutes.ai/chutes/?page={page}&limit={limit}")
+                                response.raise_for_status()
+                                break  # Success, exit retry loop
+                            except httpx.HTTPStatusError as e:
+                                if e.response.status_code == 429 and attempt < max_retries - 1:
+                                    wait_time = 2 ** attempt  # Exponential backoff: 1s, 2s, 4s
+                                    logger.warning(f"Rate limited (429), retrying in {wait_time}s...")
+                                    time.sleep(wait_time)
+                                else:
+                                    raise  # Re-raise if not 429 or max retries reached
+                        
+                        data = response.json()
+                        items = data.get("items", [])
+                        logger.info(f"Fetched page {page}: {len(items)} items, total: {data.get('total', 0)}")
+                        
+                        if not items:
+                            logger.info("No more items, stopping pagination.")
+                            break
+                        
+                        # Check for match on this page
+                        for item in items:
+                            item_name = item.get("name", "")
+                            item_name_lower = item_name.lower()
+                            logger.debug(f"Checking item: '{item_name}' (lowercased: '{item_name_lower}')")
+                            if item_name_lower == target_id or item_name_lower.endswith("/" + target_base):
+                                logger.info(f"Match found for model: {item_name}")
+                                price_info = item.get("current_estimated_price", {}).get("per_million_tokens", {})
+                                input_price = price_info.get("input", {}).get("usd", 0.0)
+                                output_price = price_info.get("output", {}).get("usd", 0.0)
+                                return CostResult(
+                                    input=input_price,  # chutes already factored by 1M
+                                    output=output_price,
+                                )
+                
+                # If no match found after all pages
+                logger.warning(f"Model {self.model_name} not found in Chutes API after checking all pages.")
+                return None
             except Exception as e:
                 logger.error(f"Error fetching pricing from Chutes: {e}")
                 return None
