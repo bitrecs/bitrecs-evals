@@ -37,7 +37,7 @@ MINER_INPUT_PATH = "input/miner_input.yaml"
 #                BitrecsEvaluationType.BITRECS_PROMPT_DAILY, ]
 
 EVAL_SUITE = [
-    BitrecsEvaluationType.BITRECS_ARTIFACT_PRICING,
+    BitrecsEvaluationType.NDCG_AT10_CURATED_ALL_BEAUTY_100,
 ]
 
 
@@ -63,7 +63,8 @@ def run_eval_suites(miner_artifact: Artifact, shuffle=False) -> Tuple[str, List[
     #logger.info("Running eval suites...")    
     run_id = f"test_{secrets.token_hex(16)}"
     logger.info(f"Eval Run ID: \033[35m{run_id}\033[0m")
-    results = EvalFactory.run_all_evals(run_id, miner_artifact, EVAL_SUITE, 10)
+    max_iterations = 3
+    results = EvalFactory.run_all_evals(run_id, miner_artifact, EVAL_SUITE, max_iterations)
     
     for result in results:
         #print(f"{result}")
@@ -187,7 +188,7 @@ def main():
     #miner_input_path = "input/miner_input.yaml"
     miner_artifact = load_miner_input_yaml(input_path=MINER_INPUT_PATH)
     
-    logger.info(f"Artifact ID: {miner_artifact.artifact_id}")
+    logger.info(f"Artifact ID: {miner_artifact.agent_id}")
     logger.info(f"Model: {miner_artifact.model}")
     logger.info("Starting evaluation suites...")
     logger.info(f"Eval Suites to run: {EVAL_SUITE}, Top Records: {CONST.TOP_RECORDS}")

@@ -189,7 +189,7 @@ class Actor:
             logger.info("Loading miner input...")            
             miner_artifact = self.load_miner_input_yaml(input_path=yaml_file_path)
             
-            logger.info(f"Artifact ID: {miner_artifact.artifact_id}")
+            logger.info(f"Artifact ID: {miner_artifact.agent_id}")
             logger.info(f"Artifact Model: {miner_artifact.model}")
             logger.info(f"Artifact Provider: {miner_artifact.provider}")
             logger.info(f"Artifact Hotkey: {miner_artifact.miner_hotkey}")        
@@ -222,7 +222,7 @@ class Actor:
             }
             
             #logger.info(f"Local Run ID: \033[33m{run_id}\033[0m")
-            logger.info(f"Artifact ID: \033[32m{miner_artifact.artifact_id}\033[0m")
+            logger.info(f"Artifact ID: \033[32m{miner_artifact.agent_id}\033[0m")
             logger.info(f"Run ID: \033[33m{bitrecs_run_id}\033[0m")
             logger.info(f"FINAL SCORE \033[92;1m{score:.2f}\033[0m")
             return result
@@ -280,7 +280,7 @@ async def evaluate_endpoint(req: EvaluateRequest):
         data = yaml.safe_load(yaml_content)
         artifact = Artifact(**data)
         logger.info(f"Miner Hotkey: \033[32m{artifact.miner_hotkey}\033[0m")
-        logger.info(f"Artifact ID: \033[32m{artifact.artifact_id}\033[0m")
+        logger.info(f"Artifact ID: \033[32m{artifact.agent_id}\033[0m")
     except Exception as e:
         logger.error(f"Failed to parse yaml into Artifact: {e}")
         return {"error": "Invalid yaml content"}    
