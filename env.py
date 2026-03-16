@@ -77,9 +77,7 @@ class Actor:
     
     
     def run_eval(self, miner_artifact: Artifact, eval_type: BitrecsEvaluationType) -> Tuple[str, List[EvalResult]]:
-        """Run evaluation suites."""
-        #logger.info("Running eval suites...")    
-        #run_id = secrets.token_hex(16)
+        """Run evaluation suites."""      
         run_id = self.bitrecs_run_id
         logger.info(f"Eval Run ID: \033[35m{run_id}\033[0m")
         logger.info(f"TOP RECORDS: \033[36m{CONST.TOP_RECORDS}\033[0m")
@@ -274,6 +272,14 @@ async def evaluate_endpoint(req: EvaluateRequest):
     if env_token != req.run_token:
         logger.error("Invalid run token provided.")
         return {"error": "Invalid run token"}
+    MODEL_COST_INPUT = os.getenv("MODEL_COST_INPUT")
+    if not MODEL_COST_INPUT:
+        logger.error("MODEL_COST_INPUT environment variable not set.")
+        return {"error": "MODEL_COST_INPUT environment variable not set."}
+    MODEL_COST_OUTPUT = os.getenv("MODEL_COST_OUTPUT")
+    if not MODEL_COST_OUTPUT:
+        logger.error("MODEL_COST_OUTPUT environment variable not set.")
+        return {"error": "MODEL_COST_OUTPUT environment variable not set."}
 
     eval_type = BitrecsEvaluationType(req.problem_name)        
     try:

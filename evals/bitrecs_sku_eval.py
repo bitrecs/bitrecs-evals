@@ -94,11 +94,12 @@ class BitrecsSkuEval(BaseEval):
             st = time.monotonic()
             system_prompt, user_prompt = prompt_factory.generate_prompt()
             server = LLM.try_parse(provider)
-            llm_output = LLMFactory.query_llm(server=server,
+            inference = LLMFactory.query_llm_with_usage(server=server,
                                                 model=model,
                                                 system_prompt=system_prompt,
                                                 user_prompt=user_prompt,
                                                 temp=temperature)
+            llm_output = inference.response
             recommended_skus = PromptFactory.tryparse_llm(llm_output)
             #logger.info(f"LLM Output: {llm_output}")
             logger.info(f"Query : {query}")
@@ -113,6 +114,9 @@ class BitrecsSkuEval(BaseEval):
                 recommended_skus=recommended_skus,
                 duration=duration
             )
+            self.load_inference_data(
+                run_id=self.run_id,
+                inference_data=inference.data)
 
     
     def run(self, max_iterations = 10) -> EvalResult:
@@ -129,7 +133,7 @@ class BitrecsSkuEval(BaseEval):
         hotkey = self.miner_artifact.miner_hotkey        
         try:
             top = 3
-            miner_score = self.sku_scorer.score_miner(hot_key=hotkey, top=top)            
+            miner_score, inference_data = self.sku_scorer.score_miner(hot_key=hotkey, top=top)            
             eval_score = miner_score
             count = top
         except Exception as e:
@@ -148,8 +152,13 @@ class BitrecsSkuEval(BaseEval):
             rows_evaluated=count,
             details=f"Evaluated {count} of {len(self.holdout_df)} rows with {exception_count} exceptions (max_iterations {max_iterations}).",
             duration_seconds=total_duration,
-            temperature=self.miner_artifact.sampling_params.temperature            
+            temperature=self.miner_artifact.sampling_params.temperature,
+            inference_data=inference_data
         )
+
+        for d in inference_data if inference_data else []:
+            self.log_inference_data(run_id=self.run_id, data=d)
+
         return result    
   
    

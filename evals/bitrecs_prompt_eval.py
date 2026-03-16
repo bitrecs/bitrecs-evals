@@ -1,6 +1,7 @@
 import logging
 import time
 import traceback
+from typing import Tuple
 import pandas as pd
 from datetime import datetime, timezone
 from common import constants as CONST
@@ -51,6 +52,7 @@ class BitrecsPromptEval(BaseEval):
         count = 0
         success_count = 0
         exception_count = 0
+        inference_data = []
         self.holdout_df = self.holdout_df.sample(frac=1).reset_index(drop=True)
         self.holdout_df = self.holdout_df.head(self.sample_size)
         for idx, row in self.holdout_df.iterrows():
@@ -61,7 +63,8 @@ class BitrecsPromptEval(BaseEval):
                 st = time.monotonic()
                 ctx = row.get('context', '')
                 logger.info(f"Context length: {len(str(ctx))} characters")
-                eval_result = self.evaluate_row(row)                
+                eval_result, row_inference_data = self.evaluate_row(row)                
+                inference_data.append(row_inference_data)
                 et = time.monotonic()
                 duration = et - st
 
@@ -102,12 +105,13 @@ class BitrecsPromptEval(BaseEval):
             temperature=self.miner_artifact.sampling_params.temperature,
             model_name=self.miner_artifact.model,
             provider_name=self.miner_artifact.provider,
-            run_id=self.run_id
+            run_id=self.run_id,
+            inference_data=inference_data
         )        
 
         return result
     
-    def evaluate_row(self, row: pd.Series) -> bool:
+    def evaluate_row(self, row: pd.Series) -> Tuple[bool, dict]:
         """
         Evaluate a single row from the holdout set.
         """
@@ -142,11 +146,12 @@ class BitrecsPromptEval(BaseEval):
         st = time.monotonic()
         system_prompt, user_prompt = prompt_factory.generate_prompt()
         server = LLM.try_parse(provider)
-        llm_output = LLMFactory.query_llm(server=server,
+        inference = LLMFactory.query_llm_with_usage(server=server,
                                             model=model,
                                             system_prompt=system_prompt,
                                             user_prompt=user_prompt,
                                             temp=temperature)
+        llm_output = inference.response
         recommended_skus = PromptFactory.tryparse_llm(llm_output)
         logger.info(f"LLM Output: {llm_output}")
         logger.info(f"Recommended SKUs: {recommended_skus}")
@@ -169,6 +174,7 @@ class BitrecsPromptEval(BaseEval):
             recommended_skus=recommended_skus,
             duration=duration
         )
+        self.log_inference_data(run_id=self.run_id, data=inference.data)
 
-        return result    
+        return result, inference.data
     

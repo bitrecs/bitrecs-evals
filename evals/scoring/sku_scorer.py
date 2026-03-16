@@ -76,7 +76,7 @@ class SKURelevanceScorer:
         print(f"loaded db from {self.source_db} for miner {miner_hotkey}")      
         return df
 
-    def score_miner(self, hot_key: str, top: int = 10) -> float:
+    def score_miner(self, hot_key: str, top: int = 10) -> Tuple[float, List[Dict[str, Any]]]:
         st = time.perf_counter()
         if not hot_key:
             raise ValueError("hot_key must be provided")
@@ -110,19 +110,11 @@ class SKURelevanceScorer:
         df = df.sample(frac=1, random_state=42).reset_index(drop=True)
 
         all_scores = []
+        inference_data = []
         miner_model = ""
         for _, row in df.iterrows():
             try:
                 sku = row["query"].upper().strip()
-                #miner_uid = row["miner_id"]
-                #batch_id = row["site_key"]
-                #query_date = row["created_at"].strftime("%Y-%m-%d %H:%M:%S")
-                #miner_model = row["model_name"].strip()
-                #  
-                # if sku != "24-WB07" and sku != "MS11":
-                #     #print(f"SKIPPED SKU IS NOT 24-WB07 or MS11: {sku}")
-                #     continue
-
                 p = next((prod for prod in self.product_catalog if prod.sku.strip().upper() == sku), None)
                 if not p:
                     logger.warning(f"Product with SKU {sku} not found in catalog for miner {hot_key}")
@@ -155,31 +147,22 @@ class SKURelevanceScorer:
                 q_time = time.perf_counter()
 
                 server = LLM.try_parse(self.judge_provider)
-                llm_output = LLMFactory.query_llm(server=server,
+                inference = LLMFactory.query_llm_with_usage(server=server,
                                                     model=self.judge_model,
                                                     system_prompt=self.system_prompt,
                                                     user_prompt=prompt,
                                                     temp=0.0)
+                llm_output = inference.response
+                inference_data.append(inference.data)
                 scored_results = PromptFactory.tryparse_llm(llm_output)
                 if not scored_results:
                     logger.error(f"Failed to parse LLM results for SKU {sku} in miner {hot_key}")
                     continue
                 llm_resuls = [ScoredResult(**r) for r in scored_results]
                 scores = [r.relevance_score for r in llm_resuls if isinstance(r.relevance_score, (int, float))]
-
-                # self.save_miner_scores(
-                #     query_date=query_date,
-                #     batch_id=self.run_id,
-                #     miner_hotkey=hot_key,
-                #     miner_uid=miner_uid,
-                #     miner_model=miner_model,
-                #     query=sku,
-                #     query_desc=query_desc,
-                #     scores=llm_resuls                    
-                # )
-
-                # Fluke detection: if 80%+ are 0 zero out all scores
-                fluke_threshold = 0.80
+              
+                # Fluke detection: if 85%+ are 0 zero out all scores
+                fluke_threshold = 0.85
                 num_zeros = scores.count(0)
                 if len(scores) > 0 and num_zeros / len(scores) >= fluke_threshold:
                     print(f"\033[31mFluke {fluke_threshold*100} detected for SKU {sku}: {scores} -- zeroing out\033[0m")
@@ -202,14 +185,7 @@ class SKURelevanceScorer:
                 continue
 
         if not all_scores:
-            return 0.0
-
-        # if len(all_scores) > 2:
-        #     trimmed = sorted(all_scores)[1:-1]  # drop lowest and highest
-        #     print(f"\033[33mTrimmed scores for miner {hot_key}: {trimmed}\033[0m")
-        # else:
-        #     trimmed = all_scores
-        # avg_score = sum(trimmed) / len(trimmed)
+            return 0.0, inference_data 
 
         avg_score = sum(all_scores) / len(all_scores)
         scaled_score = avg_score / 100
@@ -219,7 +195,7 @@ class SKURelevanceScorer:
 
         #self.save_final_score(hot_key, miner_model, scaled_score, elapsed, self.judge_model)
 
-        return scaled_score
+        return scaled_score, inference_data
     
     def build_prompt_for_sku(self, num_results: int, query_product: Product, recs: List[ReasonedProduct]) -> str:
         if not query_product or not recs:

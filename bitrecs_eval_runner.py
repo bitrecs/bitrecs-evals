@@ -37,7 +37,7 @@ MINER_INPUT_PATH = "input/miner_input.yaml"
 #                BitrecsEvaluationType.BITRECS_PROMPT_DAILY, ]
 
 EVAL_SUITE = [
-    BitrecsEvaluationType.BITRECS_ARTIFACT_PRICING,
+    BitrecsEvaluationType.BITRECS_SKU_DAILY,
 ]
 
 
@@ -200,6 +200,10 @@ def main():
     logger.info("\033[35mEvaluation suites completed successfully. \033[0m")
     run_log = strip_ansi(run_report)    
     write_log_to_output_file(run_log, output_path=f"output/eval_report_{run_id}.txt")
+    for result in results:
+        for inference in result.inference_data or []:
+            logger.info(f"Inference Data for {inference.get('model', 'unknown')} - {inference.get('provider', 'unknown')}: Request ID: {inference.get('request_id', 'unknown')}, Prompt Tokens: {inference.get('prompt_tokens', 0)}, Completion Tokens: {inference.get('completion_tokens', 0)}, Total Tokens: {inference.get('total_tokens', 0)}, Finish Reason: {inference.get('finish_reason', '')}")    
+
 
     final_score = EvalResult.calculate_overall_score(results)
     logger.info(f"\033[34mFinal Overall Score: \033[92;1m{final_score:.4f}\033[0m")

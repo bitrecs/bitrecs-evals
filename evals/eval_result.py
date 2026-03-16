@@ -1,6 +1,6 @@
 
 from dataclasses import dataclass
-from typing import List
+from typing import Any, Dict, List
 
 
 @dataclass
@@ -17,6 +17,7 @@ class EvalResult:
     provider_name: str = ""
     temperature: float = 0.0
     run_id: str = ""
+    inference_data: List[Dict[str, Any]] = None
 
     @staticmethod
     def calculate_overall_score(results: List["EvalResult"]) -> float:      
