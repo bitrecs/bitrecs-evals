@@ -37,7 +37,7 @@ MINER_INPUT_PATH = "input/miner_input.yaml"
 #                BitrecsEvaluationType.BITRECS_PROMPT_DAILY, ]
 
 EVAL_SUITE = [
-    BitrecsEvaluationType.BITRECS_SKU_DAILY,
+    BitrecsEvaluationType.BITRECS_ARTIFACT_PRICING,
 ]
 
 
