@@ -222,14 +222,7 @@ def main():
     print("      Bitrecs Evaluation Suite Runner")
     print(f"Local: {datetime.now().isoformat()}")
     print(f"UTC:   {datetime.now(timezone.utc).isoformat()}")
-    print("=" * 60) 
-
-    inference_report = get_inference_report("test_99f9147d3f23bd02b0703f3c40fcdab4")
-    print(inference_report)
-    cost_report = CostReport.calculate_cost_from_report(inference_report, input_price_per_million_tokens=MODEL_COST_INPUT, output_price_per_million_tokens=MODEL_COST_OUTPUT)
-    logger.info(f"Cost Report: Input Tokens: {cost_report.input_tokens}, Output Tokens: {cost_report.output_tokens}, Total Tokens: {cost_report.total_tokens}, Estimated Cost: ${cost_report.cost:.6f}")
-    
-    return
+    print("=" * 60)    
    
     logger.info("Loading miner input...")
     #miner_input_path = "input/miner_input.yaml"
