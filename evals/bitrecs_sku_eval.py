@@ -114,9 +114,7 @@ class BitrecsSkuEval(BaseEval):
                 recommended_skus=recommended_skus,
                 duration=duration
             )
-            self.load_inference_data(
-                run_id=self.run_id,
-                inference_data=inference.data)
+            self.log_inference_data(run_id=self.run_id, data=inference.data)
 
     
     def run(self, max_iterations = 10) -> EvalResult:

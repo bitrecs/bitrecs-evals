@@ -1,19 +1,19 @@
-import gc
 import os
 import sys
 import time
 import yaml
-import secrets
 import logging
 import tempfile
 from dotenv import load_dotenv
+
+from llm.inference_coster import CostReport
 load_dotenv()
 from datetime import datetime, timezone
 from typing import List, Tuple
 from evals.eval_result import EvalResult
 from common import constants as CONST
 from models.miner_artifact import Artifact
-from db.models.eval import db, Miner, Evaluation
+from db.models.eval import InferenceUsage, db, Miner, Evaluation
 from models.eval_type import BitrecsEvaluationType
 from evals.eval_factory import EvalFactory
 from fastapi import FastAPI
@@ -25,29 +25,11 @@ app = FastAPI()
 logging.basicConfig(level=CONST.LOG_LEVEL)
 logger = logging.getLogger(__name__)
 
-# logging.getLogger('httpcore').setLevel(logging.DEBUG)
-# logging.getLogger('httpx').setLevel(logging.DEBUG)
-# logging.getLogger('peewee').setLevel(logging.DEBUG)
+logging.getLogger('httpcore').setLevel(logging.WARNING)
+logging.getLogger('httpx').setLevel(logging.WARNING)
+logging.getLogger('peewee').setLevel(logging.WARNING)
+logging.getLogger('fsspec').setLevel(logging.WARNING)
 
-if 1==1:
-    logging.getLogger('httpcore').setLevel(logging.WARNING)
-    logging.getLogger('httpx').setLevel(logging.WARNING)
-    logging.getLogger('peewee').setLevel(logging.WARNING)
-    logging.getLogger('fsspec').setLevel(logging.WARNING)
-
-
-#EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY, BitrecsEvaluationType.BITRECS_REASON_DAILY]
-# EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY, 
-#               BitrecsEvaluationType.BITRECS_REASON_DAILY, 
-#               BitrecsEvaluationType.BITRECS_SKU_DAILY, 
-#               BitrecsEvaluationType.BITRECS_PROMPT_DAILY,
-#               BitrecsEvaluationType.AMAZON_PROMPT_100]
-
-EVAL_SUITE = [BitrecsEvaluationType.BITRECS_BASIC_DAILY, 
-              #BitrecsEvaluationType.BITRECS_REASON_DAILY, 
-              #BitrecsEvaluationType.BITRECS_SKU_DAILY, 
-              BitrecsEvaluationType.BITRECS_PROMPT_DAILY,
-              BitrecsEvaluationType.AMAZON_ALL_BEAUTY_100]
 
 
 class Actor:
@@ -91,9 +73,8 @@ class Actor:
             if result.passed:
                 logger.info(f"\033[32m{result.eval_name} Passed! Score: {result.score:.4f}\033[0m")
             else:
-                logger.error(f"\033[31m{result.eval_name} Failed! Score: {result.score:.4f}\033[0m")
-    
-        #logger.info(f"RUN COMPLETE for run ID: \033[34m{run_id}\033[0m")
+                logger.error(f"\033[31m{result.eval_name} Failed! Score: {result.score:.4f}\033[0m")    
+        
         return run_id, results
 
     
@@ -129,7 +110,7 @@ class Actor:
                 db.close()
 
 
-    def generate_report_by_run_id(self, run_id: str) -> str:
+    def get_eval_report(self, run_id: str) -> str:
         """Generate a detailed report for a specific run ID."""
         try:
             db.connect()
@@ -162,10 +143,41 @@ class Actor:
         finally:
             db.close()
 
+    
+    async def get_inference_report(self, run_id: str) -> dict:    
+        try:
+            db.connect()
+            usage_records = InferenceUsage.select().where(InferenceUsage.run_id == run_id)
+            if not usage_records:
+                logger.info(f"No inference data found in DB for run ID: {run_id}")
+                return {"error": f"No inference data found for run ID: {run_id}"}
+            
+            data = []
+            for usage in usage_records:
+                record = {
+                    "miner_id": usage.miner_id,
+                    "miner_hotkey": usage.hotkey,
+                    "model": usage.model,
+                    "provider": usage.provider,
+                    "prompt_tokens": usage.prompt_tokens,
+                    "completion_tokens": usage.completion_tokens,
+                    "total_tokens": usage.total_tokens,
+                    "finish_reason": usage.finish_reason
+                }
+                data.append(record)
+            
+            return {"run_id": run_id, "inference_data": data}
+        except Exception as e:
+            logger.error(f"Failed to retrieve inference data for run ID {run_id}: {e}")
+            return {"error": f"Failed to retrieve inference data for run ID {run_id}"}
+        finally:
+            db.close()
+
+
 
     async def evaluate(self, yaml_file_path: str, problem_type: BitrecsEvaluationType) -> dict:    
         """
-        Affine Entrypoint
+        Evaluation Entrypoint
         """
         bitrecs_run_id = self.bitrecs_run_id
         run_id = None
@@ -195,17 +207,24 @@ class Actor:
             logger.info(f"Starting evaluation: {problem_type.value}")
             run_id, results = self.run_eval(miner_artifact, problem_type)
             logger.info("\033[35mEvaluation completed successfully. \033[0m")
+            end = time.monotonic()
+            duration = round(end - start, 8)
             
             score = EvalResult.calculate_overall_score(results)
-            end = time.monotonic()
-            duration = round(end - start, 8)            
 
-            run_report = self.generate_report_by_run_id(run_id)
+            run_report = self.get_eval_report(run_id)
             logger.info(f"Eval Report for Run ID: \033[35m{run_id}\033[0m")
-            logger.info("\n" + run_report)
+            logger.info(f"\n{run_report}")
 
-            bitrecs_run_id = self.bitrecs_run_id
-            #logger.info(f"Bitrecs Run ID: \033[33m{bitrecs_run_id}\033[0m")
+            model_cost_input = float(os.getenv("MODEL_COST_INPUT", 0))
+            model_cost_output = float(os.getenv("MODEL_COST_OUTPUT", 0))
+            inference_report = await self.get_inference_report(run_id)
+            logger.info(f"Inference Report for Run ID: \033[35m{run_id}\033[0m")
+            logger.info(f"\n{inference_report}")
+            cost_report = CostReport.calculate_cost_from_report(inference_report, 
+                                                                input_price_per_million_tokens=model_cost_input, 
+                                                                output_price_per_million_tokens=model_cost_output)
+            
             result = {
                 "task_name": problem_type.value,
                 "bitrecs_run_id": bitrecs_run_id,
@@ -216,10 +235,16 @@ class Actor:
                 "extra": {
                     "result": run_report
                 },
-                "samples": results[0].rows_evaluated if results else 0
+                "samples": results[0].rows_evaluated if results else 0,
+                "inference_data": inference_report,
+                "cost_report": {
+                    "input_tokens": cost_report.input_tokens,
+                    "output_tokens": cost_report.output_tokens,
+                    "total_tokens": cost_report.total_tokens,
+                    "estimated_cost_usd": cost_report.cost
+                }
             }
             
-            #logger.info(f"Local Run ID: \033[33m{run_id}\033[0m")
             logger.info(f"Artifact ID: \033[32m{miner_artifact.agent_id}\033[0m")
             logger.info(f"Run ID: \033[33m{bitrecs_run_id}\033[0m")
             logger.info(f"FINAL SCORE \033[92;1m{score:.2f}\033[0m")
@@ -302,9 +327,9 @@ async def evaluate_endpoint(req: EvaluateRequest):
 
 
 @app.get("/run_log/{run_id}")
-async def get_run_log(run_id: str):
+async def get_run_log(run_id: str) -> dict:
     actor = Actor()
-    report = actor.generate_report_by_run_id(run_id)
+    report = actor.get_eval_report(run_id)
     if not report:
         return {"error": f"No report found for run ID: {run_id}"}
     return {"run_id": run_id, "report": report, "crated_at": datetime.now(timezone.utc).isoformat()}
@@ -321,13 +346,6 @@ async def get_db():
         media_type='application/octet-stream',
         filename='eval_runs.db'
     )
-
-
-@app.get("/evals")
-async def get_evals():
-    enabled_evals = [eval_type.value for eval_type in EVAL_SUITE]
-    return {"enabled_evaluations": enabled_evals}
-
 
 
 if __name__ == "__main__":
