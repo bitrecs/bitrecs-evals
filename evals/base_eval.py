@@ -164,7 +164,7 @@ class BaseEval(ABC):
         finally:            
             db.close()    
 
-    def load_inference_data(self, run_id) -> List[InferenceUsage]:
+    def load_inference_usage(self, run_id) -> List[InferenceUsage]:
         """Load inference usage data for a given run ID."""
         try:
             db.connect()
@@ -175,4 +175,30 @@ class BaseEval(ABC):
             return []
         finally:
             db.close()
-    
+
+    def load_inference_data(self, run_id) -> List[dict]:
+        """Load inference usage data for a given run ID as a list of dictionaries."""
+        try:
+            inf = self.load_inference_usage(run_id)
+            data_list = []
+            for usage in inf:
+                data_list.append({
+                    "run_id": usage.run_id,
+                    "hotkey": usage.hotkey,
+                    "created_at": usage.created_at.isoformat() if usage.created_at else None,
+                    "provider": usage.provider,
+                    "model": usage.model,
+                    "request_id": usage.request_id,
+                    "prompt_tokens": usage.prompt_tokens,
+                    "completion_tokens": usage.completion_tokens,
+                    "total_tokens": usage.total_tokens,
+                    "cost": usage.cost,
+                    "finish_reason": usage.finish_reason
+                })
+            return data_list
+        except Exception as e:
+            logger.error(f"Failed to load inference data from DB: {e}")
+            return []
+        finally:
+            db.close()
+

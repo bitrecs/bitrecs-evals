@@ -102,7 +102,8 @@ class NdcgAt10CuratedAllBeauty100(BaseEval):
             temperature=self.miner_artifact.sampling_params.temperature,
             model_name=self.miner_artifact.model,
             provider_name=self.miner_artifact.provider,
-            run_id=self.run_id
+            run_id=self.run_id,
+            inference_data=self.load_inference_data(self.run_id)
         )
         return result
 

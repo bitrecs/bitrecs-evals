@@ -42,7 +42,7 @@ MINER_INPUT_PATH = "input/miner_input.yaml"
 #                BitrecsEvaluationType.BITRECS_PROMPT_DAILY, ]
 
 EVAL_SUITE = [
-    BitrecsEvaluationType.BITRECS_ARTIFACT_PRICING,
+    BitrecsEvaluationType.BITRECS_HAYSTACK_DAILY,
 ]
 
 MODEL_COST_INPUT = float(os.getenv("MODEL_COST_INPUT", 0))  
@@ -243,6 +243,11 @@ def main():
     for result in results:
         for inference in result.inference_data or []:
             logger.info(f"Inference Data for {inference.get('model', 'unknown')} - {inference.get('provider', 'unknown')}: Request ID: {inference.get('request_id', 'unknown')}, Prompt Tokens: {inference.get('prompt_tokens', 0)}, Completion Tokens: {inference.get('completion_tokens', 0)}, Total Tokens: {inference.get('total_tokens', 0)}, Finish Reason: {inference.get('finish_reason', '')}")    
+
+    cost_report = get_inference_report(run_id)
+    cost_result = CostReport.calculate_cost_from_report(cost_report, MODEL_COST_INPUT, MODEL_COST_OUTPUT)
+    logger.info(f"\033[34mInference Cost Report for Run ID: {run_id}\033[0m")
+    logger.info(f"Input Tokens: {cost_result.input_tokens}, Output Tokens: {cost_result.output_tokens}, Total Tokens: {cost_result.total_tokens}, Estimated Cost: ${cost_result.cost:.4f}") 
 
 
     final_score = EvalResult.calculate_overall_score(results)
