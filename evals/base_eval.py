@@ -1,11 +1,11 @@
-import json
 import os
+import json
 import logging
-from typing import List
 import pandas as pd
+from typing import List
 from datetime import datetime, timezone
 from abc import ABC, abstractmethod
-from db.models.eval import db, Miner, MinerResponse
+from db.models.eval import InferenceUsage, db, Miner, MinerResponse
 from evals.eval_result import EvalResult
 from models.eval_type import BitrecsEvaluationType
 from models.miner_artifact import Artifact
@@ -64,8 +64,7 @@ class BaseEval(ABC):
         Filenames are expected in format: prompt_holdout_YYYYMMDD_HHMMSS.csv
         Sorts by the embedded datetime to find the most recent.
         """
-        #specific_file = "fashion_data_holdout_20260102.csv"
-        #specific_file = "amazon_ranking_100_strict_sample_20.csv"
+        
         holdout_dir = os.path.join(CONST.ROOT_DIR, "data", "holdout")
         holdout_files = [f for f in os.listdir(holdout_dir) if f.endswith('.csv')]
         if not holdout_files:
@@ -140,25 +139,66 @@ class BaseEval(ABC):
             logger.error(f"Failed to log miner response to DB: {e}")
         finally:
             db.close()
+            
+    def log_inference_data(self, run_id, data: dict):     
+        try:
+            db.connect()
+            db.create_tables([Miner, MinerResponse, InferenceUsage], safe=True)            
+            miner, created = Miner.get_or_create(hotkey=self.miner_artifact.miner_hotkey)            
+            InferenceUsage.create(
+                run_id=run_id,
+                miner=miner,
+                hotkey=self.miner_artifact.miner_hotkey,
+                request_id=data.get("request_id", "unknown"),
+                model=data.get("model", "unknown"),
+                provider=data.get("provider", "unknown"),
+                prompt_tokens=data.get("prompt_tokens", 0),
+                completion_tokens=data.get("completion_tokens", 0),
+                total_tokens=data.get("total_tokens", 0),
+                temperature=self.miner_artifact.sampling_params.temperature,
+                finish_reason=data.get("finish_reason", "")
+            )
+            logger.info("Inference usage data logged to DB.")
+        except Exception as e:
+            logger.error(f"Failed to log inference data to DB: {e}")
+        finally:            
+            db.close()    
 
+    def load_inference_usage(self, run_id) -> List[InferenceUsage]:
+        """Load inference usage data for a given run ID."""
+        try:
+            db.connect()
+            usages = InferenceUsage.select().where(InferenceUsage.run_id == run_id)
+            return list(usages)
+        except Exception as e:
+            logger.error(f"Failed to load inference data from DB: {e}")
+            return []
+        finally:
+            db.close()
 
-    def null_eval(self) -> EvalResult:
-        """
-        Return a null EvalResult indicating the evaluation could not be performed.
-        """
-        result = EvalResult(           
-            eval_name=self.get_eval_name(),  # Use base method
-            created_at=datetime.now(timezone.utc).isoformat(),
-            hot_key=self.miner_artifact.miner_hotkey,
-            score=0.0,
-            passed=False,
-            rows_evaluated=0,
-            details="FAILED: Evaluation could not be performed due to data initialization failure.",
-            duration_seconds=0.0,
-            temperature=self.miner_artifact.sampling_params.temperature,
-            model_name=self.miner_artifact.model,
-            provider_name=self.miner_artifact.provider,
-            run_id=self.run_id
-        )        
-        return result
-    
+    def load_inference_data(self, run_id) -> List[dict]:
+        """Load inference usage data for a given run ID as a list of dictionaries."""
+        try:
+            inf = self.load_inference_usage(run_id)
+            data_list = []
+            for usage in inf:
+                data_list.append({
+                    "run_id": usage.run_id,
+                    "hotkey": usage.hotkey,
+                    "created_at": usage.created_at.isoformat() if usage.created_at else None,
+                    "provider": usage.provider,
+                    "model": usage.model,
+                    "request_id": usage.request_id,
+                    "prompt_tokens": usage.prompt_tokens,
+                    "completion_tokens": usage.completion_tokens,
+                    "total_tokens": usage.total_tokens,
+                    "cost": usage.cost,
+                    "finish_reason": usage.finish_reason
+                })
+            return data_list
+        except Exception as e:
+            logger.error(f"Failed to load inference data from DB: {e}")
+            return []
+        finally:
+            db.close()
+

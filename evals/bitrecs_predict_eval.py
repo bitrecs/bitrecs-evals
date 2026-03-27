@@ -4,7 +4,7 @@ import time
 import traceback
 import sqlite3
 import logging
-from typing import List
+from typing import Any, Dict, List, Tuple
 from datetime import datetime, timezone
 from commerce.product_factory import ProductFactory
 from commerce.user_profile import UserProfile
@@ -67,11 +67,14 @@ class BitrecsPredictEval(BaseEval):
         count = 0
         success_count = 0
         exception_count = 0
+        inference_data = []
         for idx in range(self.sample_size):
             try:               
                 logger.info(f"\033[34mATTEMPT {idx+1}...\033[0m")
                 st = time.monotonic()
-                eval_result = self.evaluate_row()                
+                eval_result, inference_metrics = self.evaluate_row()
+                inference_data.append(inference_metrics)
+
                 et = time.monotonic()
                 duration = et - st
                 logger.info(f"\033[32m Row {idx} evaluation took {duration:.2f}s \033[0m")
@@ -110,7 +113,8 @@ class BitrecsPredictEval(BaseEval):
             temperature=self.miner_artifact.sampling_params.temperature,
             model_name=self.miner_artifact.model,
             provider_name=self.miner_artifact.provider,
-            run_id=self.run_id
+            run_id=self.run_id,
+            inference_data=inference_data
         )
         return result
     
@@ -276,7 +280,7 @@ class BitrecsPredictEval(BaseEval):
         db.close()
         return stats
     
-    def evaluate_row(self) -> bool:
+    def evaluate_row(self) -> Tuple[bool, Dict[str, Any]]:
         """
         Fetches a sample profile and order history and evaluates the LLM's ability to recommend products
         based on global historical patterns (co-occurrence and sequential purchases).
@@ -317,11 +321,12 @@ class BitrecsPredictEval(BaseEval):
         #server = LLM.OPEN_ROUTER
         logger.info(f"Using model:  \033[1;32m {model} \033[0m")
         st = time.perf_counter()
-        llm_response = LLMFactory.query_llm(server=server,
+        inference = LLMFactory.query_llm_with_usage(server=server,
                                     model=model, 
                                     system_prompt=system_prompt, 
                                     temp=temp, 
                                     user_prompt=user_prompt)
+        llm_response = inference.response
         et = time.perf_counter()
         logger.info(f"LLM response time: {et - st:0.2f} seconds")    
         recommended_skus = PromptFactory.tryparse_llm(llm_response)   
@@ -334,9 +339,10 @@ class BitrecsPredictEval(BaseEval):
             recommended_skus=recommended_skus,
             duration=duration
         )
+        self.log_inference_data(run_id=self.run_id, data=inference.data)
         if len(recommended_skus) != self.num_recs:
             logger.error(f"\033[31m Expected {self.num_recs} recommendations but got {len(recommended_skus)}. \033[0m")
-            return False
+            return False, inference.data
         
         rec_sku_list = [rec['sku'] for rec in recommended_skus]
         logger.info(f"Analyzing recommendations for SKU {query} with rec SKUs: {rec_sku_list}")        
@@ -365,5 +371,5 @@ class BitrecsPredictEval(BaseEval):
             logger.info(f"\033[31m FAILURE: Recommendations lack sufficient pattern support (strength: {total_strength:.2f}%, sequential orders: {sequential_orders}). \033[0m")
             result = False
         
-        return result
+        return result, inference.data
 

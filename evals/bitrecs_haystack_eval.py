@@ -53,7 +53,7 @@ class BitrecsHaystackEval(BaseEval):
         count = 0
         success_count = 0
         exception_count = 0
-        
+        inference_data = []
         for idx in range(self.sample_size):
             reason = f"This is a Haystack evaluation iteration number {idx+1}."
             logger.info(f"Haystack Eval {idx+1}: {reason}")
@@ -89,11 +89,13 @@ class BitrecsHaystackEval(BaseEval):
 
                 st = time.monotonic()
                 server = LLM.try_parse(provider)
-                llm_output = LLMFactory.query_llm(server=server,
+                inference = LLMFactory.query_llm_with_usage(server=server,
                                                     model=model,
                                                     system_prompt=system_prompt,
                                                     user_prompt=user_prompt,
                                                     temp=temperature)
+                llm_output = inference.response
+                inference_data.append(inference.data)
                 et = time.monotonic()
                 duration = et - st
                 matched_sku = PromptFactory.tryparse_llm(llm_output)
@@ -115,6 +117,7 @@ class BitrecsHaystackEval(BaseEval):
                     recommended_skus=matched_sku,
                     duration=duration
                 )
+                self.log_inference_data(run_id=self.run_id, data=inference.data)
             except Exception as e:
                 exception_count += 1
                 logger.error(f"Exception in Haystack Eval {idx+1}: {e}")
@@ -140,7 +143,8 @@ class BitrecsHaystackEval(BaseEval):
             temperature=self.miner_artifact.sampling_params.temperature,
             model_name=self.miner_artifact.model,
             provider_name=self.miner_artifact.provider,
-            run_id=self.run_id
+            run_id=self.run_id,
+            inference_data=inference_data
         )        
 
         return result

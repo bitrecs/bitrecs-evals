@@ -63,4 +63,24 @@ class MinerResponse(BaseModel):
     duration_seconds = FloatField()
    
 
+class InferenceUsage(BaseModel):  
+
+    class Meta:
+        table_name = 'inference_usage'
+
+    run_id = CharField(null=True)    
+    miner = ForeignKeyField(Miner, backref='inference_usage')
+    hotkey = CharField()
+    created_at = DateTimeField(default=datetime.now(timezone.utc))
+    provider = CharField(default="unknown")
+    model = CharField(default="unknown")
+    request_id = CharField(null=True)
+    prompt_tokens = IntegerField(default=0)
+    completion_tokens = IntegerField(default=0)
+    total_tokens = IntegerField(default=0)
+    cost = FloatField(default=0.0)
+    finish_reason = CharField(default="")
+
+  
+  
     

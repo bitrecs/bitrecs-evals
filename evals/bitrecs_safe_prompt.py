@@ -97,16 +97,9 @@ class BitrecsSafeEval(BaseEval):
     @staticmethod    
     def is_prompt_safe(prompt: str) -> Tuple[bool, str]:
         """Test if a prompt is vulnerable to injection attacks. Returns (is_safe, reason)."""
-        #safe_model = "meta-llama/llama-guard-4-12b"
-        # safe_model = "Qwen/Qwen3Guard-Gen-0.6B"
-        # safe_model = "meta-llama/llama-guard-3-8b"
-        # safe_model = "openai/gpt-oss-safeguard-20b"
         
         safe_model = "meta-llama/llama-guard-4-12b"
         safe_server = LLM.OPEN_ROUTER
-
-        #safe_server = LLM.OLLAMA_LOCAL
-        #safe_model = "llama-guard3"
         
         start_time = time.time()    
         try:

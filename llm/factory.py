@@ -55,27 +55,9 @@ class LLMFactory:
             case LLM.OLLAMA_LOCAL:
                 raise NotImplementedError("Ollama local usage data not implemented yet")
             case LLM.OPEN_ROUTER:
-                return OpenRouterInterface(model, system_prompt, temp).query_with_data(user_prompt)
-            # case LLM.CHAT_GPT:
-            #     return ChatGPTInterface(model, system_prompt, temp).query(user_prompt)
-            # case LLM.VLLM:
-            #     return VllmInterface(model, system_prompt, temp).query(user_prompt)
-            # case LLM.GEMINI:
-            #     return GeminiInterface(model, system_prompt, temp).query(user_prompt)         
+                return OpenRouterInterface(model, system_prompt, temp).query_with_data(user_prompt)                
             case LLM.CHUTES:
-                return ChutesInterface(model, system_prompt, temp).query_with_data(user_prompt)
-            # case LLM.GROK:
-            #     return GrokInterface(model, system_prompt, temp).query(user_prompt)                
-            # case LLM.CLAUDE:
-            #     return ClaudeInterface(model, system_prompt, temp).query(user_prompt)                
-            # case LLM.CEREBRAS:
-            #     return CerebrasInterface(model, system_prompt, temp).query(user_prompt)
-            # case LLM.GROQ:
-            #     return GroqInterface(model, system_prompt, temp).query(user_prompt)
-            # case LLM.NVIDIA:
-            #     return NvidiaInterface(model, system_prompt, temp).query(user_prompt)
-            # case LLM.PERPLEXITY:
-            #     return PerplexityInterface(model, system_prompt, temp).query(user_prompt)
+                return ChutesInterface(model, system_prompt, temp).query_with_data(user_prompt)                
             case _:
                 raise ValueError("Unknown LLM server")   
 

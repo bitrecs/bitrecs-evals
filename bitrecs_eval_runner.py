@@ -5,15 +5,20 @@ import yaml
 import secrets
 import logging
 from dotenv import load_dotenv
+
+from llm.inference_coster import CostReport
+
+
 load_dotenv()
 from datetime import datetime, timezone
 from typing import List, Tuple
 from evals.eval_result import EvalResult
 from common import constants as CONST
 from models.miner_artifact import Artifact
-from db.models.eval import db, Miner, Evaluation
+from db.models.eval import InferenceUsage, db, Miner, Evaluation
 from evals.eval_factory import EvalFactory
 from models.eval_type import BitrecsEvaluationType
+
 
 logging.basicConfig(level=CONST.LOG_LEVEL)
 logger = logging.getLogger(__name__)
@@ -37,8 +42,11 @@ MINER_INPUT_PATH = "input/miner_input.yaml"
 #                BitrecsEvaluationType.BITRECS_PROMPT_DAILY, ]
 
 EVAL_SUITE = [
-    BitrecsEvaluationType.BITRECS_ARTIFACT_PRICING,
+    BitrecsEvaluationType.BITRECS_HAYSTACK_DAILY,
 ]
+
+MODEL_COST_INPUT = float(os.getenv("MODEL_COST_INPUT", 0))  
+MODEL_COST_OUTPUT = float(os.getenv("MODEL_COST_OUTPUT", 0))
 
 
 def load_miner_input_yaml(input_path=None) -> Artifact:
@@ -177,12 +185,44 @@ def write_log_to_output_file(log_content: str, output_path: str):
         logger.error(f"Failed to write log to {output_path}: {e}")
 
 
+def get_inference_report(run_id: str) -> dict:    
+    try:
+        db.connect()
+        usage_records = InferenceUsage.select().where(InferenceUsage.run_id == run_id)
+        if not usage_records:
+            logger.info(f"No inference data found in DB for run ID: {run_id}")
+            return {"error": f"No inference data found for run ID: {run_id}"}
+        
+        data = []
+        for usage in usage_records:
+            record = {
+                "miner_id": usage.miner_id,
+                "miner_hotkey": usage.hotkey,
+                "model": usage.model,
+                "provider": usage.provider,
+                "prompt_tokens": usage.prompt_tokens,
+                "completion_tokens": usage.completion_tokens,
+                "total_tokens": usage.total_tokens,
+                "finish_reason": usage.finish_reason
+            }
+            data.append(record)
+        
+        return {"run_id": run_id, "inference_data": data}
+    except Exception as e:
+        logger.error(f"Failed to retrieve inference data for run ID {run_id}: {e}")
+        return {"error": f"Failed to retrieve inference data for run ID {run_id}"}
+    finally:
+        db.close()
+
+
+
+
 def main():
     print("=" * 60)
     print("      Bitrecs Evaluation Suite Runner")
     print(f"Local: {datetime.now().isoformat()}")
     print(f"UTC:   {datetime.now(timezone.utc).isoformat()}")
-    print("=" * 60) 
+    print("=" * 60)    
    
     logger.info("Loading miner input...")
     #miner_input_path = "input/miner_input.yaml"
@@ -200,6 +240,15 @@ def main():
     logger.info("\033[35mEvaluation suites completed successfully. \033[0m")
     run_log = strip_ansi(run_report)    
     write_log_to_output_file(run_log, output_path=f"output/eval_report_{run_id}.txt")
+    for result in results:
+        for inference in result.inference_data or []:
+            logger.info(f"Inference Data for {inference.get('model', 'unknown')} - {inference.get('provider', 'unknown')}: Request ID: {inference.get('request_id', 'unknown')}, Prompt Tokens: {inference.get('prompt_tokens', 0)}, Completion Tokens: {inference.get('completion_tokens', 0)}, Total Tokens: {inference.get('total_tokens', 0)}, Finish Reason: {inference.get('finish_reason', '')}")    
+
+    cost_report = get_inference_report(run_id)
+    cost_result = CostReport.calculate_cost_from_report(cost_report, MODEL_COST_INPUT, MODEL_COST_OUTPUT)
+    logger.info(f"\033[34mInference Cost Report for Run ID: {run_id}\033[0m")
+    logger.info(f"Input Tokens: {cost_result.input_tokens}, Output Tokens: {cost_result.output_tokens}, Total Tokens: {cost_result.total_tokens}, Estimated Cost: ${cost_result.cost:.4f}") 
+
 
     final_score = EvalResult.calculate_overall_score(results)
     logger.info(f"\033[34mFinal Overall Score: \033[92;1m{final_score:.4f}\033[0m")
