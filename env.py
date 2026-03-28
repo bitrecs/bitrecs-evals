@@ -6,6 +6,7 @@ import logging
 import tempfile
 from dotenv import load_dotenv
 
+from evals.base_eval import BaseEval
 from llm.inference_coster import CostReport
 load_dotenv()
 from datetime import datetime, timezone
@@ -225,6 +226,8 @@ class Actor:
                                                                 input_price_per_million_tokens=model_cost_input, 
                                                                 output_price_per_million_tokens=model_cost_output)
             
+            token_count = BaseEval.get_run_token_count(run_id)
+            
             result = {
                 "task_name": problem_type.value,
                 "bitrecs_run_id": bitrecs_run_id,
@@ -240,7 +243,7 @@ class Actor:
                 "cost_report": {
                     "input_tokens": cost_report.input_tokens,
                     "output_tokens": cost_report.output_tokens,
-                    "total_tokens": cost_report.total_tokens,
+                    "total_tokens": token_count,
                     "estimated_cost_usd": cost_report.cost
                 }
             }

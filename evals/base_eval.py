@@ -164,7 +164,8 @@ class BaseEval(ABC):
         finally:            
             db.close()    
 
-    def load_inference_usage(self, run_id) -> List[InferenceUsage]:
+    @staticmethod
+    def load_inference_usage(run_id) -> List[InferenceUsage]:
         """Load inference usage data for a given run ID."""
         try:
             db.connect()
@@ -176,10 +177,11 @@ class BaseEval(ABC):
         finally:
             db.close()
 
-    def load_inference_data(self, run_id) -> List[dict]:
+    @staticmethod
+    def load_inference_data(run_id) -> List[dict]:
         """Load inference usage data for a given run ID as a list of dictionaries."""
         try:
-            inf = self.load_inference_usage(run_id)
+            inf = BaseEval.load_inference_usage(run_id)
             data_list = []
             for usage in inf:
                 data_list.append({
@@ -202,3 +204,9 @@ class BaseEval(ABC):
         finally:
             db.close()
 
+    @staticmethod
+    def get_run_token_count(run_id) -> int:
+        """Calculate total tokens used for a given run ID."""
+        data = BaseEval.load_inference_data(run_id)
+        total_tokens = sum(item.get("total_tokens", 0) for item in data)
+        return total_tokens

@@ -152,7 +152,7 @@ class BitrecsReasonEval(BaseEval):
             details=f"Evaluated {count} of {len(self.holdout_df)} rows with {exception_count} exceptions (max_iterations {max_iterations}).",
             duration_seconds=total_duration,
             temperature=self.miner_artifact.sampling_params.temperature,
-            inference_data=self.load_inference_data(self.run_id)            
+            inference_data=BaseEval.load_inference_data(self.run_id)
         )
         return result    
   

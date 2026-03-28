@@ -103,7 +103,7 @@ class NdcgAt10CuratedElectronics100(BaseEval):
             model_name=self.miner_artifact.model,
             provider_name=self.miner_artifact.provider,
             run_id=self.run_id,
-            inference_data=self.load_inference_data(self.run_id)
+            inference_data=BaseEval.load_inference_data(self.run_id)
         )
         return result
 
