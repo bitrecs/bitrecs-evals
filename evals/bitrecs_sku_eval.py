@@ -47,12 +47,10 @@ class BitrecsSkuEval(BaseEval):
             self.init_baseline_reasons()
 
         df = self.load_recent_answers()
-        self.holdout_df = df      
-        
+        self.holdout_df = df
         if len(self.holdout_df) < self.sample_size:
             raise ValueError(f"Holdout set size {len(self.holdout_df)} is less than minimum required {self.sample_size}")
         
-        #self.holdout_df = self.holdout_df.head(50)
 
     def eval_type(self) -> BitrecsEvaluationType:
         return BitrecsEvaluationType.BITRECS_SKU_DAILY
@@ -117,18 +115,14 @@ class BitrecsSkuEval(BaseEval):
             self.log_inference_data(run_id=self.run_id, data=inference.data)
 
     
-    def run(self, max_iterations = 10) -> EvalResult:
-        """
-        Run the Bitrecs reason evaluation.
-        """
-        
+    def run(self, max_iterations = 10) -> EvalResult:                
         count = 0
         success_count = 0
         exception_count = 0
         total_duration = 0.0
         start_time = time.monotonic()
-        eval_score = 0.0        
-        hotkey = self.miner_artifact.miner_hotkey        
+        eval_score = 0.0
+        hotkey = self.miner_artifact.miner_hotkey
         try:
             top = 3
             miner_score, inference_data = self.sku_scorer.score_miner(hot_key=hotkey, top=top)            

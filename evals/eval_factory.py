@@ -284,26 +284,24 @@ class EvalFactory:
         """Register a new eval class."""
         cls._registry[name] = eval_class
     
-    @classmethod
-    def run_eval(cls, eval_type: BitrecsEvaluationType, miner_artifact: Artifact, run_id: str, max_iterations: int = 10) -> EvalResult:
-        """Create and run a specific eval."""
-        if eval_type not in cls._registry:
-            raise ValueError(f"Unknown eval type: {eval_type}")
+    # @classmethod
+    # def run_eval(cls, eval_type: BitrecsEvaluationType, miner_artifact: Artifact, run_id: str, max_iterations: int = 10) -> EvalResult:
+    #     """Create and run a specific eval."""
+    #     if eval_type not in cls._registry:
+    #         raise ValueError(f"Unknown eval type: {eval_type}")
         
-        eval_instance : BaseEval = cls._registry[eval_type](run_id, miner_artifact)
-        if eval_type.name != eval_instance.eval_type().name:
-            raise ValueError(f"Eval type mismatch: registry has {eval_type}, but instance reports {eval_instance.eval_type()}")
-            
+    #     eval_instance : BaseEval = cls._registry[eval_type](run_id, miner_artifact)
+    #     if eval_type.name != eval_instance.eval_type().name:
+    #         raise ValueError(f"Eval type mismatch: registry has {eval_type}, but instance reports {eval_instance.eval_type()}")            
         
-        return eval_instance.run(max_iterations)
+    #     return eval_instance.run(max_iterations)
     
     @classmethod
     def run_all_evals(cls, run_id: str, miner_artifact: Artifact, eval_types: List[BitrecsEvaluationType] = None, max_iterations: int = 10) -> List[EvalResult]:
         """Run multiple evals and return aggregated results."""
         if eval_types is None:
             raise ValueError("eval_types must be provided")
-            #eval_types = list(cls._registry.keys())
-        
+    
         results = []        
         for eval_type in eval_types:
             try:
@@ -311,8 +309,8 @@ class EvalFactory:
                 if eval_type.name != eval_instance.eval_type().name:
                     raise ValueError(f"Eval type mismatch: registry has {eval_type}, but instance reports {eval_instance.eval_type()}")
 
-                logger.debug(f"\033[34mRunning eval type: {eval_type}\033[0m")
-                result = cls.run_eval(eval_type, miner_artifact, run_id, max_iterations)
+                logger.debug(f"\033[34mRunning eval type: {eval_type}\033[0m")                
+                result = eval_instance.run(max_iterations)
                 results.append(result)                
             except Exception as e:
                 # Log error and continue (don't fail all evals)

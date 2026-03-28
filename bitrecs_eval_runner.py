@@ -5,10 +5,6 @@ import yaml
 import secrets
 import logging
 from dotenv import load_dotenv
-
-from llm.inference_coster import CostReport
-
-
 load_dotenv()
 from datetime import datetime, timezone
 from typing import List, Tuple
@@ -18,6 +14,8 @@ from models.miner_artifact import Artifact
 from db.models.eval import InferenceUsage, db, Miner, Evaluation
 from evals.eval_factory import EvalFactory
 from models.eval_type import BitrecsEvaluationType
+from evals.base_eval import BaseEval
+from llm.inference_coster import CostReport
 
 
 logging.basicConfig(level=CONST.LOG_LEVEL)
@@ -42,7 +40,7 @@ MINER_INPUT_PATH = "input/miner_input.yaml"
 #                BitrecsEvaluationType.BITRECS_PROMPT_DAILY, ]
 
 EVAL_SUITE = [
-    BitrecsEvaluationType.BITRECS_HAYSTACK_DAILY,
+    BitrecsEvaluationType.BITRECS_SKU_DAILY,
 ]
 
 MODEL_COST_INPUT = float(os.getenv("MODEL_COST_INPUT", 0))  
@@ -74,6 +72,7 @@ def run_eval_suites(miner_artifact: Artifact, shuffle=False) -> Tuple[str, List[
     max_iterations = 3
     results = EvalFactory.run_all_evals(run_id, miner_artifact, EVAL_SUITE, max_iterations)
     
+    tokens = 0
     for result in results:
         #print(f"{result}")
         log_eval_result_to_db(run_id, result, miner_artifact.miner_hotkey, miner_artifact.model, miner_artifact.provider)
@@ -81,11 +80,13 @@ def run_eval_suites(miner_artifact: Artifact, shuffle=False) -> Tuple[str, List[
             logger.info(f"\033[32m{result.eval_name} Passed! Score: {result.score:.4f}\033[0m")
         else:
             logger.error(f"\033[31m{result.eval_name} Failed! Score: {result.score:.4f}\033[0m")    
-    
-    total_score = sum(r.score for r in results) / len(results) if results else 0.0
-    
+        tokens += BaseEval.get_run_token_count(result.run_id)
+
+    logger.info(f"Total Tokens Used for Run ID {run_id}: {tokens}")
+    total_score = sum(r.score for r in results) / len(results) if results else 0.0    
     logger.info(f"Aggregated Score: {total_score:.4f} from {len(results)} evals.")    
-    logger.info(f"RUN COMPLETE for run ID: \033[34m{run_id}\033[0m")    
+    logger.info(f"RUN COMPLETE for run ID: \033[34m{run_id}\033[0m")
+
     return run_id, results
 
 
