@@ -222,11 +222,15 @@ class Actor:
             inference_report = await self.get_inference_report(run_id)
             logger.info(f"Inference Report for Run ID: \033[35m{run_id}\033[0m")
             logger.info(f"\n{inference_report}")
-            cost_report = CostReport.calculate_cost_from_report(inference_report, 
+            cost_result = CostReport.calculate_cost_from_report(inference_report, 
                                                                 input_price_per_million_tokens=model_cost_input, 
                                                                 output_price_per_million_tokens=model_cost_output)
             
             token_count = BaseEval.get_run_token_count(run_id)
+          
+            logger.info(f"\033[34mInference Cost Report for Run ID: {run_id}\033[0m")
+            logger.info(f"Input Tokens: {cost_result.input_tokens}, Output Tokens: {cost_result.output_tokens}, Total Tokens: {cost_result.total_tokens}, Estimated Cost: ${cost_result.cost:.8f}") 
+
             
             result = {
                 "task_name": problem_type.value,
@@ -241,10 +245,10 @@ class Actor:
                 "samples": results[0].rows_evaluated if results else 0,
                 "inference_data": inference_report,
                 "cost_report": {
-                    "input_tokens": cost_report.input_tokens,
-                    "output_tokens": cost_report.output_tokens,
+                    "input_tokens": cost_result.input_tokens,
+                    "output_tokens": cost_result.output_tokens,
                     "total_tokens": token_count,
-                    "estimated_cost_usd": cost_report.cost
+                    "estimated_cost_usd": cost_result.cost
                 }
             }
             

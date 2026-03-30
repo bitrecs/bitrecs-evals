@@ -62,15 +62,16 @@ class BitrecsArtifactPricing(BaseEval):
         try:
             cost_result = self.get_cost_result()
             input_cost_per_million = cost_result.input
-            logger.info(f"Model '{model_name}' (Provider: {provider}) input cost: ${input_cost_per_million:.2f} per million tokens")            
+            output_cost_per_million = cost_result.output
+            logger.info(f"\033[36mModel: {model_name} (Provider: {provider}) input cost: ${input_cost_per_million:.8f} output cost: ${output_cost_per_million:.8f}\033[0m")
             if input_cost_per_million > self.max_input_cost_per_million:
                 final_score = 0.0
                 result = False
-                reason = f"FAIL: Input cost ${input_cost_per_million:.2f}/1M tokens exceeds maximum allowed ${self.max_input_cost_per_million:.2f}. (Provider: {provider}, Model: {model_name})"
+                reason = f"FAIL: Input cost ${input_cost_per_million:.8f}/1M tokens exceeds maximum allowed ${self.max_input_cost_per_million:.8f}. (Provider: {provider}, Model: {model_name})"
             else:
                 final_score = 1.0
                 result = True
-                reason = f"PASS: Input cost ${input_cost_per_million:.2f}/1M tokens is within the allowed threshold of ${self.max_input_cost_per_million:.2f}. (Provider: {provider}, Model: {model_name})"
+                reason = f"PASS: Input cost ${input_cost_per_million:.8f}/1M tokens is within the allowed threshold of ${self.max_input_cost_per_million:.8f}. (Provider: {provider}, Model: {model_name})"
         
         except Exception as e:
             logger.error(f"Exception during pricing evaluation: {e}")
@@ -97,5 +98,6 @@ class BitrecsArtifactPricing(BaseEval):
             temperature=temperature,
             model_name=model_name,
             provider_name=provider,
-            run_id=self.run_id
+            run_id=self.run_id,
+            inference_data=BaseEval.load_inference_data(self.run_id)
         )
