@@ -205,6 +205,7 @@ class NdcgAt10CuratedAllBeauty100(BaseEval):
             recommended_skus=recommended_skus,
             duration=duration
         )
+        
         self.log_inference_data(run_id=self.run_id, data=inference.data)
 
         return rank_index

@@ -117,7 +117,8 @@ class AmazonVideoGames100(BaseEval):
             temperature=self.miner_artifact.sampling_params.temperature,
             model_name=self.miner_artifact.model,
             provider_name=self.miner_artifact.provider,
-            run_id=self.run_id
+            run_id=self.run_id,
+            inference_data=BaseEval.load_inference_data(self.run_id)
         )
         return result
     
@@ -156,11 +157,12 @@ class AmazonVideoGames100(BaseEval):
         st = time.monotonic()
         system_prompt, user_prompt = prompt_factory.generate_prompt()
         server = LLM.try_parse(provider)
-        llm_output = LLMFactory.query_llm(server=server,
+        inference = LLMFactory.query_llm_with_usage(server=server,
                                             model=model,
                                             system_prompt=system_prompt,
                                             user_prompt=user_prompt,
                                             temp=temperature)
+        llm_output = inference.response
         recommended_skus = PromptFactory.tryparse_llm(llm_output)
         logger.info(f"LLM Output: {llm_output}")
         logger.info(f"Recommended SKUs: {recommended_skus}")
@@ -183,6 +185,8 @@ class AmazonVideoGames100(BaseEval):
             recommended_skus=recommended_skus,
             duration=duration
         )
+
+        self.log_inference_data(run_id=self.run_id, data=inference.data)
 
         return result
    
