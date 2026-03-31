@@ -169,6 +169,7 @@ class BaseEval(ABC):
         """Load inference usage data for a given run ID."""
         try:
             db.connect()
+            db.create_tables([Miner, MinerResponse, InferenceUsage], safe=True)
             usages = InferenceUsage.select().where(InferenceUsage.run_id == run_id)
             return list(usages)
         except Exception as e:
