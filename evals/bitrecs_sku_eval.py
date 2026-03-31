@@ -134,6 +134,8 @@ class BitrecsSkuEval(BaseEval):
         end_time = time.monotonic()
         total_duration = end_time - start_time
         eval_success = eval_score >= self.pass_threshold
+        for d in inference_data if inference_data else []:
+            self.log_inference_data(run_id=self.run_id, data=d)
         
         result = EvalResult(
             eval_name=self.get_eval_name(),
@@ -145,11 +147,10 @@ class BitrecsSkuEval(BaseEval):
             details=f"Evaluated {count} of {len(self.holdout_df)} rows with {exception_count} exceptions (max_iterations {max_iterations}).",
             duration_seconds=total_duration,
             temperature=self.miner_artifact.sampling_params.temperature,
-            inference_data=inference_data
+            inference_data=BaseEval.load_inference_data(self.run_id)
         )
 
-        for d in inference_data if inference_data else []:
-            self.log_inference_data(run_id=self.run_id, data=d)
+      
 
         return result    
   
