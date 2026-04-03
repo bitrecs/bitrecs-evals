@@ -41,6 +41,7 @@ MINER_INPUT_PATH = "input/miner_input.yaml"
 
 EVAL_SUITE = [
     BitrecsEvaluationType.BITRECS_ARTIFACT_PRICING,
+    BitrecsEvaluationType.BITRECS_MODEL_ECONOMIC_EVAL,
 ]
 
 MODEL_COST_INPUT = float(os.getenv("MODEL_COST_INPUT", 0))  
