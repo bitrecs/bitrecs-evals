@@ -21,7 +21,7 @@ class BaseEval(ABC):
     """
     @property
     def sample_size(self) -> int:        
-        return 3
+        return 5
     
     @property
     def pass_threshold(self) -> float:

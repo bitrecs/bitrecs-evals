@@ -5,20 +5,19 @@ import yaml
 import logging
 import tempfile
 from dotenv import load_dotenv
-
+load_dotenv()
+from fastapi import FastAPI
+from typing import List, Tuple
+from datetime import datetime, timezone
+from pydantic import BaseModel
 from evals.base_eval import BaseEval
 from llm.inference_coster import CostReport
-load_dotenv()
-from datetime import datetime, timezone
-from typing import List, Tuple
 from evals.eval_result import EvalResult
 from common import constants as CONST
 from models.miner_artifact import Artifact
 from db.models.eval import InferenceUsage, db, Miner, Evaluation
 from models.eval_type import BitrecsEvaluationType
 from evals.eval_factory import EvalFactory
-from fastapi import FastAPI
-from pydantic import BaseModel
 from fastapi.responses import FileResponse
 
 app = FastAPI()
