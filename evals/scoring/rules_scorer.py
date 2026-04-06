@@ -345,16 +345,17 @@ class RulesScorer:
             print(f"❌ Too short ({len(reason)} chars) - returning 0.05")
             return 0.05
 
-        # Penalty if product name is in the reason (case-insensitive, punctuation removed)        
-        if product.name and product.reason:
-            name = product.name.lower().strip()
-            reason_lower = product.reason.lower().strip()
-            name_clean = name.translate(str.maketrans('', '', string.punctuation))
-            reason_clean = reason_lower.translate(str.maketrans('', '', string.punctuation))
-            if name_clean in reason_clean or name in reason_lower:
-                print(f"❌ Product name found in reason for hotkey {hotkey}, applying heavy penalty.")
-                print(f"Product name: {product.name} | Reason: {product.reason}")
-                return 0.01  # or 0.0 for total disqualification
+        if 1==2:
+            # Penalty if product name is in the reason (case-insensitive, punctuation removed)        
+            if product.name and product.reason:
+                name = product.name.lower().strip()
+                reason_lower = product.reason.lower().strip()
+                name_clean = name.translate(str.maketrans('', '', string.punctuation))
+                reason_clean = reason_lower.translate(str.maketrans('', '', string.punctuation))
+                if name_clean in reason_clean or name in reason_lower:
+                    print(f"❌ Product name found in reason for hotkey {hotkey}, applying heavy penalty.")
+                    print(f"Product name: {product.name} | Reason: {product.reason}")
+                    return 0.01  # or 0.0 for total disqualification
         
         # Initialize scoring components
         scores = {
