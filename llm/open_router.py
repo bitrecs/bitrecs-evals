@@ -60,7 +60,7 @@ class OpenRouter:
             "reasoning": reasoning,
             "stream": False,
             "temperature": self.temp,
-            "max_tokens": 2048
+            "max_tokens": 4096
         }
         
         timeout = (3, 60)
