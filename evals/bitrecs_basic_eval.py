@@ -202,7 +202,7 @@ class BitrecsBasicEval(BaseEval):
             return False, f"provider '{agent.provider}' is not a supported LLM provider"
         
         provider = LLM.try_parse(agent.provider)
-        ALLOWED_PROVIDERS = [LLM.CHUTES, LLM.OPEN_ROUTER]
+        ALLOWED_PROVIDERS = [LLM.CHUTES]
         if provider not in ALLOWED_PROVIDERS:
             return False, f"provider '{agent.provider}' is currently not supported. Supported providers are: {', '.join(ALLOWED_PROVIDERS)}"
         
