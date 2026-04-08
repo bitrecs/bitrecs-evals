@@ -32,7 +32,8 @@ class Chutes:
         url = "https://llm.chutes.ai/v1/chat/completions"
         headers = {
             "Authorization": f"Bearer {self.CHUTES_API_KEY}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "x-identifier": "bitrecs"
         }
         data = {
             "model": self.model,
